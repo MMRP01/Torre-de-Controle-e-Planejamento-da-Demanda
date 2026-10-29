@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurar o servidor — Torre de Controle de Produção</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:760px;margin:0 auto;padding:18px;color:#1f2328;background:#f4f5f7}
+  h1{font-size:20px;margin:6px 0 4px} p,li{line-height:1.5} label{display:block;font-weight:700;margin:14px 0 4px}
+  input{width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid #bbb;border-radius:8px}
+  button{font:inherit;font-weight:700;padding:10px 16px;border-radius:8px;border:1px solid #c10016;background:#c10016;color:#fff;cursor:pointer;margin:10px 8px 6px 0}
+  button.sec{background:#fff;color:#1f2328;border-color:#aaa} button:disabled{opacity:.5;cursor:wait}
+  .msg{padding:10px 12px;border-radius:8px;margin:12px 0;line-height:1.45} .ok{background:#e8f5e9;border-left:6px solid #2e7d32} .erro{background:#ffe5e8;border-left:6px solid #c10016} .aviso{background:#fff3cd;border-left:6px solid #e0a800}
+  pre{background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;word-break:break-all} small{color:#555}
+</style>
+</head>
+<body>
+<h1>Configurar o servidor (Supabase)</h1>
+<p>Cole abaixo os dois dados do <strong>seu</strong> projeto no Supabase (painel → <em>Project Settings → API</em>).
+Esta página <strong>testa a conexão de verdade</strong> e gera o texto do arquivo <code>config.js</code> já pronto, para você só colar — sem editar nada à mão.</p>
+<label for="url">1. Project URL <small>(termina em .supabase.co)</small></label>
+<input id="url" type="text" placeholder="https://SEU-CODIGO.supabase.co" autocomplete="off" spellcheck="false">
+<label for="chave">2. Chave "anon public" <small>(texto longo que começa com eyJ)</small></label>
+<input id="chave" type="text" placeholder="eyJhbGciOi..." autocomplete="off" spellcheck="false">
+<button id="go">Testar e gerar o config.js</button>
+<div id="msg"></div>
+<div id="resultado" style="display:none">
+  <h3>Seu config.js pronto</h3>
+  <pre id="texto"></pre>
+  <button id="copiar" class="sec">Copiar texto</button><button id="baixar" class="sec">Baixar config.js</button>
+  <h3>Como usar</h3>
+  <ol>
+    <li>No seu repositório do GitHub, clique em <strong>config.js</strong> e depois no <strong>lápis</strong> (Edit this file).</li>
+    <li>Apague <strong>todo</strong> o conteúdo e cole o texto acima.</li>
+    <li>Clique em <strong>Commit changes</strong>. Espere 1 a 2 minutos e abra o site com <strong>Ctrl + F5</strong>.</li>
+  </ol>
+  <p><small>Ou: clique em "Baixar config.js" e, no GitHub, use <em>Add file → Upload files</em> para substituir o arquivo.</small></p>
+</div>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const msg = (cls, html)=>{ $('msg').innerHTML = '<div class="msg '+cls+'">'+html+'</div>'; };
+  const esc = t => String(t).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const comTempo = (p, ms)=>Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('sem resposta em '+Math.round(ms/1000)+' s')), ms))]);
+  async function gerar(){
+    $('resultado').style.display = 'none';
+    let url = $('url').value.trim(), key = $('chave').value.trim().replace(/^['"`]+|['"`]+$/g,'').replace(/\s+/g,'');
+    if(!url || !key){ return msg('erro','Preencha os <strong>dois</strong> campos.'); }
+    const avisos = [];
+    if(!/^https?:\/\//i.test(url)){ url = 'https://'+url; avisos.push('acrescentei "https://" no começo da URL'); }
+    const antes = url; url = url.replace(/\/+$/,'').replace(/\/(rest|auth|realtime|storage|functions)\/v1.*$/i,'').replace(/\/+$/,'');
+    if(url!==antes) avisos.push('removi o final da URL (barra ou "/rest/v1")');
+    if(/abcdefghijkl|xxxxxxxx|COLE_AQUI|SEU-PROJETO|SEU-CODIGO/i.test(url) || /COLE_AQUI|\.\.\.|A-SUA-CHAVE|SUA-CHAVE|xxxx/i.test(key))
+      return msg('erro','Estes são valores de <strong>exemplo</strong>, não os do seu projeto. Copie a <em>Project URL</em> e a chave <em>anon public</em> direto do painel do Supabase (<em>Project Settings → API</em>), usando o botão de copiar.');
+    if(!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(url)) avisos.push('a URL não parece a de um projeto do Supabase (o formato é https://CODIGO.supabase.co)');
+    let papel = '?'; try{ papel = JSON.parse(atob(key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role||'?'; }catch(e){}
+    if(papel==='service_role') return msg('erro','Esta é a chave <strong>SECRETA</strong> (<code>service_role</code>). Ela nunca pode ficar numa página pública. Use a chave <strong>anon public</strong> e, por segurança, gere uma nova service_role no painel do Supabase (a que você colou aqui deve ser considerada exposta).');
+    if(!/^eyJ/.test(key) && !/^sb_publishable_/.test(key)) avisos.push('a chave não parece a "anon public" (ela costuma começar com eyJ)');
+    $('go').disabled = true; msg('aviso','Testando a conexão com <strong>'+esc(url.replace(/^https?:\/\//,''))+'</strong>…');
+    let r;
+    try{ r = await comTempo(fetch(url+'/auth/v1/settings', {headers:{apikey:key}}), 10000); }
+    catch(e){ $('go').disabled = false; return msg('erro','Não consegui falar com <strong>'+esc(url)+'</strong> ('+esc(e.message||e)+').<br>Confira a URL (copie de novo do painel), se o projeto não está <strong>pausado</strong> (painel do Supabase → <em>Restore project</em>) e se um antivírus, bloqueador de anúncios ou VPN bloqueia <code>supabase.co</code>.'); }
+    $('go').disabled = false;
+    if(r.status===401 || r.status===403) return msg('erro','O servidor respondeu, mas <strong>recusou a chave</strong>. Copie de novo a chave <strong>anon public</strong> completa (botão de copiar), do <strong>mesmo projeto</strong> da URL.');
+    if(r.status>=500) return msg('erro','O servidor respondeu com erro '+r.status+'. Se o projeto estiver pausado, clique em <strong>Restore project</strong> no painel do Supabase e tente de novo em alguns minutos.');
+    const texto = "window.MENZOIL_CONFIG = {\n  supabaseUrl: '"+url+"',\n  supabaseAnonKey: '"+key+"'\n};\n";
+    $('texto').textContent = texto; $('resultado').style.display = '';
+    msg(avisos.length ? 'aviso' : 'ok', '✓ <strong>Conexão com o servidor confirmada</strong> ('+esc(url.replace(/^https?:\/\//,''))+', chave aceita).'+(avisos.length?'<br>Observações: '+esc(avisos.join('; '))+'.':''));
+  }
+  $('go').onclick = gerar;
+  $('copiar').onclick = async ()=>{ const t = $('texto').textContent; try{ await navigator.clipboard.writeText(t); $('copiar').textContent = 'Copiado ✓'; }catch(e){ const rg = document.createRange(); rg.selectNodeContents($('texto')); const s = getSelection(); s.removeAllRanges(); s.addRange(rg); $('copiar').textContent = 'Selecionado: use Ctrl+C'; } setTimeout(()=>{ $('copiar').textContent = 'Copiar texto'; }, 3000); };
+  $('baixar').onclick = ()=>{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('texto').textContent], {type:'application/javascript'})); a.download = 'config.js'; document.body.appendChild(a); a.click(); a.remove(); };
+  window.__gerarConfig = gerar;
+})();
+</script>
+</body>
+</html>
