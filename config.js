@@ -10,6 +10,6 @@
 // é o login + as regras do servidor). NUNCA coloque aqui a chave "service_role".
 // =====================================================================================
 window.MENZOIL_CONFIG = {
-  supabaseUrl: '',        // ex.: 'https://abcdefghijkl.supabase.co'
-  supabaseAnonKey: ''     // ex.: 'eyJhbGciOi...'  (chave "anon public")
+  supabaseUrl: 'https://jezfiitifuclyssdizjt.supabase.co',        
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImplemZpaXRpZnVjbHlzc2Rpemp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMzMDg3OTYsImV4cCI6MjEwODg4NDc5Nn0.r9yfMKaiLJHspTA1mF8a7edCadS44iyXHwA8QSIs-AQ'     
 };
