@@ -89,7 +89,7 @@ No menu da esquerda, **⚙ Project Settings → API** (ou **Data API / API Keys*
 ### C2. Abrir o site
 1. Espere 1 a 2 minutos e abra `https://SEU-USUARIO.github.io/planejamento-producao/` com **Ctrl + F5**.
 2. Deve aparecer a tela de **Entrar** (**E-mail** e **Senha**), com **"Criar conta"** e **"Esqueci a senha"**, e no rodapé
-   **"versão 2026-10-29.3"**.
+   **"versão 2026-10-30.1"**.
 
 ### C3. Criar a sua conta (faça isso ANTES de divulgar o endereço)
 1. Clique em **Criar conta** → nome, e-mail, senha.
@@ -154,6 +154,8 @@ Escolha uma opção:
 | Projeto "pausado" | O plano gratuito pausa após cerca de 1 semana sem uso | No painel, *Restore project* |
 
 ## Atualizar a ferramenta depois
+> **Algumas versões também mudam o servidor.** Quando o histórico de versões (`docs/HISTORICO_DE_VERSOES.md`) disser "Ação necessária no Supabase", rode o arquivo `supabase/schema.sql` de novo no SQL Editor (é seguro repetir). A versão 2026-10-31.1 exige isso.
+
 Em **Add file → Upload files**, envie o `index.html` (e `supabase.js`, `diagnostico.html`, `configurar.html`) novos.
 **Não envie o `config.js` do pacote** (ele vem em branco e apagaria o seu). Exporte um **backup** antes.
 

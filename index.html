@@ -469,6 +469,40 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
     </section>
 
     <!-- ============ NECESSIDADES POR GRUPO/SUBGRUPO ============ -->
+    <section class="page" id="page-materiais">
+      <div class="page-head">
+        <div>
+          <h2>Planejamento de Materiais</h2>
+          <div class="desc">Projeção diária do estoque de cada insumo a partir do plano de produção (só o que ainda falta produzir), das entregas programadas e do estoque de segurança — com alerta de falta, data limite para comprar e reposição sugerida. Atualiza sozinha quando o plano muda.</div>
+        </div>
+        <div class="head-actions"><button class="btn" onclick="renderMateriais()">↻ Recalcular</button><button class="btn" onclick="exportMateriaisCsv()">⬇ Exportar (.csv)</button></div>
+      </div>
+      <div class="note" id="matAviso" style="margin-bottom:14px"></div>
+      <div class="grid grid-4" id="matKpis"></div>
+      <div class="filters">
+        <div class="f"><label>Situação</label><select id="matAcao" onchange="renderMateriais()">
+          <option value="ruptura_inevitavel">Ruptura inevitável</option><option value="comprar_ja">Emitir pedido já</option><option value="comprar_ate">Emitir pedido até a data</option><option value="ok">Sem ação</option></select></div>
+        <div class="f"><label>Tipo</label><select id="matTipo" data-unico onchange="renderMateriais()"><option value="">Itens e grupos</option><option value="grupo">Só grupos de reposição</option><option value="item">Só itens</option></select></div>
+        <div class="f"><label>Grupo do cadastro</label><select id="matGrupo" onchange="renderMateriais()"></select></div>
+        <div class="f"><label>Material (código ou descrição)</label><input type="text" id="matBusca" placeholder="digite para buscar" autocomplete="off" oninput="renderMateriais()"></div>
+        <div class="f"><label>Pedidos de compra atrasados</label><select id="matAtrasados" data-unico onchange="renderMateriais()"><option value="hoje">Considerar chegando hoje</option><option value="ignorar">Ignorar</option></select></div>
+        <div class="f"><label>Horizonte até</label><input type="date" id="matFim" onchange="renderMateriais()"></div>
+        <div class="f-actions"><button class="btn btn-ghost" onclick="clearMateriaisFiltros()">Limpar filtros</button></div>
+      </div>
+      <div class="card">
+        <h3>Materiais <span class="dash-por" id="matCount"></span></h3>
+        <div class="card-sub">Ordenados por urgência. <strong>Precisa chegar até</strong>: data em que o saldo cruza o estoque de segurança. <strong>Emitir pedido até</strong>: essa data menos o prazo de entrega. <strong>Chega em (se pedir hoje)</strong>: hoje mais o prazo. <strong>Ruptura inevitável</strong>: mesmo pedindo hoje, o material chega depois de faltar. <strong>Emitir pedido já</strong>: a data de emitir o pedido já passou. A reposição sugerida cobre as faltas e repõe o estoque de segurança (e é descontada dos pedidos de compra já abertos). Clique em uma linha para ver a projeção dia a dia.</div>
+        <div class="tbl-wrap"><table class="data" id="tblMateriais"></table></div>
+      </div>
+      <div class="card" id="matDetalheCard" style="display:none">
+        <h3 id="matDetalheTitulo"></h3>
+        <div class="card-sub" id="matDetalheSub"></div>
+        <div class="chart-box"><div id="chartMatSaldo"></div></div>
+        <div class="tbl-wrap" style="max-height:340px"><table class="data" id="tblMatSerie"></table></div>
+        <div id="matPedidos"></div>
+      </div>
+    </section>
+
     <section class="page" id="page-necgrupo">
       <div class="page-head">
         <div>
@@ -764,7 +798,8 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
         <div class="f"><label>De</label><input type="date" id="rgDe" onchange="renderRefugos()"></div>
         <div class="f"><label>Até</label><input type="date" id="rgAte" onchange="renderRefugos()"></div>
         <div class="f"><label>Recurso</label><select id="rgRecurso" onchange="renderRefugos()"></select></div>
-        <div class="f"><label>Item refugado</label><select id="rgItem" onchange="renderRefugos()"></select></div>
+        <div class="f"><label>Código do item</label><select id="rgItem" data-multi onchange="renderRefugos()"></select></div>
+        <div class="f"><label>Descrição do item</label><select id="rgDescricao" data-multi onchange="renderRefugos()"></select></div>
         <div class="f"><label>Turno</label><select id="rgTurno" onchange="renderRefugos()"><option value="">Todos</option><option value="1">1º turno</option><option value="2">2º turno</option><option value="3">3º turno</option></select></div>
         <div class="f"><label>Nº OP</label><input type="text" id="rgOp" placeholder="digite o Nº OP" autocomplete="off" oninput="renderRefugos()"></div>
         <div class="f"><label>Ver por</label><select id="rgAgrupar" data-unico onchange="renderRefugos()"><option value="dia">Dia</option><option value="item">Item</option><option value="recurso">Recurso</option><option value="op">Nº OP</option><option value="granel">Nº OP Granel</option><option value="turno">Turno</option><option value="uom">Unidade de medida</option></select></div>
@@ -1181,7 +1216,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-10-29","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[]};
+let DB = {"updatedAt":"2026-11-03","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -1225,6 +1260,7 @@ const NAV = [
   {group:'Planejamento', items:[
     {id:'necessidades', label:'Necessidades', ico:'◧'},
     {id:'necgrupo', label:'Necessidades por Grupo', ico:'▧'},
+    {id:'materiais', label:'Planejamento de Materiais', ico:'▥'},
     {id:'plano', label:'Plano Mestre', ico:'▤'},
     {id:'visaodia', label:'Itens por Dia', ico:'▦'},
     {id:'efetuado', label:'Planejado x Efetuado', ico:'✅'},
@@ -1300,6 +1336,7 @@ function renderPagina(id){
   try{
     if(id==='necessidades') renderNecessidades();
     if(id==='necgrupo') renderNecessidadesGrupo();
+    if(id==='materiais') renderMateriais();
     if(id==='cadastros') renderCadastros();
     if(id==='importacao') renderImportacao();
     if(id==='plano'){ renderPlano(); if(planMode==='manual') renderManualClientList(); }
@@ -1524,6 +1561,13 @@ function melhorarFiltros(){
     // só fecha a lista cujo campo se moveu com a rolagem (a página ou um contêiner que o contém); redesenhar uma tabela não fecha
     document.querySelectorAll('.cb-list').forEach(l=>{ if(l.style.display==='none') return; const inp = l.parentNode.querySelector('.cb-input'); if(e.target===document || (e.target.contains && e.target.contains(inp))) l.style.display='none'; });
   }, true); }
+}
+function populateSelectSeguro(sel, values, withAll){
+  const cur = sel.value; sel.innerHTML = '';
+  const add = (v,t)=>{ const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+  if(withAll) add('','Todos'); values.forEach(v=>add(v,v));
+  if(sel.__cbMulti){ sel.__cbPodar(); return; }
+  if(values.includes(cur)) sel.value = cur;
 }
 function populateSelect(sel, values, withAll){
   const cur = sel.value;
@@ -1829,6 +1873,9 @@ function garantirEstruturas(){
   DB.refugos = DB.refugos || [];
   DB.paradas = DB.paradas || [];
   DB.removidasComProducao = DB.removidasComProducao || [];
+  DB.comprasAbertas = DB.comprasAbertas || [];        // pedidos de compra em aberto (Planejamento de Materiais)
+  DB.paramMateriais = DB.paramMateriais || [];        // estoque de segurança e prazo por item
+  DB.gruposReposicao = DB.gruposReposicao || [];      // grupos de reposição (vários códigos somados)
 }
 const nomeLocalGranel = id => { const l = (DB.locaisGranel||[]).find(x=>x.id===id); return l ? l.nome : ''; };
 function renderLocais(){
@@ -2172,9 +2219,9 @@ const IMPORT_DEFS = {
     ],
     template:['Número do Pedido','Item','Quantidade','Data de Entrega','Cliente','Lote','Data do Pedido'],
     example:[
-      ['PED-5010','PA-1001','400','31/12/2026','Cliente Exemplo','L001','01/12/2026'],
-      ['PED-5010','PA-1002','120','31/12/2026','Cliente Exemplo','L002','01/12/2026'],
-      ['PED-5011','PA-1003','250','15/01/2027','Outro Cliente','','05/12/2026'],
+      ['5010','PA-1001','400','31/12/2026','Cliente Exemplo','L001','01/12/2026'],
+      ['5010','PA-1002','120','31/12/2026','Cliente Exemplo','L002','01/12/2026'],
+      ['5011','PA-1003','250','15/01/2027','Outro Cliente','','05/12/2026'],
     ],
   },
   prioridades: {
@@ -2223,6 +2270,12 @@ function parseNumberFlexible(v){
   }
   const n = parseFloat(s);
   return isNaN(n) ? undefined : n;
+}
+// data real do calendário (rejeita 31/31/2027, 30/02/2026 etc.)
+function dataISOValida(s){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s)); if(!m) return false;
+  const a = +m[1], mo = +m[2], d = +m[3], dt = new Date(Date.UTC(a, mo-1, d));
+  return dt.getUTCFullYear()===a && dt.getUTCMonth()===mo-1 && dt.getUTCDate()===d;
 }
 function parseDateFlexible(v){
   if(v==null || v==='') return '';
@@ -2286,9 +2339,18 @@ function mapRow(rawRow, def){
     for(const [nk, v] of normalizedEntries){
       if(col.aliases.includes(nk)){ val = v; break; }
     }
-    if((val===undefined || val==='') && col.required){ missing.push(col.field); }
-    if(col.type==='number') val = (val===undefined || val==='') ? undefined : parseNumberFlexible(val);
-    if(col.type==='date') val = parseDateFlexible(val);
+    const vazio = (val===undefined || val==='');
+    if(vazio && col.required){ missing.push(col.field); }
+    if(col.type==='number'){
+      const bruto = val; val = vazio ? undefined : parseNumberFlexible(val);
+      // campo numérico OBRIGATÓRIO com texto (ex.: "PED-9001" onde se espera 9001): recusa a linha em vez de gravar "indefinido" em silêncio
+      if(!vazio && val===undefined && col.required) missing.push(`${col.field} (o valor "${String(bruto).slice(0,30)}" não é um número)`);
+    }
+    if(col.type==='date'){
+      const bruto = val; val = parseDateFlexible(val);
+      // data que não existe no calendário (ex.: 31/31/2027) ou texto que não é data: recusa a linha em vez de gravar lixo
+      if(val!=='' && !dataISOValida(val)){ missing.push(`${col.field} (o valor "${String(bruto).slice(0,30)}" não é uma data válida)`); val = ''; }
+    }
     out[col.field] = val;
   });
   return {out, missing};
@@ -2320,7 +2382,7 @@ async function runImport(kind, inputId, modeId, reportId){
     if(mode==='replace') DB.items = [];
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
-      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes: ${missing.join(', ')}`}); errors++; return; }
+      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       // A coluna "Capacidade Máxima do Lote" vem em UNIDADES do item (nº de caixas, tambores, IBCs
       // etc. por lote), não em litros — confirmado com a Menzoil batendo com a capacidade diária de
       // cada recurso em praticamente todos os itens (ex.: 540 caixas x 22,704L = ~12.260L). Sempre
@@ -2357,7 +2419,7 @@ async function runImport(kind, inputId, modeId, reportId){
     if(mode==='replace') DB.recipes = [];
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
-      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes: ${missing.join(', ')}`}); errors++; return; }
+      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       if(!itemByCode(out.product)){ report.push({line:idx+2, status:'error', msg:`Produto ${out.product} não encontrado nos Itens.`}); errors++; return; }
       if(!itemByCode(out.material)){ report.push({line:idx+2, status:'error', msg:`Insumo ${out.material} não encontrado nos Itens.`}); errors++; return; }
       const existing = DB.recipes.find(r=>r.product===out.product && r.material===out.material);
@@ -2375,7 +2437,7 @@ async function runImport(kind, inputId, modeId, reportId){
     const agregados = new Map();
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
-      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes: ${missing.join(', ')}`}); errors++; return; }
+      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       if(!itemByCode(out.itemCode)){ report.push({line:idx+2, status:'error', msg:`Item ${out.itemCode} não encontrado nos Itens.`}); errors++; return; }
       const lote = out.lote ? String(out.lote) : '';
       const chave = out.orderNo+'|'+out.itemCode+'|'+lote;
@@ -2413,7 +2475,7 @@ async function runImport(kind, inputId, modeId, reportId){
   if(kind==='estoque'){
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
-      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes: ${missing.join(', ')}`}); errors++; return; }
+      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       const existing = itemByCode(out.itemCode);
       if(!existing){ report.push({line:idx+2, status:'error', msg:`Item ${out.itemCode} não encontrado — cadastre-o antes de importar o estoque.`}); errors++; return; }
       const stockVal = out.stock ?? 0; // planilha em branco = sem estoque (0), não é erro
@@ -2428,7 +2490,7 @@ async function runImport(kind, inputId, modeId, reportId){
     let algumaLinhaValida = false;
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
-      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes: ${missing.join(', ')}`}); errors++; return; }
+      if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       if(!itemByCode(out.itemCode)){ report.push({line:idx+2, status:'error', msg:`Item ${out.itemCode} não encontrado nos Itens.`}); errors++; return; }
       algumaLinhaValida = true;
       const existing = DB.prioridades.find(p=>p.customer===out.customer && p.itemCode===out.itemCode);
@@ -2444,6 +2506,10 @@ async function runImport(kind, inputId, modeId, reportId){
       }
     });
     if(!algumaLinhaValida) DB.prioridadeBatchCounter--; // nenhuma linha válida: não "gasta" um número de lote à toa
+  }
+  if(['compras','parametros','gruposrep'].includes(kind)){       // Planejamento de Materiais
+    const RM = importarMateriais(kind, rawRows, def, mode);
+    RM.report.forEach(x=>report.push(x)); added += RM.added; updated += RM.updated; errors += RM.errors;
   }
 
   document.getElementById(reportId).innerHTML = `
@@ -2462,6 +2528,7 @@ async function runImport(kind, inputId, modeId, reportId){
   populateListFilters(); populateDashFilters();
   if(cadActive) renderCadastros();
   if(document.getElementById('page-prioridades')?.classList.contains('active')) renderPrioridades();
+  if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
   persistDB();
 }
 
@@ -2471,6 +2538,9 @@ function renderImportacao(){
     {kind:'receitas', title:'Receitas', desc:'Consumo de cada insumo por unidade do produto acabado. Produto e Insumo precisam existir no cadastro de Itens.', showMode:true},
     {kind:'pedidos', title:'Carteira de Pedidos em Aberto', desc:'Pedidos a atender. O Item precisa existir no cadastro de Itens. Para um pedido com vários itens, repita o mesmo "Número do Pedido" em uma linha para cada item.', showMode:true},
     {kind:'estoque', title:'Estoque Atual', desc:'Atualiza somente o saldo de estoque dos itens já cadastrados, pelo código do item.', showMode:false},
+    {kind:'compras', title:'Pedidos de Compra em Aberto', desc:'Entregas de insumos programadas: pedido, item, quantidade e data prevista de chegada. A cada importação a lista é SUBSTITUÍDA (os pedidos já recebidos saem do ERP). Data anterior a hoje conta como chegando hoje. Alimenta o Planejamento de Materiais.', showMode:false},
+    {kind:'parametros', title:'Estoque de Segurança e Prazo de Entrega', desc:'Por item: estoque de segurança e prazo de entrega em dias corridos. Célula em branco não apaga o valor que já existe. Alimenta o Planejamento de Materiais.', showMode:true},
+    {kind:'gruposrep', title:'Grupos de Reposição', desc:'Vários códigos analisados SOMADOS (estoque, consumo, entregas, segurança e prazo do grupo), como os aditivos da mesma família. Os itens do grupo deixam de ser analisados um a um. Liste os códigos separados por vírgula.', showMode:true},
   ];
   document.getElementById('importCards').innerHTML = specs.map(s=>{
     const def = IMPORT_DEFS[s.kind];
@@ -2684,7 +2754,11 @@ function planejarPedidoLinha(orderId){
 }
 // lógica central de planejamento manual — recebe os valores diretamente (não lê campos fixos do DOM),
 // reaproveitada tanto pela Montagem Manual quanto pela Lista Mestre.
-function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw){
+/* opts.juntar: só quando pedido explicitamente, soma o pedido em linhas que já existem do mesmo item+data+recurso (até o lote máximo).
+   Nas EDIÇÕES (planejar, adicionar linha, reprogramar pendência) o padrão é NÃO juntar: cada linha fica como a pessoa definiu, mesmo menor que o lote
+   máximo. O critério de agrupar por lote máximo continua valendo na GERAÇÃO AUTOMÁTICA do plano. Quantidade acima do lote máximo continua sendo dividida. */
+function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
+  const juntar = !!(opts && opts.juntar);
   const order = DB.orders.find(o=>o.id===orderId);
   if(!order){ alert('Pedido não encontrado.'); return; }
   const it = itemByCode(order.itemCode);
@@ -2701,10 +2775,9 @@ function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw){
   let restante = qtyUnitsTotal;
   let linhasCompletadas = 0, linhasCriadas = 0;
 
-  // 1) antes de criar linha nova, tenta ENCHER linhas já existentes do mesmo item+data+recurso que ainda
-  //    têm espaço — assim, uma única OP consegue atender esse pedido junto com outros já planejados ali,
-  //    em vez de sempre abrir uma linha separada por pedido.
-  const linhasComEspaco = DB.plan
+  // 1) (só com opts.juntar) antes de criar linha nova, tenta ENCHER linhas já existentes do mesmo item+data+recurso que ainda
+  //    têm espaço — assim, uma única OP consegue atender esse pedido junto com outros já planejados ali.
+  const linhasComEspaco = !juntar ? [] : DB.plan
     .filter(p=> p.itemCode===it.code && p.date===date && p.resource===resource && p.batchUnits < maxBatchUnits && !linhaProtegida(p))
     .sort((a,b)=> (maxBatchUnits-a.batchUnits) - (maxBatchUnits-b.batchUnits)); // preenche primeiro quem tem menos espaço livre
 
@@ -3200,7 +3273,7 @@ function reprogramarPendenciaCore(orderId, date, resource, qtyRaw){
   comJustificativaSeNecessario(`reprogramar ${qty} ${it.uom} do pedido ${order.orderNo} para ${fmtDate(date)} (${resource})`, (just)=> autorizado(()=>{
     retiradas.forEach(({p,t})=> retirarDoPedidoDaLinha(p, order, t, just));
     DB.plan = DB.plan.filter(p=>p.batchUnits>0.0001);        // linha que ficou vazia sai do plano
-    planejarPedidoLinhaCore(orderId, date, resource, qty);  // cria/junta a linha na nova data (respeita a capacidade máxima do lote)
+    planejarPedidoLinhaCore(orderId, date, resource, qty);  // cria a linha na nova data (sem juntar a linhas existentes; acima do lote máximo, divide)
     showToast(`↻ ${fmtL(qty)} ${it.uom} do pedido ${order.orderNo} reprogramado(s) para ${fmtDate(date)}.`);
   }));
 }
@@ -4235,6 +4308,7 @@ function runGeneratePlan(escopo){
             aplicacao: escolhida.aplicacao,
             opNumber: prev? prev.opNumber : '',
             opGranelNumber: prev? prev.opGranelNumber : '',
+            ...(prev && Array.isArray(prev.loteManual) ? {loteManual: prev.loteManual} : {}),   // lote editado na Lista Mestre sobrevive à regeneração do plano
             turno1: prev? prev.turno1 : null,
             turno2: prev? prev.turno2 : null,
             turno3: prev? prev.turno3 : null,
@@ -4386,7 +4460,7 @@ function renderPlano(){
                   String(a.orderNo).localeCompare(String(b.orderNo), undefined, {numeric:true})
                 ).map(l=>{
                 const it = itemByCode(l.itemCode);
-                const lotesArr = l.lotes && l.lotes.length ? l.lotes : (getOrderForPlanLine(l)?.lotes || []);
+                const lotesArr = lotesDaLinha(l);
                 const lotesTxt = lotesArr.length ? ` · Lote${lotesArr.length>1?'s':''}: ${lotesArr.join(', ')}` : '';
                 const t1=l.turno1, t2=l.turno2, t3=l.turno3;
                 const totalUnits = l.actualQtyUnits;
@@ -4542,13 +4616,12 @@ function renderLista(){
       const gTxtP = String(p.opGranelNumber||'').trim(), gP = gTxtP ? gmap.get(normaTxt(gTxtP)) : null, granelMulti = !!(gP && gP.itens.size>1);
       const refs = refPorLinha[p.id] || [], refTxt = refs.length ? refs.reduce((s,r)=>s+r.qty,0) : 0;
       const it = itemByCode(p.itemCode);
-      const lotesArrLM = p.lotes && p.lotes.length ? p.lotes : (getOrderForPlanLine(p)?.lotes || []);
-      const lotesTxt = lotesArrLM.length ? lotesArrLM.join(', ') : '—';
+      const lotesArrLM = lotesDaLinha(p), loteEditado = Array.isArray(p.loteManual);
       return __cab + `<tr>
         <td>${fmtDate(p.date)}${p.originalDate && p.originalDate!==p.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-top:2px" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span>` : ''}</td>
         <td><select style="min-width:150px"${attrTrava(p)} onchange="updateListaRecurso('${p.id}', this.value)">${DB.resources.map(r=>`<option value="${r.name}" ${r.name===p.resource?'selected':''}>${r.name}</option>`).join('')}</select></td>
         <td class="mono">${p.itemCode}${(()=>{ const pr=getPrioridadeResumoItem(p.itemCode); return pr ? ' '+prioridadeSelo(pr,{compacto:true}) : ''; })()}${p.changeLog && p.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline;white-space:nowrap" title="Clique para ver o histórico completo de alterações" onclick="showChangeLogModal('${p.id}')">🔔 ${p.changeLog.length} ▸</span>` : ''}</td><td style="white-space:normal;min-width:230px;max-width:330px;font-size:12px;line-height:1.35">${it?it.name:''}</td><td class="mono">${p.orderNo}</td>
-        <td class="mono" style="font-size:11px;color:var(--muted)">${lotesTxt}</td>
+        <td style="min-width:150px;white-space:nowrap"><input class="mono" style="font-size:11px;width:118px${loteEditado?';border-color:#B8590A':''}" value="${acessoEsc(lotesArrLM.join(', '))}" onchange="updateLoteLinha('${p.id}',this.value)" placeholder="—" title="Lote(s) desta linha. Para vários, separe por vírgula. Apague para deixar a linha sem lote.">${loteEditado?` <button type="button" class="btn btn-sm" style="padding:0 6px" title="Lote editado manualmente. Clique para voltar ao lote do pedido" onclick="restaurarLoteLinha('${p.id}')">↺</button>`:''}</td>
         <td class="mono">${fmtL(p.batchLiters)}</td>
         <td><input type="number" min="1" step="1" value="${p.batchUnits}" style="width:80px"${attrTrava(p)} onchange="updateListaQtd('${p.id}', this.value)"> ${it?it.uom:''}</td>
         <td>${p.bucket && p.bucket!=='limpo' ? `<span class="badge warn">${bucketLabel(p.bucket)}</span>` : '—'}${p.viavel===false?` <span class="badge danger" style="cursor:pointer;text-decoration:underline" title="Clique para ver o que falta" onclick="showMissingInputsModal('${p.id}')">estoque insuf. ▸</span>`:''}</td>
@@ -4781,19 +4854,23 @@ function infoRefugo(r){
 }
 function refugosFiltrados(){
   const g = id => document.getElementById(id).value;
-  const de = g('rgDe'), ate = g('rgAte'), rec = filtroValores('rgRecurso'), item = filtroValores('rgItem'), tur = filtroValores('rgTurno'), op = normaTxt(g('rgOp').trim());
+  const de = g('rgDe'), ate = g('rgAte'), rec = filtroValores('rgRecurso'), item = filtroValores('rgItem'), desc = filtroValores('rgDescricao'), tur = filtroValores('rgTurno'), op = normaTxt(g('rgOp').trim());
   return (DB.refugos||[]).map(infoRefugo).filter(x=>
     (!de||x.r.date>=de) && (!ate||x.r.date<=ate) && (!rec.length||rec.includes(x.resource)) && (!item.length||item.includes(x.r.itemCode)) &&
+    (!desc.length||desc.includes(x.it?x.it.name:'')) &&
     (!tur.length||tur.includes(String(x.r.turno))) && (!op||normaTxt(x.op).includes(op)));
 }
 function clearRefugosFiltros(){
-  ['rgDe','rgAte','rgRecurso','rgItem','rgTurno','rgOp'].forEach(id=>document.getElementById(id).value='');
+  ['rgDe','rgAte','rgRecurso','rgItem','rgDescricao','rgTurno','rgOp'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('rgAgrupar').value = 'dia'; renderRefugos();
 }
 function renderRefugos(){
   const pg = document.getElementById('page-refugos'); if(!pg || !pg.classList.contains('active')) return;
   populateSelect(document.getElementById('rgRecurso'), DB.resources.map(r=>r.name), true);
-  populateSelect(document.getElementById('rgItem'), [...new Set((DB.refugos||[]).map(r=>r.itemCode))].sort(), true);
+  const codigosRef = [...new Set((DB.refugos||[]).map(r=>r.itemCode))].sort(), travaCod = travaDoFiltro('rgItem');
+  populateSelect(document.getElementById('rgItem'), codigosRef, true);
+  // descrições dos itens que têm refugo (respeita a trava de item do usuário); montadas por DOM porque descrição pode ter aspas ou "&"
+  populateSelectSeguro(document.getElementById('rgDescricao'), [...new Set(codigosRef.filter(c=>!travaCod||travaCod.includes(c)).map(c=>{ const i = itemByCode(c); return i ? i.name : ''; }).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
   const agr = document.getElementById('rgAgrupar').value || 'dia';
   const regs = refugosFiltrados();
   const nomeAgr = {dia:'Dia', item:'Item', recurso:'Recurso', op:'Nº OP', granel:'Nº OP Granel', turno:'Turno', uom:'Unidade de medida'}[agr];
@@ -5077,6 +5154,26 @@ function updateTurnoData(id, turnoField, value){
   recalcularEfetivo(p);
   atualizarTelasAposApontamento();
 }
+/* ---------- Lote(s) da linha ----------
+   O lote normalmente vem do(s) pedido(s) da linha. Na Lista Mestre ele pode ser editado: o valor digitado fica em p.loteManual
+   (array; vazio = "sem lote", de propósito) e tem prioridade sobre o do pedido, que continua guardado e é o que "↺" restaura. */
+function lotesAutoLinha(p){ return (p.lotes && p.lotes.length) ? p.lotes : (getOrderForPlanLine(p)?.lotes || []); }
+function lotesDaLinha(p){ return Array.isArray(p.loteManual) ? p.loteManual : lotesAutoLinha(p); }
+function parseLotes(txt){ return [...new Set(String(txt==null?'':txt).split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean))]; }
+function updateLoteLinha(id, texto){
+  const p = DB.plan.find(x=>x.id===id); if(!p) return;
+  const antes = lotesDaLinha(p), novos = parseLotes(texto), auto = lotesAutoLinha(p);
+  if(novos.join('|')===antes.join('|')){ renderLista(); return; }                        // nada mudou (ex.: só espaços)
+  if(novos.join('|')===auto.join('|')) delete p.loteManual; else p.loteManual = novos;   // igual ao do pedido: volta a seguir o pedido
+  logMudancaPlano(p, 'Lote(s)', antes.join(', ')||'—', novos.join(', ')||'—', '');
+  renderLista(); renderVisaoDia(); persistDB();
+}
+function restaurarLoteLinha(id){
+  const p = DB.plan.find(x=>x.id===id); if(!p || !Array.isArray(p.loteManual)) return;
+  const antes = lotesDaLinha(p); delete p.loteManual;
+  logMudancaPlano(p, 'Lote(s)', antes.join(', ')||'—', lotesAutoLinha(p).join(', ')||'—', 'voltou ao lote do pedido');
+  renderLista(); renderVisaoDia(); persistDB();
+}
 function updatePlanField(id, field, value){
   const p = DB.plan.find(x=>x.id===id);
   if(!p) return;
@@ -5147,7 +5244,7 @@ function doPrint(){
             <tbody>
               ${linhas.map(p=>{
                 const it = itemByCode(p.itemCode);
-                const lotesArrPrint = p.lotes && p.lotes.length ? p.lotes : (getOrderForPlanLine(p)?.lotes || []);
+                const lotesArrPrint = lotesDaLinha(p);
                 const lotesTxt = lotesArrPrint.length ? lotesArrPrint.join(', ') : '—';
                 const contaminante = p.bucket && p.bucket!=='limpo' ? `<div class="tag-contam">⚠ ${bucketLabel(p.bucket)}</div>` : '';
                 const dataAlterada = p.originalDate && p.originalDate!==p.date ? `<div class="tag-data-alt">📅 data alterada (era ${fmtDate(p.originalDate)})</div>` : '';
@@ -6501,6 +6598,7 @@ const CATALOGO_CAMPOS = {
     {id:'quantidade',label:'Quantidade da linha',                 acoes:['updateListaQtd']},
     {id:'recurso',   label:'Recurso da linha',                    acoes:['updateListaRecurso']},
     {id:'op',        label:'Nº OP e OP Granel',                   acoes:[['updatePlanField',1,'opNumber'],['updatePlanField',1,'opGranelNumber']]},
+    {id:'lote',      label:'Lote(s) da linha',                    acoes:['updateLoteLinha','restaurarLoteLinha']},
     {id:'status',    label:'Status da linha',                     acoes:[['updatePlanField',1,'status']]},
     {id:'local',     label:'Localização do granel',               acoes:['updateLocalGranel']},
     {id:'refugo',    label:'Apontar refugo / perdas',             acoes:['abrirRefugoLinha','addRefugo','deleteRefugo']},
@@ -6538,6 +6636,9 @@ const CATALOGO_CAMPOS = {
     {id:'receitas',  label:'Importar receitas',                   acoes:[['runImport',0,'receitas']]},
     {id:'pedidos',   label:'Importar pedidos',                    acoes:[['runImport',0,'pedidos']]},
     {id:'estoque',   label:'Importar estoque',                    acoes:[['runImport',0,'estoque']]},
+    {id:'compras',   label:'Importar pedidos de compra em aberto', acoes:[['runImport',0,'compras']]},
+    {id:'parametros',label:'Importar estoque de segurança e prazos', acoes:[['runImport',0,'parametros']]},
+    {id:'gruposrep', label:'Importar grupos de reposição',         acoes:[['runImport',0,'gruposrep']]},
     {id:'backup',    label:'Restaurar backup dos dados',          acoes:['restaurarBackup']},
   ],
 };
@@ -6579,7 +6680,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel'];
 function instalarGuardas(){
@@ -7165,6 +7266,409 @@ function init(){
 }
 /*ONLINE_START*/
 /* =========================================================================
+   MOTOR DE MATERIAIS — projeção de estoque de insumos por data, alertas de falta e sugestão de compra.
+   Funções PURAS (sem tela, sem rede, sem alterar os dados de entrada): servem à ferramenta de planejamento e à de decisão de compra.
+
+   Regras (definidas pelo PCP):
+   • O estoque informado é o do DIA (hoje) e o ERP já baixou o que foi produzido: só entra no consumo o que AINDA FALTA PRODUZIR
+     (planejado − efetuado; linha "Concluído" não consome mais).
+   • Linha do plano com data anterior a hoje e ainda não produzida consome A PARTIR DE HOJE.
+   • Entradas = pedidos de compra em aberto, na data prevista de chegada.
+   • Prazo de entrega em DIAS CORRIDOS; prazo e estoque de segurança valem por item e, na falta, pelo grupo (não há fornecedor).
+   • Sugestão de compra = cobrir as faltas e repor o estoque de segurança: máx(0, segurança − menor saldo projetado no horizonte).
+   ========================================================================= */
+(function(raiz){
+  const DIA = 86400000;
+  const isoParaMs = iso => { const [a,m,d] = String(iso).slice(0,10).split('-').map(Number); return Date.UTC(a, m-1, d); };
+  const msParaIso = ms => new Date(ms).toISOString().slice(0,10);
+  const somaDias = (iso, n) => msParaIso(isoParaMs(iso) + n*DIA);
+  const difDias = (a, b) => Math.round((isoParaMs(a) - isoParaMs(b)) / DIA);          // a − b, em dias
+  const num = v => { const n = Number(v); return isFinite(n) ? n : 0; };
+  const K = v => String(v==null?'':v).trim().toLowerCase();                       // códigos são comparados sem diferenciar maiúsculas/minúsculas nem espaços (o cadastro do ERP mistura)
+  const arred = (v, c=2) => { const f = Math.pow(10, c); return Math.round((v + Number.EPSILON) * f) / f; };
+  const sobe = (v, c=2) => { const f = Math.pow(10, c); return Math.ceil(v * f - 1e-9) / f; };
+
+  // quanto da linha ainda precisa ser produzido (e, portanto, ainda vai consumir material)
+  function restanteLinha(p){
+    if(!p) return 0;
+    if(p.status === 'Concluído') return 0;
+    return Math.max(0, num(p.batchUnits) - num(p.actualQtyUnits));
+  }
+
+  function mapaParametro(lista, campoValor){
+    const porItem = new Map(), porGrupo = new Map();
+    (lista||[]).forEach(x=>{
+      if(!x || x.chave===undefined || x.chave===null || String(x.chave).trim()==='') return;
+      const alvo = x.tipo === 'grupo' ? porGrupo : porItem;
+      alvo.set(String(x.chave).trim().toLowerCase(), num(x[campoValor]));
+    });
+    return (codigo, grupo) => {
+      const c = String(codigo||'').trim().toLowerCase(), g = String(grupo||'').trim().toLowerCase();
+      if(porItem.has(c)) return { valor:porItem.get(c), origem:'item' };
+      if(g && porGrupo.has(g)) return { valor:porGrupo.get(g), origem:'grupo' };
+      return null;
+    };
+  }
+
+  /* entrada: { hoje, plano, receitas, itens, compras, prazos, seguranca, opcoes }
+       plano:      [{ id, date, itemCode, batchUnits, actualQtyUnits, status }]
+       receitas:   [{ product, material, qtyPerUnit }]
+       itens:      [{ code, name, group, uom, stock }]
+       compras:    [{ id, item, qtd, data, pedido, fornecedor? }]      (pedidos de compra em aberto)
+       prazos:     [{ tipo:'item'|'grupo', chave, dias }]
+       seguranca:  [{ tipo:'item'|'grupo', chave, qtd }]
+       gruposReposicao: [{ chave, itens:[códigos], seguranca, prazo }]   (vários códigos analisados SOMADOS: estoque, consumo, entregas, segurança e prazo do grupo)
+       opcoes:     { fim?: 'AAAA-MM-DD' (horizonte; padrão = fim do plano), pedidoAtrasado?: 'hoje'|'ignorar' }                    */
+  function projetarMateriais(entrada){
+    const E = entrada || {};
+    const hoje = E.hoje, opc = E.opcoes || {};
+    if(!hoje) throw new Error('projetarMateriais: informe "hoje" (AAAA-MM-DD).');
+    const plano = E.plano || [], receitas = E.receitas || [], itens = E.itens || [], compras = E.compras || [];
+    const avisos = [];
+    const itemPor = new Map(itens.map(i=>[K(i.code), i]));
+    const receitaPor = new Map();
+    const codigoOriginal = new Map();     // chave normalizada -> código como veio (para exibir quando o item não tem cadastro)
+    receitas.forEach(r=>{ const k = K(r.product); if(!receitaPor.has(k)) receitaPor.set(k, []); receitaPor.get(k).push({ material:String(r.material).trim(), q:num(r.qtyPerUnit) }); if(!codigoOriginal.has(K(r.material))) codigoOriginal.set(K(r.material), String(r.material).trim()); });
+    const prazoDe = mapaParametro(E.prazos, 'dias'), segDe = mapaParametro(E.seguranca, 'qtd');
+    // grupos de reposição: vários códigos analisados como UM material (um código só pertence a um grupo)
+    const grupos = (E.gruposReposicao||[]).filter(g=>g && g.chave && Array.isArray(g.itens));
+    const grupoPor = new Map(grupos.map(g=>[String(g.chave), g])), grupoDe = new Map();
+    grupos.forEach(g=>g.itens.forEach(c=>{ const k = K(c); if(k && !grupoDe.has(k)) grupoDe.set(k, g); }));
+    const chaveMat = cod => { const g = grupoDe.get(K(cod)); return g ? 'G:'+g.chave : 'I:'+K(cod); };
+
+    // 1) consumo por material e por dia (só o que falta produzir; atrasadas consomem a partir de hoje)
+    const consumo = new Map();         // material -> Map(data -> qtd)
+    let ultimaData = hoje, linhasSemReceita = new Set(), linhasConsideradas = 0;
+    plano.forEach(p=>{
+      const falta = restanteLinha(p); if(falta <= 0) return;
+      const rec = receitaPor.get(K(p.itemCode));
+      if(!rec || !rec.length){ linhasSemReceita.add(String(p.itemCode)); return; }
+      linhasConsideradas++;
+      const data = p.date && p.date >= hoje ? p.date : hoje;
+      if(data > ultimaData) ultimaData = data;
+      rec.forEach(r=>{
+        const k = chaveMat(r.material);
+        if(!consumo.has(k)) consumo.set(k, new Map());
+        const m = consumo.get(k); m.set(data, (m.get(data)||0) + r.q * falta);
+      });
+    });
+    if(linhasSemReceita.size) avisos.push({ tipo:'sem_receita', texto:`${linhasSemReceita.size} item(ns) do plano sem receita cadastrada: não entram no cálculo.`, itens:[...linhasSemReceita].sort() });
+
+    // 2) entradas (pedidos de compra em aberto)
+    const entradas = new Map();        // material -> Map(data -> qtd)
+    const pedidosPor = new Map();
+    let atrasados = 0;
+    compras.forEach(c=>{
+      const q = num(c.qtd); if(q <= 0 || !c.item) return;
+      let data = c.data;
+      const vencido = !data || data < hoje;
+      if(vencido){
+        atrasados++;
+        if(opc.pedidoAtrasado === 'ignorar') return;
+        data = hoje;                   // atrasado: assume que chega hoje (e sinaliza)
+      }
+      const k = chaveMat(c.item);
+      if(!entradas.has(k)) entradas.set(k, new Map());
+      const m = entradas.get(k); m.set(data, (m.get(data)||0) + q);
+      if(!pedidosPor.has(k)) pedidosPor.set(k, []);
+      pedidosPor.get(k).push({ id:c.id, item:c.item, pedido:c.pedido, qtd:q, data:c.data||'', atrasado:vencido });
+      if(data > ultimaData) ultimaData = data;
+    });
+    if(atrasados) avisos.push({ tipo:'pedido_atrasado', texto:`${atrasados} pedido(s) de compra com data prevista anterior a hoje (ou sem data): ${opc.pedidoAtrasado==='ignorar'?'ignorados':'considerados como chegando hoje'}.` });
+
+    // 3) horizonte
+    let fim = opc.fim && opc.fim >= hoje ? opc.fim : ultimaData;
+    if(difDias(fim, hoje) > 730){ fim = somaDias(hoje, 730); avisos.push({ tipo:'horizonte', texto:'Horizonte limitado a 730 dias.' }); }
+    const dias = []; for(let d = hoje; d <= fim; d = somaDias(d, 1)) dias.push(d);
+
+    // 4) materiais a analisar: os que têm consumo, mais os que já estão abaixo do estoque de segurança
+    const codigos = new Set(consumo.keys());
+    const estoqueGrupo = g => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? num(i.stock) : 0); }, 0);
+    itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && num(i.stock) < s.valor) codigos.add('I:'+K(i.code)); });
+    grupos.forEach(g=>{ if(num(g.seguranca) > 0 && estoqueGrupo(g) < num(g.seguranca)) codigos.add('G:'+g.chave); });
+
+    const materiais = [];
+    codigos.forEach(chaveInterna=>{
+      const ehGrupo = chaveInterna.startsWith('G:'), cod = chaveInterna.slice(2);
+      const grp = ehGrupo ? grupoPor.get(cod) : null, it = ehGrupo ? null : itemPor.get(cod);
+      const membros = ehGrupo ? grp.itens.map(c=>{ const i = itemPor.get(K(c)); return i ? i.code : String(c).trim(); }) : null;
+      const estoque = ehGrupo ? estoqueGrupo(grp) : (it ? num(it.stock) : 0);
+      const seg = ehGrupo ? { valor:num(grp.seguranca), origem:'grupo de reposição' } : segDe(cod, it && it.group);
+      const prz = ehGrupo ? (grp.prazo === undefined || grp.prazo === null || grp.prazo === '' ? null : { valor:num(grp.prazo), origem:'grupo de reposição' }) : prazoDe(cod, it && it.group);
+      const seguranca = seg ? seg.valor : 0, prazo = prz ? prz.valor : null;
+      const cons = consumo.get(chaveInterna) || new Map(), ent = entradas.get(chaveInterna) || new Map();
+      let saldo = estoque, minSaldo = Infinity, dataMin = hoje, primeiraFalta = null, gatilho = null, consTot = 0, entTot = 0;
+      const serie = dias.map(d=>{
+        const c = cons.get(d)||0, e = ent.get(d)||0; consTot += c; entTot += e;
+        saldo = saldo + e - c;
+        if(saldo < minSaldo - 1e-9){ minSaldo = saldo; dataMin = d; }
+        if(primeiraFalta === null && saldo < -1e-9) primeiraFalta = d;
+        if(gatilho === null && saldo < seguranca - 1e-9) gatilho = d;
+        return { data:d, consumo:arred(c), entradas:arred(e), saldo:arred(saldo) };
+      });
+      if(!isFinite(minSaldo)) minSaldo = estoque;
+      const situacao = primeiraFalta ? 'falta' : (gatilho ? 'abaixo_minimo' : 'ok');
+      // prazo e urgência
+      let dataLimite = null, atrasoDias = 0, chegadaMaisCedo = null, rupturaDias = 0, acao = 'ok';
+      if(gatilho){
+        const p = prazo === null ? 0 : prazo;
+        dataLimite = somaDias(gatilho, -p);
+        chegadaMaisCedo = somaDias(hoje, p);
+        atrasoDias = Math.max(0, difDias(hoje, dataLimite));
+        if(primeiraFalta && difDias(chegadaMaisCedo, primeiraFalta) > 0){ rupturaDias = difDias(chegadaMaisCedo, primeiraFalta); acao = 'ruptura_inevitavel'; }
+        else if(atrasoDias > 0) acao = 'comprar_ja';
+        else acao = 'comprar_ate';
+      }
+      const qtdSugerida = gatilho ? sobe(Math.max(0, seguranca - minSaldo)) : 0;
+      const umGrupo = ehGrupo ? ((membros.map(c=>itemPor.get(K(c))).find(Boolean)||{}).uom || '') : '';
+      const codExibe = ehGrupo ? cod : (it ? it.code : (codigoOriginal.get(cod) || cod));
+      materiais.push({
+        id: ehGrupo ? chaveInterna : 'I:'+codExibe, tipo: ehGrupo ? 'grupo' : 'item', membros: membros,
+        codigo:codExibe, nome: ehGrupo ? ('Grupo '+cod) : (it ? it.name : '(item sem cadastro)'), grupo: it ? (it.group||'') : '', uom: ehGrupo ? umGrupo : (it ? (it.uom||'') : ''), cadastrado: ehGrupo ? true : !!it,
+        estoqueAtual:arred(estoque), seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
+        prazoDias:prazo, prazoOrigem: prz ? prz.origem : null, semPrazo: prazo === null,
+        consumoTotal:arred(consTot), entradasTotal:arred(entTot), saldoFinal:arred(saldo), minSaldo:arred(minSaldo), dataMinSaldo:dataMin,
+        primeiraFalta, dataGatilho:gatilho, situacao, acao, dataLimitePedido:dataLimite, atrasoDias, chegadaMaisCedo, rupturaDias,
+        qtdSugerida, pedidos:(pedidosPor.get(chaveInterna)||[]).slice(), serie,
+      });
+    });
+    const peso = { ruptura_inevitavel:0, comprar_ja:1, comprar_ate:2, ok:3 };
+    materiais.sort((a,b)=> peso[a.acao]-peso[b.acao] || String(a.dataLimitePedido||'9999').localeCompare(String(b.dataLimitePedido||'9999')) || a.codigo.localeCompare(b.codigo));
+    const cont = k => materiais.filter(m=>m.acao===k).length;
+    return {
+      hoje, fim, dias:dias.length, avisos, materiais,
+      resumo:{ analisados:materiais.length, ok:cont('ok'), comprarAte:cont('comprar_ate'), comprarJa:cont('comprar_ja'), rupturaInevitavel:cont('ruptura_inevitavel'),
+               comFalta:materiais.filter(m=>m.situacao==='falta').length, semPrazo:materiais.filter(m=>m.semPrazo && m.acao!=='ok').length, linhasConsideradas },
+    };
+  }
+
+  // compara dois cenários (ex.: plano real x plano simulado): o que piora, o que melhora, o que passa a faltar
+  function compararCenarios(base, alt){
+    const pb = new Map(base.materiais.map(m=>[m.id||m.codigo, m])), pa = new Map(alt.materiais.map(m=>[m.id||m.codigo, m]));
+    const ordem = { ok:0, abaixo_minimo:1, falta:2 };
+    const todos = new Set([...pb.keys(), ...pa.keys()]), saida = [];
+    todos.forEach(c=>{
+      const b = pb.get(c), a = pa.get(c);
+      const sb = b ? b.situacao : 'ok', sa = a ? a.situacao : 'ok';
+      const minB = b ? b.minSaldo : null, minA = a ? a.minSaldo : null;
+      const d = ordem[sa] - ordem[sb];
+      if(d !== 0 || (minB !== null && minA !== null && Math.abs(minA - minB) > 1e-9) || (!b && a) || (b && !a)){
+        saida.push({ id:c, codigo:(a||b).codigo, tipo:(a||b).tipo, nome:(a||b).nome, antes:sb, depois:sa, minAntes:minB, minDepois:minA,
+          variacao: d > 0 ? 'piora' : d < 0 ? 'melhora' : 'muda', novaFalta: sb !== 'falta' && sa === 'falta', primeiraFaltaDepois: a ? a.primeiraFalta : null, qtdSugeridaAntes: b ? b.qtdSugerida : 0, qtdSugeridaDepois: a ? a.qtdSugerida : 0 });
+      }
+    });
+    saida.sort((x,y)=> (y.novaFalta - x.novaFalta) || ({piora:0,muda:1,melhora:2}[x.variacao] - {piora:0,muda:1,melhora:2}[y.variacao]) || String(x.codigo).localeCompare(String(y.codigo)));
+    return { alterados:saida, novasFaltas:saida.filter(x=>x.novaFalta).length, pioram:saida.filter(x=>x.variacao==='piora').length, melhoram:saida.filter(x=>x.variacao==='melhora').length };
+  }
+
+  const API = { projetarMateriais, compararCenarios, restanteLinha, somaDias, difDias };
+  if(typeof module !== 'undefined' && module.exports) module.exports = API;
+  raiz.MateriaisMotor = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* =========================================================================
+   PLANEJAMENTO DE MATERIAIS — tela, importações e exportação (usa o MateriaisMotor)
+   Dados novos (todos sincronizados entre os usuários, como o resto):
+     DB.comprasAbertas   pedidos de compra em aberto   {id, pedido, itemCode, qty, data, fornecedor, destino}
+     DB.paramMateriais   estoque de segurança e prazo por item {id(=item), item, seguranca, prazo}
+     DB.gruposReposicao  grupos analisados somados     {id(=chave), chave, itens[], seguranca, prazo}
+   ========================================================================= */
+IMPORT_DEFS.compras = {
+  label:'Pedidos de Compra em Aberto', key:'pedido',
+  cols:[
+    {field:'pedido', required:false, aliases:['numero do pedido de compra','n do pedido de compra','pedido de compra','numero do pc','n do pc','pc','numero da entrega']},
+    {field:'itemCode', required:true, aliases:['item','codigo do item','insumo','material','codigo','produto']},
+    {field:'qty', required:true, type:'number', aliases:['quantidade','qtd']},
+    {field:'dueDate', required:true, type:'date', aliases:['data prevista','data prevista de chegada','previsao de entrega','previsao de chegada','data de entrega','entrega','data prevista de entrega']},
+    {field:'fornecedor', required:false, aliases:['fornecedor']},
+    {field:'destino', required:false, aliases:['destino','local de entrega','local']},
+  ],
+  template:['Número do Pedido de Compra','Item','Quantidade','Data Prevista','Fornecedor','Destino'],
+  example:[['PC-0001','INS-EXEMPLO-1','1000','15/11/2026','Fornecedor Exemplo','Depósito Exemplo'],['PC-0002','INS-EXEMPLO-2','50000','20/11/2026','','']],
+};
+IMPORT_DEFS.parametros = {
+  label:'Estoque de Segurança e Prazo por Item', key:'item',
+  cols:[
+    {field:'item', required:true, aliases:['item','codigo do item','insumo','material','codigo','chave']},
+    {field:'seguranca', required:false, type:'number', aliases:['estoque de seguranca','estoque seguranca','estoque minimo','seguranca','es']},
+    {field:'prazo', required:false, type:'number', aliases:['prazo de entrega (dias corridos)','prazo de entrega','prazo de entrega (dias)','prazo','lead time','lead time (dias)']},
+  ],
+  template:['Item','Estoque de Segurança','Prazo de Entrega (dias corridos)'],
+  example:[['INS-EXEMPLO-1','250','14'],['INS-EXEMPLO-2','20000','14']],
+};
+IMPORT_DEFS.gruposrep = {
+  label:'Grupos de Reposição', key:'chave',
+  cols:[
+    {field:'chave', required:true, aliases:['grupo','grupo de reposicao','chave','familia']},
+    {field:'itens', required:true, aliases:['itens','codigos','itens do grupo','codigos dos itens','insumos']},
+    {field:'seguranca', required:false, type:'number', aliases:['estoque de seguranca','estoque seguranca','estoque minimo','seguranca','es']},
+    {field:'prazo', required:false, type:'number', aliases:['prazo de entrega (dias corridos)','prazo de entrega','prazo de entrega (dias)','prazo','lead time','lead time (dias)']},
+  ],
+  template:['Grupo','Itens','Estoque de Segurança','Prazo de Entrega (dias corridos)'],
+  example:[['FAMÍLIA EXEMPLO','INS-EXEMPLO-1, INS-EXEMPLO-3','500','14']],
+};
+
+// importação dos três tipos (chamada por runImport); devolve {added, updated, errors, report}
+function importarMateriais(kind, rawRows, def, mode){
+  const rep = [], R = {added:0, updated:0, errors:0, report:rep};
+  const erro = (i, msg)=>{ rep.push({line:i+2, status:'error', msg}); R.errors++; };
+  const mapa = raw => mapRow(raw, def);
+  if(kind==='compras'){
+    const novos = [], antes = (DB.comprasAbertas||[]).length;
+    rawRows.forEach((raw,i)=>{
+      const {out, missing} = mapa(raw);
+      if(missing.length) return erro(i, `Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`);
+      if(!out.dueDate) return erro(i, 'Data prevista inválida (use dd/mm/aaaa).');
+      if(!(out.qty > 0)) return erro(i, 'A quantidade deve ser maior que zero.');
+      if(!itemByCode(out.itemCode)) return erro(i, `Item ${out.itemCode} não encontrado nos Itens — cadastre-o antes de importar.`);
+      const venc = out.dueDate < todayISO();
+      const cad = itemByCode(out.itemCode);          // grava o código como está no cadastro (o ERP mistura maiúsculas e minúsculas)
+      novos.push({id:`${out.pedido||'PC'}|${cad.code}|${i+2}`, pedido:String(out.pedido||''), itemCode:cad.code, qty:out.qty, data:out.dueDate, fornecedor:out.fornecedor||'', destino:out.destino||''});
+      rep.push({line:i+2, status:'ok', msg:`Pedido ${out.pedido||'(sem nº)'} — ${out.itemCode}: ${fmtL(out.qty)} em ${fmtDate(out.dueDate)}${venc?' (data vencida: conta como chegando hoje)':''}.`}); R.added++;
+    });
+    if(!novos.length){ rep.push({line:'—', status:'error', msg:`Nenhuma linha válida: a lista atual (${antes} pedido(s) de compra) foi MANTIDA.`}); R.errors++; return R; }
+    DB.comprasAbertas = novos;                                   // retrato do ERP: substitui a lista anterior (pedidos recebidos saem)
+    rep.push({line:'—', status:'update', msg:`Lista de pedidos de compra substituída: ${antes} anterior(es) → ${novos.length} novo(s).`}); R.updated++;
+    return R;
+  }
+  if(kind==='parametros'){
+    if(mode==='replace') DB.paramMateriais = [];
+    DB.paramMateriais = DB.paramMateriais || [];
+    rawRows.forEach((raw,i)=>{
+      const {out, missing} = mapa(raw);
+      if(missing.length) return erro(i, `Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`);
+      if(out.seguranca===undefined && out.prazo===undefined) return erro(i, 'Informe o estoque de segurança e/ou o prazo de entrega.');
+      if(!itemByCode(out.item)) return erro(i, `Item ${out.item} não encontrado nos Itens.`);
+      out.item = itemByCode(out.item).code;
+      const ex = DB.paramMateriais.find(p=>p.item===out.item);
+      if(ex){ if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo;     // célula em branco não apaga o valor existente
+        rep.push({line:i+2, status:'update', msg:`${out.item}: segurança ${fmtL(ex.seguranca||0)} · prazo ${ex.prazo??'—'} dia(s).`}); R.updated++; }
+      else{ DB.paramMateriais.push({id:out.item, item:out.item, seguranca:out.seguranca, prazo:out.prazo});
+        rep.push({line:i+2, status:'ok', msg:`${out.item}: segurança ${fmtL(out.seguranca||0)} · prazo ${out.prazo??'—'} dia(s).`}); R.added++; }
+    });
+    return R;
+  }
+  if(kind==='gruposrep'){
+    if(mode==='replace') DB.gruposReposicao = [];
+    DB.gruposReposicao = DB.gruposReposicao || [];
+    rawRows.forEach((raw,i)=>{
+      const {out, missing} = mapa(raw);
+      if(missing.length) return erro(i, `Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`);
+      const chave = String(out.chave).trim();
+      const itens = [...new Set(String(out.itens).split(/[,;|\n]+/).map(x=>x.trim().split(/\s+/)[0]).filter(Boolean).map(c=>{ const it = itemByCode(c); return it ? it.code : c; }))];
+      if(!itens.length) return erro(i, 'O grupo precisa de pelo menos um código de item.');
+      const semCad = itens.filter(c=>!itemByCode(c));
+      const emOutro = itens.filter(c=>DB.gruposReposicao.some(g=>g.chave!==chave && (g.itens||[]).includes(c)));
+      const aviso = (semCad.length ? ` · sem cadastro de item: ${semCad.join(', ')}` : '') + (emOutro.length ? ` · já em outro grupo (vale o primeiro): ${emOutro.join(', ')}` : '');
+      const ex = DB.gruposReposicao.find(g=>g.chave===chave);
+      if(ex){ ex.itens = itens; if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo;
+        rep.push({line:i+2, status:'update', msg:`Grupo ${chave}: ${itens.length} código(s)${aviso}.`}); R.updated++; }
+      else{ DB.gruposReposicao.push({id:chave, chave, itens, seguranca:out.seguranca, prazo:out.prazo});
+        rep.push({line:i+2, status:'ok', msg:`Grupo ${chave}: ${itens.length} código(s)${aviso}.`}); R.added++; }
+    });
+    return R;
+  }
+  return R;
+}
+
+/* ---------- cálculo e tela ---------- */
+let MATERIAIS_ULTIMO = null;
+function materiaisEntrada(){
+  const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  const par = DB.paramMateriais || [];
+  return { hoje:todayISO(), plano:DB.plan||[], receitas:DB.recipes||[], itens:DB.items||[],
+    compras:(DB.comprasAbertas||[]).map(c=>({id:c.id, item:c.itemCode, qtd:c.qty, data:c.data, pedido:c.pedido, fornecedor:c.fornecedor})),
+    prazos:par.filter(p=>p.prazo!==undefined && p.prazo!==null && p.prazo!=='').map(p=>({tipo:'item', chave:p.item, dias:p.prazo})),
+    seguranca:par.filter(p=>p.seguranca!==undefined && p.seguranca!==null && p.seguranca!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.seguranca})),
+    gruposReposicao:(DB.gruposReposicao||[]).map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo})),
+    opcoes:{ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje' } };
+}
+const MAT_ACAO = {
+  ruptura_inevitavel:{rot:'Ruptura inevitável', cls:'danger'},
+  comprar_ja:{rot:'Emitir pedido já', cls:'warn'},
+  comprar_ate:{rot:'Emitir pedido até a data', cls:'info'},
+  ok:{rot:'Sem ação', cls:'ok'},
+};
+function filtrarMateriais(lista){
+  const acao = filtroValores('matAcao'), grp = filtroValores('matGrupo');
+  const tipo = (document.getElementById('matTipo')||{}).value || '', busca = normaTxt(((document.getElementById('matBusca')||{}).value||'').trim());
+  return lista.filter(m=> (!acao.length || acao.includes(m.acao)) && (!grp.length || grp.includes(m.grupo)) && (!tipo || m.tipo===tipo) &&
+    (!busca || normaTxt(m.codigo+' '+m.nome+' '+(m.membros||[]).join(' ')).includes(busca)));
+}
+function renderMateriais(){
+  const pg = document.getElementById('page-materiais'); if(!pg || !pg.classList.contains('active')) return;
+  const entrada = materiaisEntrada(), r = MateriaisMotor.projetarMateriais(entrada); MATERIAIS_ULTIMO = r;
+  populateSelectSeguro(document.getElementById('matGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
+  // avisos de preparo
+  const av = [];
+  if(!(DB.plan||[]).length) av.push('Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.');
+  if(!(DB.paramMateriais||[]).length && !(DB.gruposReposicao||[]).length) av.push('Nenhum estoque de segurança ou prazo foi importado (cartões em <strong>Importação de Dados</strong>).');
+  if(!(DB.comprasAbertas||[]).length) av.push('Nenhum pedido de compra em aberto foi importado: o cálculo considera só o estoque atual.');
+  r.avisos.forEach(a=>{ if(a.tipo==='pedido_atrasado') av.push(a.texto); if(a.tipo==='sem_receita') av.push(`${a.itens.length} item(ns) do plano sem receita (não entram no cálculo): ${acessoEsc(a.itens.slice(0,6).join(', '))}${a.itens.length>6?'…':''}.`); });
+  const ctr = document.getElementById('matAviso'); ctr.style.display = av.length ? '' : 'none'; ctr.innerHTML = av.map(x=>'• '+x).join('<br>');
+  const R = r.resumo;
+  document.getElementById('matKpis').innerHTML = `
+    ${kpi('Materiais analisados', R.analisados, `${r.materiais.filter(m=>m.tipo==='grupo').length} grupo(s) de reposição`)}
+    ${kpi('Ruptura inevitável', R.rupturaInevitavel, R.rupturaInevitavel?'o prazo do fornecedor não evita a falta':'nenhuma', R.rupturaInevitavel?'down':'up')}
+    ${kpi('Emitir pedido já', R.comprarJa, R.comprarJa?'a data de emitir o pedido já passou':'nenhum', R.comprarJa?'down':'up')}
+    ${kpi('Emitir pedido até a data', R.comprarAte, `${R.comFalta} com falta no plano · ${R.semPrazo} sem prazo cadastrado`)}`;
+  const f = filtrarMateriais(r.materiais);
+  document.getElementById('matCount').textContent = `— ${f.length} de ${r.materiais.length}`;
+  const t = document.getElementById('tblMateriais');
+  t.innerHTML = `<thead><tr><th>Material</th><th>Tipo</th><th>UM</th><th>Estoque</th><th>Segurança</th><th>Prazo (d)</th><th>Consumo (plano)</th><th>Entradas</th><th>Menor saldo</th><th>1ª falta (saldo &lt; 0)</th><th title="Data em que o saldo projetado cruza o estoque de segurança: o material precisa estar no estoque até aqui">Precisa chegar até</th><th title="Precisa chegar até, menos o prazo de entrega: data limite para EMITIR o pedido de compra">Emitir pedido até</th><th title="Hoje mais o prazo de entrega: quando o material chega se o pedido for feito hoje">Chega em (se pedir hoje)</th><th>Situação</th><th>Sugerido</th></tr></thead><tbody>${
+    f.length ? f.map(m=>{ const a = MAT_ACAO[m.acao];
+      const sit = m.acao==='ok' ? (m.situacao==='ok' ? '' : '') : '';
+      return `<tr style="cursor:pointer" data-id="${acessoEsc(m.id)}" onclick="abrirDetalheMaterial(this.dataset.id)" title="Clique para ver a projeção dia a dia">
+        <td><strong class="mono">${acessoEsc(m.codigo)}</strong><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(m.nome)}</div></td>
+        <td>${m.tipo==='grupo' ? `<span class="badge info">Grupo · ${m.membros.length}</span>` : 'Item'}</td><td>${acessoEsc(m.uom)}</td>
+        <td class="mono">${fmtL(m.estoqueAtual)}</td><td class="mono">${fmtL(m.seguranca)}</td>
+        <td class="mono">${m.semPrazo ? '<span class="badge warn" title="Sem prazo de entrega cadastrado">—</span>' : m.prazoDias}</td>
+        <td class="mono">${fmtL(m.consumoTotal)}</td><td class="mono">${m.entradasTotal ? fmtL(m.entradasTotal) : '—'}</td>
+        <td class="mono" style="${m.minSaldo<0?'color:var(--danger);font-weight:700':m.minSaldo<m.seguranca?'color:#B8590A;font-weight:700':''}">${fmtL(m.minSaldo)}<div style="font-size:10px;color:var(--muted)">${m.acao==='ok'?'':fmtDate(m.dataMinSaldo)}</div></td>
+        <td class="mono">${m.primeiraFalta ? fmtDate(m.primeiraFalta) : '—'}</td>
+        <td class="mono">${m.dataGatilho ? fmtDate(m.dataGatilho) : '—'}</td>
+        <td class="mono">${m.dataLimitePedido ? fmtDate(m.dataLimitePedido) : '—'}${m.atrasoDias>0?`<div style="font-size:10px;color:var(--danger)">${m.atrasoDias} dia(s) de atraso</div>`:''}</td>
+        <td class="mono" style="${m.chegadaMaisCedo && m.dataGatilho && m.chegadaMaisCedo>m.dataGatilho?'color:var(--danger);font-weight:700':''}" ${m.chegadaMaisCedo && m.dataGatilho && m.chegadaMaisCedo>m.dataGatilho?'title="Chega depois da data em que o material é necessário"':''}>${m.chegadaMaisCedo ? fmtDate(m.chegadaMaisCedo) : '—'}</td>
+        <td><span class="badge ${a.cls}">${a.rot}</span>${m.rupturaDias>0?`<div style="font-size:10px;color:var(--danger)">${m.rupturaDias} dia(s) sem material</div>`:''}</td>
+        <td class="mono" style="font-weight:700">${m.qtdSugerida ? fmtL(m.qtdSugerida) : '—'}</td></tr>`; }).join('')
+    : `<tr><td colspan="15"><div class="empty">Nenhum material para este filtro.</div></td></tr>`}</tbody>`;
+  if(MATERIAL_ABERTO) abrirDetalheMaterial(MATERIAL_ABERTO, true);
+}
+let MATERIAL_ABERTO = '';
+function abrirDetalheMaterial(id, manter){
+  const r = MATERIAIS_ULTIMO; if(!r) return; const m = r.materiais.find(x=>x.id===id);
+  const card = document.getElementById('matDetalheCard');
+  if(!m){ MATERIAL_ABERTO = ''; card.style.display = 'none'; return; }
+  MATERIAL_ABERTO = id; card.style.display = '';
+  document.getElementById('matDetalheTitulo').innerHTML = `${acessoEsc(m.codigo)} — ${acessoEsc(m.nome)} <span class="badge ${MAT_ACAO[m.acao].cls}">${MAT_ACAO[m.acao].rot}</span>`;
+  document.getElementById('matDetalheSub').innerHTML = `Estoque hoje <strong>${fmtL(m.estoqueAtual)} ${acessoEsc(m.uom)}</strong> · segurança <strong>${fmtL(m.seguranca)}</strong>${m.segurancaOrigem?` (${m.segurancaOrigem})`:''} · prazo <strong>${m.prazoDias===null?'não cadastrado':m.prazoDias+' dia(s) corridos'}</strong>${m.prazoOrigem?` (${m.prazoOrigem})`:''}`
+    + (m.acao!=='ok' ? `<br>Primeira falta (saldo negativo): <strong>${m.primeiraFalta?fmtDate(m.primeiraFalta):'—'}</strong> · precisa chegar até <strong>${fmtDate(m.dataGatilho)}</strong> (cruza o estoque de segurança) · emitir o pedido até <strong>${fmtDate(m.dataLimitePedido)}</strong> · se pedir hoje, chega em <strong>${fmtDate(m.chegadaMaisCedo)}</strong> · reposição sugerida <strong>${fmtL(m.qtdSugerida)} ${acessoEsc(m.uom)}</strong>` : '')
+    + (m.membros ? `<br>Códigos somados neste grupo: <span class="mono">${acessoEsc(m.membros.join(', '))}</span>` : '');
+  svgLineChart('chartMatSaldo', m.serie.map(s=>fmtDate(s.data)), [
+    {label:'Saldo projetado', color:'#C10016', data:m.serie.map(s=>s.saldo)},
+    {label:'Estoque de segurança', color:'#B8590A', data:m.serie.map(()=>m.seguranca)},
+  ]);
+  document.getElementById('tblMatSerie').innerHTML = `<thead><tr><th>Data</th><th>Consumo (plano)</th><th>Entradas</th><th>Saldo</th></tr></thead><tbody>${m.serie.map(s=>
+    `<tr><td class="mono">${fmtDate(s.data)}</td><td class="mono">${s.consumo?fmtL(s.consumo):'—'}</td><td class="mono">${s.entradas?fmtL(s.entradas):'—'}</td><td class="mono" style="${s.saldo<0?'color:var(--danger);font-weight:700':s.saldo<m.seguranca?'color:#B8590A;font-weight:700':''}">${fmtL(s.saldo)}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('matPedidos').innerHTML = m.pedidos.length ? `<h4 style="margin:12px 0 6px">Pedidos de compra em aberto</h4>${m.pedidos.map(p=>`<div style="font-size:12px">${acessoEsc(p.pedido||'(sem nº)')}${m.tipo==='grupo'?' · '+acessoEsc(p.item):''} — <strong>${fmtL(p.qtd)}</strong> em ${p.data?fmtDate(p.data):'sem data'}${p.atrasado?' <span class="badge warn">data vencida: conta como hoje</span>':''}</div>`).join('')}` : '';
+  if(!manter && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function clearMateriaisFiltros(){
+  ['matAcao','matGrupo'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('matTipo').value=''; document.getElementById('matBusca').value=''; document.getElementById('matFim').value=''; document.getElementById('matAtrasados').value='hoje';
+  renderMateriais();
+}
+function exportMateriaisCsv(){
+  const r = MATERIAIS_ULTIMO || MateriaisMotor.projetarMateriais(materiaisEntrada()); const f = filtrarMateriais(r.materiais);
+  const n = v => (v===null||v===undefined||v==='') ? '' : String(v).replace('.',',');
+  const cab = ['Código','Tipo','Descrição','UM','Estoque atual','Estoque de segurança','Prazo (dias corridos)','Consumo (plano)','Entradas','Menor saldo','Data do menor saldo','Primeira falta','Precisa chegar até','Emitir pedido até','Chega em (se pedir hoje)','Situação','Quantidade sugerida','Códigos do grupo'];
+  const lin = f.map(m=>[m.codigo, m.tipo==='grupo'?'Grupo':'Item', m.nome, m.uom, n(m.estoqueAtual), n(m.seguranca), m.prazoDias===null?'':m.prazoDias, n(m.consumoTotal), n(m.entradasTotal), n(m.minSaldo), m.dataMinSaldo, m.primeiraFalta||'', m.dataGatilho||'', m.dataLimitePedido||'', m.chegadaMaisCedo||'', MAT_ACAO[m.acao].rot, n(m.qtdSugerida), (m.membros||[]).join(' ')]);
+  const csv = '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `planejamento_materiais_${todayISO()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível neste ambiente'); }
+  return csv;
+}
+
+/* =========================================================================
    MODO ONLINE — dados compartilhados em tempo real entre vários usuários
    -------------------------------------------------------------------------
    Ligado por configuração (arquivo config.js → window.MENZOIL_CONFIG). Sem configuração, a ferramenta
@@ -7178,9 +7682,9 @@ function init(){
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-10-29.3';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-10-31.2';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao'];
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
@@ -7194,7 +7698,9 @@ function syncEstavel(v){
   return '{'+ks.map(k=>JSON.stringify(k)+':'+syncEstavel(v[k])).join(',')+'}';
 }
 const syncChave = (col, r) => col==='items' ? r.code : col==='resources' ? r.name
-  : col==='removidasComProducao' ? `${r.ts}|${r.usuario}|${r.linha&&r.linha.id}` : r.id;
+  : col==='removidasComProducao' ? `${r.ts}|${r.usuario}|${r.linha&&r.linha.id}`
+  : col==='recipes' ? (r.id || `${r.product}|${r.material}`)      // receita sem id (backup antigo): produto + insumo identifica
+  : r.id;
 const syncIdRow = (col, key) => col+SYNC_SEP+key;
 
 const Sync = {
@@ -7491,8 +7997,13 @@ async function syncIniciar(){
 }
 function syncPerguntarMigracao(){
   return new Promise(resolve=>{
-    const n = SYNC_COLECOES_GRANDES.map(c=>`${(DB[c]||[]).length} ${c}`).join(' · ');
-    customConfirm(`O servidor está <strong>vazio</strong> e este arquivo traz dados (${n}).\nEnviar esses dados ao servidor para todos os usuários usarem?`, ()=>resolve(true), ()=>resolve(false));
+    // a tela "Carregando…" fica POR CIMA da caixa de confirmação (z-index maior): esconde-a enquanto a pergunta está aberta, senão a pessoa nunca a vê
+    const ov = document.getElementById('loginOverlay'), antes = ov ? ov.style.display : null;
+    if(ov) ov.style.display = 'none';
+    const volta = ()=>{ if(ov) ov.style.display = antes || 'flex'; };
+    const nomes = {items:'itens', recipes:'receitas', resources:'recursos', orders:'pedidos', plan:'linhas de plano'};
+    const n = SYNC_COLECOES_GRANDES.map(c=>`${(DB[c]||[]).length} ${nomes[c]||c}`).join(' · ');
+    customConfirm(`O servidor está <strong>vazio</strong> e este arquivo traz dados (${n}).\nEnviar esses dados ao servidor para todos os usuários usarem?`, ()=>{ volta(); resolve(true); }, ()=>{ volta(); resolve(false); });
   });
 }
 function syncAoVoltarRede(){ syncAgendar(true); syncResync(); }
