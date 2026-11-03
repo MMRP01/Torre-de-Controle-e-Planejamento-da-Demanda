@@ -670,6 +670,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
       <div class="card" id="manualClientsCard" style="display:none">
         <h3>Pedidos em aberto por Cliente</h3>
         <div class="card-sub">Expanda um cliente, depois um item, pra ver os pedidos/lotes daquele item. Cada linha já tem os campos de Data, Recurso e Quantidade — ajuste e clique em "Planejar" para adicionar aquela linha ao plano.</div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="mcAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — junta a linhas do mesmo item, data e recurso até o lote máximo, olhando só o volume (ignora o pedido). Linhas cuja quantidade você editou não são completadas. Desmarque para que cada linha adicionada fique exatamente como você definiu.</span></label>
         <div class="filters" style="margin-bottom:10px">
           <div class="f"><label>Buscar cliente</label><input id="mcSearch" placeholder="Nome do cliente..." oninput="renderManualClientList()"></div>
           <div class="f"><label>Filtrar por item</label><select id="mcItemFilter" onchange="renderManualClientList()"></select></div>
@@ -851,7 +852,8 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
           <button class="btn btn-sm" id="btnToggleAddLinha">Abrir</button>
         </div>
         <div id="addLinhaListaBody" style="display:none;margin-top:10px">
-          <div class="card-sub">Escolha um pedido em aberto — a quantidade respeita a capacidade máxima do lote e junta com linhas já existentes do mesmo item/data/recurso, igual à Montagem Manual.</div>
+          <div class="card-sub">Escolha um pedido em aberto — a quantidade respeita a capacidade máxima do lote (acima dele, divide em linhas) e não pode passar do que está em aberto no pedido (só administrador ou usuário com permissão).</div>
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="lmAddAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — junta a linhas do mesmo item, data e recurso até o lote máximo, olhando só o volume (ignora o pedido). Linhas cuja quantidade você editou não são completadas. Desmarque para que cada linha adicionada fique exatamente como você definiu.</span></label>
           <div class="form-row">
             <div class="form-field" style="flex:2"><label>Pedido em aberto</label><select id="lmAddPedido" onchange="atualizarCamposAddLinha()"></select></div>
             <div class="form-field"><label>Data</label><input type="date" id="lmAddData"></div>
@@ -2754,11 +2756,20 @@ function planejarPedidoLinha(orderId){
 }
 // lógica central de planejamento manual — recebe os valores diretamente (não lê campos fixos do DOM),
 // reaproveitada tanto pela Montagem Manual quanto pela Lista Mestre.
-/* opts.juntar: só quando pedido explicitamente, soma o pedido em linhas que já existem do mesmo item+data+recurso (até o lote máximo).
-   Nas EDIÇÕES (planejar, adicionar linha, reprogramar pendência) o padrão é NÃO juntar: cada linha fica como a pessoa definiu, mesmo menor que o lote
-   máximo. O critério de agrupar por lote máximo continua valendo na GERAÇÃO AUTOMÁTICA do plano. Quantidade acima do lote máximo continua sendo dividida. */
+/* AGRUPAR POR VOLUME (caixa "Agrupar por volume" na Montagem manual e na Lista Mestre; padrão ligado, lembrada neste navegador).
+   Ligado: ao planejar um pedido / adicionar linha / reprogramar pendência, olha-se SÓ O VOLUME do item (ignora o pedido): primeiro completa linhas já
+   existentes do mesmo item+data+recurso até o lote máximo e só então cria linha(s) nova(s), divididas pelo lote máximo.
+   Linhas cuja quantidade a pessoa EDITOU (p.qtdFixa) nunca são completadas: ficam como foram definidas, mesmo menores que o lote máximo.
+   Desligado: cada linha adicionada fica como a pessoa definiu (nunca soma em linha existente). A geração automática sempre agrupa pelo lote máximo. */
+let AGRUPAR_POR_VOLUME = true;
+try{ AGRUPAR_POR_VOLUME = localStorage.getItem('menzoil_agruparVolume') !== '0'; }catch(e){}
+function setAgruparPorVolume(v){
+  AGRUPAR_POR_VOLUME = !!v;
+  try{ localStorage.setItem('menzoil_agruparVolume', AGRUPAR_POR_VOLUME ? '1' : '0'); }catch(e){}
+  ['mcAgrupar','lmAddAgrupar'].forEach(id=>{ const c = document.getElementById(id); if(c) c.checked = AGRUPAR_POR_VOLUME; });
+}
 function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
-  const juntar = !!(opts && opts.juntar);
+  const juntar = (opts && opts.juntar !== undefined) ? !!opts.juntar : AGRUPAR_POR_VOLUME;
   const order = DB.orders.find(o=>o.id===orderId);
   if(!order){ alert('Pedido não encontrado.'); return; }
   const it = itemByCode(order.itemCode);
@@ -2768,6 +2779,11 @@ function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
   if(!qtyUnitsRaw || qtyUnitsRaw<=0){ alert('Informe uma quantidade maior que zero.'); return; }
   const qtyUnitsTotal = Math.round(qtyUnitsRaw);
   if(Math.abs(qtyUnitsTotal-qtyUnitsRaw)>0.001){ showToast(`Quantidade ajustada para ${qtyUnitsTotal} ${it.uom} (não é possível produzir fração de unidade).`); }
+  const pendU = pendenteUnidadesDoPedido(order);
+  if(qtyUnitsTotal > pendU + 0.001 && !podeExcederPedido()){
+    alert(`Quantidade acima do que está em aberto no pedido ${order.orderNo}: pendente ${fmtL(Math.round(pendU*100)/100)} ${it.uom}; você informou ${fmtL(qtyUnitsTotal)}.\n\n${MSG_SEM_EXCESSO}`);
+    return;
+  }
 
   // respeita a capacidade máxima do lote do item — se a quantidade informada exceder o que o item
   // aguenta produzir de uma vez, divide em várias linhas (mesma data e recurso), igual à geração automática.
@@ -2775,10 +2791,10 @@ function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
   let restante = qtyUnitsTotal;
   let linhasCompletadas = 0, linhasCriadas = 0;
 
-  // 1) (só com opts.juntar) antes de criar linha nova, tenta ENCHER linhas já existentes do mesmo item+data+recurso que ainda
+  // 1) (com "Agrupar por volume" ligado) antes de criar linha nova, tenta ENCHER linhas já existentes do mesmo item+data+recurso que ainda
   //    têm espaço — assim, uma única OP consegue atender esse pedido junto com outros já planejados ali.
   const linhasComEspaco = !juntar ? [] : DB.plan
-    .filter(p=> p.itemCode===it.code && p.date===date && p.resource===resource && p.batchUnits < maxBatchUnits && !linhaProtegida(p))
+    .filter(p=> p.itemCode===it.code && p.date===date && p.resource===resource && p.batchUnits < maxBatchUnits && !linhaProtegida(p) && !p.qtdFixa)
     .sort((a,b)=> (maxBatchUnits-a.batchUnits) - (maxBatchUnits-b.batchUnits)); // preenche primeiro quem tem menos espaço livre
 
   for(const linha of linhasComEspaco){
@@ -2863,6 +2879,7 @@ function updatePlanLineField(id, field, value){
     qty = Math.round(qtyRaw);
   }
 
+  if(field==='batchUnits'){ const exc = aumentaExcessoDoItem(p, qty); if(exc && !podeExcederPedido()){ alert(`Essa quantidade deixa o item ${p.itemCode} planejado acima do que está em aberto nos pedidos (${fmtL(exc.aberto)} em aberto; ficaria ${fmtL(exc.novo)}).\n\n${MSG_SEM_EXCESSO}`); renderPlano(); renderLista(); return; } }
   const labels = {date:'Data de produção', resource:'Recurso', batchUnits:'Quantidade'};
   const valorAntigoDisplay = field==='date' ? fmtDate(p.date) : field==='batchUnits' ? fmtL(p.batchUnits) : p.resource;
   const exigeJustificativa = (field==='date' || field==='batchUnits'); // só datas e quantidades exigem justificativa
@@ -2882,9 +2899,9 @@ function updatePlanLineField(id, field, value){
       logMudancaPlano(p, 'Recurso', valorAntigo, value, justificativa);
     } else if(field==='batchUnits'){
       if(Math.abs(qty-qtyRaw)>0.001){ showToast(`Quantidade ajustada para ${qty} ${it?it.uom:''} (não é possível produzir fração de unidade).`); }
-      ajustarOrdersProporcional(p, qty); // abate/reflete a mudança no(s) pedido(s) de origem dessa linha
-      p.batchUnits = qty;
+      p.batchUnits = qty; p.qtdFixa = true;     // quantidade definida pela pessoa: a linha não é mais completada pelo agrupamento
       p.batchLiters = it ? qty*it.litersPerUnit : qty;
+      reajustarVinculosPedidos(p);   // redistribui os pedidos do item entre as linhas, do mais antigo para o mais novo
       logMudancaPlano(p, 'Quantidade', fmtL(valorAntigo), fmtL(qty), justificativa);
     }
     p.manual = true; // linha ajustada manualmente: preservada e sinalizada, para não se perder numa nova geração automática sem aviso
@@ -3273,7 +3290,7 @@ function reprogramarPendenciaCore(orderId, date, resource, qtyRaw){
   comJustificativaSeNecessario(`reprogramar ${qty} ${it.uom} do pedido ${order.orderNo} para ${fmtDate(date)} (${resource})`, (just)=> autorizado(()=>{
     retiradas.forEach(({p,t})=> retirarDoPedidoDaLinha(p, order, t, just));
     DB.plan = DB.plan.filter(p=>p.batchUnits>0.0001);        // linha que ficou vazia sai do plano
-    planejarPedidoLinhaCore(orderId, date, resource, qty);  // cria a linha na nova data (sem juntar a linhas existentes; acima do lote máximo, divide)
+    planejarPedidoLinhaCore(orderId, date, resource, qty);  // cria/junta a linha na nova data conforme "Agrupar por volume" (acima do lote máximo, divide)
     showToast(`↻ ${fmtL(qty)} ${it.uom} do pedido ${order.orderNo} reprogramado(s) para ${fmtDate(date)}.`);
   }));
 }
@@ -4652,6 +4669,59 @@ function renderLista(){
 // ajusta o array "orders" de uma linha proporcionalmente à nova quantidade — sem isso, o pedido de
 // origem continuaria "achando" que tem mais planejado do que realmente sobrou nessa linha depois do ajuste
 // (afetando pendência do pedido, prioridades e OTIF).
+/* ---- vínculo automático dos pedidos às linhas (do pedido mais antigo para o mais novo) ---- */
+// "mais antigo" = menor data de entrega; em empate, menor número do pedido
+const cmpPedidoAntigo = (a,b) => String(a.dueDate||'9999-99-99').localeCompare(String(b.dueDate||'9999-99-99')) || String(a.orderNo).localeCompare(String(b.orderNo),'pt',{numeric:true});
+// Depois que as quantidades das linhas de um item mudam, redistribui os pedidos em aberto desse item entre as linhas SEM produção, na ordem das linhas
+// (data, sequência) e dos pedidos (mais antigo primeiro), preenchendo cada linha na quantidade informada. Linhas com produção mantêm os seus vínculos
+// (e abatem a capacidade dos pedidos). Se as linhas somarem mais do que os pedidos em aberto, o excedente fica no pedido mais novo (aparece como excedente).
+function redistribuirPedidosDoItem(itemCode){
+  const pedidos = DB.orders.filter(o=>o.status==='Aberto' && o.itemCode===itemCode).sort(cmpPedidoAntigo);
+  if(!pedidos.length) return;
+  const linhas = DB.plan.filter(p=>p.itemCode===itemCode).sort((a,b)=> String(a.date).localeCompare(String(b.date)) || (a.sequence||0)-(b.sequence||0) || String(a.id).localeCompare(String(b.id)));
+  const cap = new Map(pedidos.map(o=>[o.id, o.qty]));
+  linhas.filter(linhaProtegida).forEach(p=>(p.orders||[]).forEach(e=>{ if(cap.has(e.orderId)) cap.set(e.orderId, cap.get(e.orderId)-e.qty); }));
+  const r2 = v => Math.round(v*100)/100;
+  let idx = 0;
+  linhas.filter(p=>!linhaProtegida(p)).forEach(p=>{
+    let falta = p.batchUnits; const novos = [];
+    while(falta > 0.0001 && idx < pedidos.length){
+      const o = pedidos[idx], c = Math.max(0, cap.get(o.id));
+      if(c <= 0.0001){ idx++; continue; }
+      const usar = Math.min(falta, c);
+      novos.push({orderId:o.id, orderNo:o.orderNo, qty:r2(usar), lotes:o.lotes||[]});
+      cap.set(o.id, c-usar); falta = r2(falta-usar);
+      if(cap.get(o.id) <= 0.0001) idx++;
+    }
+    if(falta > 0.0001){                       // linhas além dos pedidos em aberto: o excedente fica no pedido mais novo
+      const ult = pedidos[pedidos.length-1], ex = novos.find(n=>n.orderId===ult.id);
+      if(ex) ex.qty = r2(ex.qty+falta); else novos.push({orderId:ult.id, orderNo:ult.orderNo, qty:r2(falta), lotes:ult.lotes||[]});
+    }
+    p.orders = novos;
+    p.orderNo = [...new Set(novos.map(o=>o.orderNo))].join(', ');
+    p.orderId = novos.length===1 ? novos[0].orderId : null;
+    p.lotes = [...new Set(novos.flatMap(o=>o.lotes||[]))];
+    const ds = novos.map(n=>{ const o = DB.orders.find(x=>x.id===n.orderId); return o && o.dueDate; }).filter(Boolean).sort();
+    if(ds.length) p.dueDate = ds[0];
+  });
+}
+// chamada depois que a quantidade de UMA linha foi alterada pela pessoa (p.batchUnits já atualizado)
+function reajustarVinculosPedidos(p){
+  if(linhaProtegida(p)) ajustarOrdersProporcional(p, p.batchUnits);   // linha com produção: mantém os vínculos, ajustando proporcionalmente
+  redistribuirPedidosDoItem(p.itemCode);
+}
+/* ---- trava de excesso: não planejar acima do que está em aberto no pedido, só administrador ou usuário com a permissão ---- */
+const podeExcederPedido = () => !!USUARIO_ATUAL && (!!USUARIO_ATUAL.admin || (USUARIO_ATUAL.campos||{})['*excederPedido']===true);
+const MSG_SEM_EXCESSO = 'Só administrador, ou usuário com a permissão "Planejar acima do pedido em aberto", pode planejar quantidade acima do que está em aberto no pedido.';
+function pendenteUnidadesDoPedido(order){ const r = pendingLitersForOrder(order); return r.it && r.it.litersPerUnit>0 ? r.pending/r.it.litersPerUnit : 0; }
+// a nova quantidade da linha aumenta o excedente do item (planejado acima do total em aberto dos pedidos)?
+function aumentaExcessoDoItem(p, novaQty){
+  const aberto = DB.orders.filter(o=>o.status==='Aberto' && o.itemCode===p.itemCode).reduce((s,o)=>s+o.qty,0);
+  const atual = DB.plan.filter(x=>x.itemCode===p.itemCode).reduce((s,x)=>s+x.batchUnits,0);
+  const novo = atual - p.batchUnits + novaQty;
+  const exA = Math.max(0, atual-aberto), exN = Math.max(0, novo-aberto);
+  return exN > exA + 0.001 ? {aberto, novo, excesso:exN} : null;
+}
 function ajustarOrdersProporcional(p, novaQtyUnits){
   if(!p.orders || !p.orders.length) return;
   const totalAntigo = p.orders.reduce((s,o)=>s+o.qty, 0);
@@ -4684,11 +4754,13 @@ function updateListaQtd(id, value){
     renderLista();
     return;
   }
+  const exc = aumentaExcessoDoItem(p, qty);
+  if(exc && !podeExcederPedido()){ alert(`Essa quantidade deixa o item ${p.itemCode} planejado acima do que está em aberto nos pedidos (${fmtL(exc.aberto)} ${it?it.uom:''} em aberto; ficaria ${fmtL(exc.novo)}).\n\n${MSG_SEM_EXCESSO}`); renderLista(); return; }
   comAutorizacaoLinhaProduzida(p, `Quantidade (Lista Mestre): ${fmtL(p.batchUnits)} → ${fmtL(qty)}`, (just)=>{
     const valorAntigo = p.batchUnits;
-    ajustarOrdersProporcional(p, qty); // abate/reflete a mudança no(s) pedido(s) de origem dessa linha
-    p.batchUnits = qty;
+    p.batchUnits = qty; p.qtdFixa = true;     // quantidade definida pela pessoa: a linha não é mais completada pelo agrupamento
     p.batchLiters = it ? qty*it.litersPerUnit : qty;
+    reajustarVinculosPedidos(p);   // redistribui os pedidos do item entre as linhas, do mais antigo para o mais novo
     logMudancaPlano(p, 'Quantidade (Lista Mestre)', fmtL(valorAntigo), fmtL(qty), just);
     renderPlano(); renderLista(); populateDashFilters(); renderDashboards(); renderVisaoDia(); renderManualClientList();
     checkExcessoPlanejado(p.itemCode);
@@ -7090,6 +7162,7 @@ function abrirPermissoes(id){
       <button class="btn btn-sm" onclick="aplicarPresetPermissoes('edicao')">Edição em todas</button>
       <button class="btn btn-sm btn-ghost" onclick="aplicarPresetPermissoes('nenhum')">Limpar</button></div>
     <div class="am-scroll"><table class="data am-matrix" id="pmMatriz"><thead><tr><th>Tela</th><th class="am-c">Sem acesso</th><th class="am-c">Somente leitura</th><th class="am-c">Edição</th></tr></thead><tbody>${linhas}</tbody></table></div>
+    <label class="am-admin" style="margin-top:10px"><input type="checkbox" id="pmExcesso" ${(u.campos||{})['*excederPedido']===true?'checked':''}> <strong>Pode planejar quantidade acima do pedido em aberto</strong> — por padrão só administradores; marque para liberar este usuário</label>
     <div class="am-travas" id="pmTravas">
       <h4>🔒 Travar filtros (opcional)</h4>
       <div class="card-sub">Fixe um filtro nos valores escolhidos: em <b>todas as telas que têm esse filtro</b>, a pessoa passa a ver só esses valores e <b>não consegue mudá-los</b>. Deixe em branco para o filtro ficar livre. Ex.: travar <b>Cliente</b> em “Cliente X”, ou <b>Recurso</b> em duas linhas.</div>
@@ -7138,6 +7211,7 @@ function salvarPermissoes(id){
     }
   });
   if(erroCampos && !virarAdmin){ erro.textContent = erroCampos; return; }
+  const exc = document.getElementById('pmExcesso'); if(!virarAdmin && exc && exc.checked) campos['*excederPedido'] = true;   // permissão extra: planejar acima do pedido em aberto
   const travas = {};
   DIMENSOES_TRAVA.forEach(d=>{ const sl = document.getElementById('pmTrava_'+d.id); const v = sl && sl.__cbGet ? sl.__cbGet() : []; if(v.length) travas[d.id] = v; });
   u.admin = virarAdmin; u.permissoes = virarAdmin ? {} : perm; u.campos = virarAdmin ? {} : campos; u.travas = virarAdmin ? {} : travas;
@@ -7682,7 +7756,7 @@ function exportMateriaisCsv(){
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-10-31.2';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-10-31.4';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
 const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt'];   // viram registros da coleção "config"

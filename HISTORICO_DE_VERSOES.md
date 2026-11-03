@@ -3,6 +3,26 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-10-31.4
+- **Vínculo dos pedidos ajustado automaticamente ao editar quantidades.** Ao alterar a quantidade de uma linha (Lista Mestre ou Plano Mestre), os pedidos em
+  aberto do item são **redistribuídos entre as linhas**, do pedido **mais antigo para o mais novo** (menor data de entrega primeiro; empate: menor número
+  do pedido), preenchendo cada linha na quantidade informada. Número do pedido, lotes e data de entrega das linhas acompanham. Linhas com produção apontada
+  mantêm os seus vínculos. Se as linhas somarem mais que os pedidos em aberto, o excedente fica no pedido mais novo.
+- **Não planejar acima do que está em aberto em cada pedido.** Planejar, adicionar linha ou editar a quantidade que deixe o item planejado acima do total em aberto
+  dos pedidos passa a ser **bloqueado**, com aviso. Só **administrador** ou o usuário com a nova permissão **"Pode planejar quantidade acima do pedido em aberto"**
+  (marcada em Usuários e Permissões → Permissões) pode ultrapassar. Reduzir um excedente que já existe continua permitido.
+- A nova permissão fica no perfil do usuário e **não exige rodar o schema.sql** de novo.
+
+## 2026-10-31.3
+- **Agrupar por volume (corrige a versão 2026-10-31.2).** Na 2026-10-31.2, ao planejar um pedido, adicionar linha ou reprogramar pendência, a ferramenta
+  deixou de somar em linhas existentes e passou a olhar só o pedido (dividia apenas quando o pedido passava do lote máximo). Agora o padrão volta a
+  ser **olhar só o volume do item, ignorando o pedido**: completa linhas existentes do mesmo item, data e recurso até o lote máximo e só então abre
+  linha nova, dividida pelo lote máximo.
+- **Linhas editadas ficam como você definiu.** Linha cuja quantidade você alterou (Lista Mestre ou Plano Mestre) **não é mais completada** pelo agrupamento,
+  mesmo menor que o lote máximo. Assim dá para reduzir uma linha e adicionar o restante sem que ele seja somado de volta.
+- **Caixa "Agrupar por volume"** na Montagem manual e em "+ Adicionar linha direto aqui" (a escolha é lembrada neste navegador). Desmarcada, cada linha
+  adicionada fica exatamente como definida. A geração automática do plano sempre agrupa pelo lote máximo.
+
 ## 2026-10-31.2
 - **Edições de linhas livres (Lista Mestre e Montagem manual).** Ao **planejar um pedido, adicionar linha ou reprogramar pendência**, a ferramenta
   deixa de somar o pedido em linhas que já existem do mesmo item, data e recurso. Antes, ao reduzir uma linha (ex.: de 1.080 para 500) e adicionar
