@@ -117,6 +117,21 @@ table.data th{
   letter-spacing:.04em;padding:9px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;white-space:nowrap;
 }
 table.data td{padding:8px 10px;border-bottom:1px solid var(--g150);white-space:nowrap;}
+/* observações da linha (Lista Mestre) */
+table.data tr.linha-obs td{background:#FFF7DB !important;}
+.btn-obs{font-size:11px;padding:2px 6px;border:1px solid var(--line-strong);border-radius:6px;background:#fff;color:var(--g600);margin-right:4px;}
+.btn-obs.tem{background:var(--brand-yellow);color:#111;border-color:#C9A600;font-weight:800;box-shadow:0 0 0 2px rgba(253,218,37,.55);}
+.obs-prev{margin-top:4px;padding:3px 7px;background:#FFF0B3;border-left:3px solid var(--brand-yellow);font-size:11.5px;font-weight:600;color:#5C4A00;cursor:pointer;white-space:normal;}
+/* linha de filtros por coluna (Lista Mestre) */
+table.data tr.lc-filtros th{padding:4px 6px;background:var(--g100);text-transform:none;letter-spacing:0;font-weight:400;box-shadow:inset 0 -2px 0 var(--line-strong);}
+table.data tr.lc-filtros input,table.data tr.lc-filtros select{width:100%;min-width:72px;font-size:11px;padding:3px 5px;border:1px solid var(--line-strong);border-radius:5px;background:#fff;}
+table.data tr.lc-filtros .ativo{border-color:var(--accent);background:var(--accent-dim);}
+/* colunas congeladas (código e descrição ficam à vista ao rolar para o lado) */
+table.data td.frz{position:sticky;z-index:2;background:var(--card);}
+table.data th.frz{position:sticky;z-index:6 !important;}   /* acima dos cabeçalhos das colunas que rolam (z-index 3) */
+table.data tr:hover td.frz{background:var(--g50);}
+table.data td.frz-last{box-shadow:inset -1px 0 0 var(--line-strong), 3px 0 5px -3px rgba(0,0,0,.25);}
+table.data th.frz-last{box-shadow:inset 0 -2px 0 var(--brand-yellow), inset -1px 0 0 var(--line-strong), 3px 0 5px -3px rgba(0,0,0,.25);}
 table.data th.day-alt{background:var(--g300);}
 table.data td.day-alt{background:rgba(30,32,35,.05);}
 table.data tr:hover td.day-alt{background:rgba(30,32,35,.09);}
@@ -587,6 +602,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
         <button class="btn btn-danger" onclick="toggleClearPanel()">🗑 Limpar plano</button>
         <button class="btn" onclick="toggleMovePanel()">📅 Alterar data de um dia inteiro</button>
         <button class="btn" onclick="toggleAlterPanel()">🔀 Alterar programação</button>
+        <button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button>
         <button class="btn btn-ghost" onclick="expandAllResourceCards(true)">⬇ Expandir todos</button>
         <button class="btn btn-ghost" onclick="expandAllResourceCards(false)">⬆ Comprimir todos</button>
       </div>
@@ -670,7 +686,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
       <div class="card" id="manualClientsCard" style="display:none">
         <h3>Pedidos em aberto por Cliente</h3>
         <div class="card-sub">Expanda um cliente, depois um item, pra ver os pedidos/lotes daquele item. Cada linha já tem os campos de Data, Recurso e Quantidade — ajuste e clique em "Planejar" para adicionar aquela linha ao plano.</div>
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="mcAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — junta a linhas do mesmo item, data e recurso até o lote máximo, olhando só o volume (ignora o pedido). Linhas cuja quantidade você editou não são completadas. Desmarque para que cada linha adicionada fique exatamente como você definiu.</span></label>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="mcAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — soma na linha já existente do mesmo item, data e recurso (uma linha só), olhando só o volume. Linhas cuja quantidade você editou não recebem a soma. Desmarque para que a linha adicionada fique separada, exatamente como você definiu.</span></label>
         <div class="filters" style="margin-bottom:10px">
           <div class="f"><label>Buscar cliente</label><input id="mcSearch" placeholder="Nome do cliente..." oninput="renderManualClientList()"></div>
           <div class="f"><label>Filtrar por item</label><select id="mcItemFilter" onchange="renderManualClientList()"></select></div>
@@ -691,7 +707,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
     <section class="page" id="page-visaodia">
       <div class="page-head">
         <div><h2>Itens Planejados por Dia</h2><div class="desc">Matriz por item: total em pedidos, quanto falta programar e a quantidade planejada em cada dia do período — Qtd. e Litros lado a lado, como uma planilha de programação.</div></div>
-        <div class="head-actions"><button class="btn" onclick="exportVisaoDiaCsv()">⬇ Exportar (.csv)</button></div>
+        <div class="head-actions"><button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button><button class="btn" onclick="exportVisaoDiaCsv()">⬇ Exportar (.csv)</button></div>
       </div>
 
       <div class="grid grid-4" id="vdKpis"></div>
@@ -830,6 +846,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
         <div><h2>Lista Mestre de Produção</h2><div class="desc">Itens, quantidades, OP e OP granel planejados por dia. Filtre e imprima como lista mestre de produção.</div></div>
         <div class="head-actions">
           <button class="btn btn-danger" onclick="abrirParadaRapida('')">🛑 Registrar parada</button>
+          <button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button>
           <button class="btn" onclick="doPrint()">🖨 Abrir lista para impressão</button>
         </div>
       </div>
@@ -852,14 +869,14 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
           <button class="btn btn-sm" id="btnToggleAddLinha">Abrir</button>
         </div>
         <div id="addLinhaListaBody" style="display:none;margin-top:10px">
-          <div class="card-sub">Escolha um pedido em aberto — a quantidade respeita a capacidade máxima do lote (acima dele, divide em linhas) e não pode passar do que está em aberto no pedido (só administrador ou usuário com permissão).</div>
-          <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="lmAddAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — junta a linhas do mesmo item, data e recurso até o lote máximo, olhando só o volume (ignora o pedido). Linhas cuja quantidade você editou não são completadas. Desmarque para que cada linha adicionada fique exatamente como você definiu.</span></label>
+          <div class="card-sub">Escolha o <strong>item</strong> — o pedido é vinculado <strong>automaticamente</strong> (do mais antigo para o mais novo). Só é possível inserir se houver pedido em aberto disponível para o item, e a quantidade não pode passar do que está em aberto (só administrador ou usuário com permissão).</div>
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:2px 0 12px;cursor:pointer"><input type="checkbox" id="lmAddAgrupar" checked onchange="setAgruparPorVolume(this.checked)" style="margin-top:2px"><span><strong>Agrupar por volume</strong> — soma na linha já existente do mesmo item, data e recurso (uma linha só), olhando só o volume. Linhas cuja quantidade você editou não recebem a soma. Desmarque para que a linha adicionada fique separada, exatamente como você definiu.</span></label>
           <div class="form-row">
-            <div class="form-field" style="flex:2"><label>Pedido em aberto</label><select id="lmAddPedido" onchange="atualizarCamposAddLinha()"></select></div>
+            <div class="form-field" style="flex:2"><label>Item (com pedido em aberto)</label><select id="lmAddItem" onchange="atualizarCamposAddLinha()"></select><div id="lmAddInfo" style="font-size:11.5px;color:var(--muted);margin-top:3px"></div></div>
             <div class="form-field"><label>Data</label><input type="date" id="lmAddData"></div>
             <div class="form-field"><label>Recurso</label><select id="lmAddRecurso"></select></div>
             <div class="form-field"><label>Quantidade</label><input type="number" step="any" id="lmAddQty"></div>
-            <button class="btn btn-primary" style="height:34px" onclick="adicionarLinhaListaMestre()">+ Adicionar</button>
+            <button class="btn btn-primary" id="lmAddBtn" style="height:34px" onclick="adicionarLinhaListaMestre()">+ Adicionar</button>
           </div>
         </div>
       </div>
@@ -1078,7 +1095,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
 
       <div class="card">
         <h3>Totalizador</h3>
-        <div class="card-sub">Totais do período por <strong>recurso</strong>, <strong>unidade de medida</strong> e <strong>turno</strong> — os três recortes sempre visíveis, independentemente do “Ver por”.</div>
+        <div class="card-sub">Totais do período por <strong>recurso</strong>, <strong>unidade de medida</strong> e <strong>turno</strong> — os três recortes sempre visíveis, independentemente do “Ver por”. Traz o <strong>volume efetuado por turno</strong> (1º, 2º e 3º) e as <strong>horas paradas</strong> (paradas registradas no período; só existem por recurso, então por unidade de medida e por turno aparece “—”).</div>
         <div class="dash-3" id="dashTotalizador"></div>
       </div>
 
@@ -1218,16 +1235,17 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-03","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-05","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
-let __itemIndex = null, __itemIndexLen = -1;
+let __itemIndex = null, __itemIndexLen = -1, __itemIndexArr = null;
 const itemByCode = c => {
-  if(!__itemIndex || __itemIndexLen !== DB.items.length){
+  // reconstrói o índice quando o número de itens muda OU quando a lista de itens é substituída por outra (ex.: restaurar backup), mesmo com o mesmo tamanho
+  if(!__itemIndex || __itemIndexLen !== DB.items.length || __itemIndexArr !== DB.items){
     __itemIndex = new Map();
     DB.items.forEach(i=> __itemIndex.set(i.code.toLowerCase(), i));
-    __itemIndexLen = DB.items.length;
+    __itemIndexLen = DB.items.length; __itemIndexArr = DB.items;
   }
   return __itemIndex.get(String(c||'').toLowerCase());
 };
@@ -1752,6 +1770,10 @@ function imprimirRelatorioCompras(){
   .meta{font-size:12px;color:#667085;margin-bottom:18px;}
   .assinatura{margin-top:40px;display:flex;gap:60px;}
   .assinatura div{flex:1;border-top:1px solid #999;padding-top:6px;font-size:11px;color:#667085;text-align:center;}
+  .obs-print{margin-top:5px;padding:4px 8px;background:#FFF0B3;border-left:3px solid #FDDA25;font-size:11px;font-weight:700;color:#5C4A00;}
+  .grp-granel td{background:#E8EEF7;font-weight:700;padding:7px 10px;font-size:12px;border:1px solid #ccc;}
+  .granel-alerta{color:#B8590A;font-weight:700;}
+  thead{display:table-header-group;} tr{page-break-inside:avoid;}
   @media print{ .no-print{display:none;} }
 </style></head>
 <body>
@@ -1870,6 +1892,32 @@ function renderCadastros(){
 function setCadTab(id){ cadActive=id; renderCadastros(); }
 
 /* ---- LOCALIZAÇÕES DE GRANEL ---- */
+/* ---- vínculo das linhas do plano com os pedidos ----
+   A pendência de um pedido é o que ele pede menos o que as linhas do plano já cobrem, e cada linha aponta para o pedido pelo id.
+   Se um id deixa de existir (ex.: a base de pedidos foi reimportada por uma versão que recriava os pedidos), a linha volta a apontar
+   pelo NÚMERO do pedido + item (+ lote) — assim o que já foi planejado (e produzido) continua abatendo o pedido. Devolve quantos vínculos foram reatados. */
+function reconciliarVinculosPedidos(){
+  const ids = new Set((DB.orders||[]).map(o=>o.id));
+  const porChave = new Map();
+  (DB.orders||[]).forEach(o=>{ const k = String(o.orderNo).trim()+'|'+o.itemCode; if(!porChave.has(k)) porChave.set(k, []); porChave.get(k).push(o); });
+  const acha = (orderNo, item, lote)=>{ const c = porChave.get(String(orderNo==null?'':orderNo).trim()+'|'+item); if(!c || !c.length) return null; return (lote && c.find(o=>(o.lotes||[])[0]===lote)) || c[0]; };
+  let n = 0;
+  (DB.plan||[]).forEach(p=>{
+    if(p.orders && p.orders.length){
+      let mudou = false;
+      p.orders.forEach(e=>{
+        if(e.orderId && ids.has(e.orderId)) return;
+        const o = acha(e.orderNo, p.itemCode, (e.lotes||[])[0]); if(!o) return;
+        e.orderId = o.id; mudou = true; n++;
+      });
+      if(mudou) p.orderId = p.orders.length===1 ? p.orders[0].orderId : null;
+    } else if(p.orderId && !ids.has(p.orderId)){
+      const o = acha(String(p.orderNo||'').split(',')[0], p.itemCode, (p.lotes||[])[0]);
+      if(o){ p.orderId = o.id; n++; }
+    }
+  });
+  return n;
+}
 function garantirEstruturas(){
   DB.locaisGranel = DB.locaisGranel || [];
   DB.refugos = DB.refugos || [];
@@ -1878,6 +1926,10 @@ function garantirEstruturas(){
   DB.comprasAbertas = DB.comprasAbertas || [];        // pedidos de compra em aberto (Planejamento de Materiais)
   DB.paramMateriais = DB.paramMateriais || [];        // estoque de segurança e prazo por item
   DB.gruposReposicao = DB.gruposReposicao || [];      // grupos de reposição (vários códigos somados)
+  DB.solicitacoesOP = DB.solicitacoesOP || [];        // solicitações de ordem de produção (registro)
+  // reata as linhas do plano aos pedidos cujo id foi trocado por uma importação antiga (o que já foi planejado volta a abater o pedido)
+  const reatados = reconciliarVinculosPedidos();
+  if(reatados>0) setTimeout(()=>{ try{ persistDB(); showToast(`Vínculos reatados: ${reatados} linha(s) do plano voltaram a abater os pedidos (pelo número do pedido).`); }catch(e){} }, 1200);
 }
 const nomeLocalGranel = id => { const l = (DB.locaisGranel||[]).find(x=>x.id===id); return l ? l.nome : ''; };
 function renderLocais(){
@@ -1919,8 +1971,19 @@ function deleteLocalGranel(id){
 /* ---- ITENS ---- */
 function renderItens(){
   const el = document.getElementById('cad-itens');
-  const semCapacidade = DB.items.filter(i=>!i.maxBatchLiters).length;
+  const semCapacidade = DB.items.filter(i=>!i.maxBatchLiters && DB.orders.some(o=>o.status==='Aberto' && o.itemCode===i.code && pedidoDivideLote(o))).length;   // itens com pedido de cliente que divide pelo lote e sem lote máximo
   el.innerHTML = `
+    <div class="card">
+      <h3>Clientes que dividem pelo lote máximo</h3>
+      <div class="card-sub">Marque os clientes cujos pedidos devem ser <strong>divididos em linhas pela Capacidade Máxima do Lote</strong> do item (geração do plano, planejar pedido, adicionar linha, reprogramar e edição de quantidade). Para os demais, a quantidade de um item na mesma data e recurso é <strong>uma linha só</strong> (a soma). A mudança vale para os próximos planejamentos: as linhas que já existem não são refeitas.</div>
+      <div class="tbl-wrap" style="max-height:260px"><table class="data" id="tblClientesLote"><thead><tr><th>Divide pelo lote</th><th>Cliente</th><th>Pedidos em aberto</th><th>Itens sem Capacidade Máxima</th></tr></thead><tbody>${(()=>{
+        const abertos = DB.orders.filter(o=>o.status==='Aberto');
+        const nomes = [...new Set([...abertos.map(o=>o.customer).filter(Boolean), ...clientesLoteMaxLista()])].sort((a,b)=>String(a).localeCompare(String(b)));
+        if(!nomes.length) return '<tr><td colspan="4"><div class="empty">Nenhum cliente nos pedidos em aberto.</div></td></tr>';
+        return nomes.map(nm=>{ const ped = abertos.filter(o=>o.customer===nm), div = clienteDivideLote(nm);
+          const sem = div ? [...new Set(ped.map(o=>o.itemCode))].filter(c=>{ const it = itemByCode(c); return it && !it.maxBatchLiters; }).length : 0;
+          return `<tr><td><input type="checkbox" data-cli="${acessoEsc(nm)}" ${div?'checked':''} onchange="toggleClienteLoteMax(this.dataset.cli, this.checked)"></td><td>${acessoEsc(nm)}${ped.length?'':' <span style="color:var(--muted);font-size:11px">(sem pedidos em aberto agora)</span>'}</td><td class="mono">${ped.length}</td><td class="mono">${div ? (sem ? `<span class="badge warn">⚠ ${sem}</span>` : '0') : '—'}</td></tr>`; }).join(''); })()}</tbody></table></div>
+    </div>
     <div class="card">
       <h3>Novo item</h3>
       <div class="card-sub">Unidade de medida, litros por unidade, aplicação, grupo e subgrupo — usados nas conversões e na análise por subgrupo de Aditivos.</div>
@@ -1945,9 +2008,9 @@ function renderItens(){
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <h3 style="margin-bottom:0">Itens cadastrados <span class="pill">${DB.items.length}</span></h3>
-        ${semCapacidade>0 ? `<span class="badge warn">⚠ ${semCapacidade} item(ns) sem Capacidade Máxima do Lote definida</span>` : `<span class="badge ok">✓ Todos os itens têm capacidade definida</span>`}
+        ${semCapacidade>0 ? `<span class="badge warn">⚠ ${semCapacidade} item(ns) com pedido de cliente que divide pelo lote sem Capacidade Máxima do Lote definida</span>` : ''}
       </div>
-      <div class="card-sub">A Capacidade Máxima do Lote é editável direto na coluna — é usada para dividir automaticamente o planejamento (manual ou automático) em várias linhas quando a quantidade excede o que o item aguenta produzir de uma vez.</div>
+      <div class="card-sub">A Capacidade Máxima do Lote é usada <strong>só para dividir as linhas dos clientes marcados no cartão acima</strong>. Para os demais clientes, a quantidade de um item na mesma data e recurso fica em <strong>uma linha só</strong> (a soma).</div>
       <div class="tbl-wrap"><table class="data" id="tblItens"></table></div>
     </div>`;
   document.getElementById('tblItens').innerHTML = `<thead><tr>
@@ -2431,6 +2494,17 @@ async function runImport(kind, inputId, modeId, reportId){
   }
 
   if(kind==='pedidos'){
+    // guarda os pedidos antigos ANTES de apagar: quem já existia mantém o mesmo id, e com ele o vínculo com as linhas do plano (o que já foi planejado/produzido continua abatendo)
+    const chavePI = o => String(o.orderNo).trim()+'|'+o.itemCode;
+    const antigosPorCompleta = new Map(), antigosPorPedidoItem = new Map(), idsUsados = new Set();
+    DB.orders.forEach(o=>{ const kc = chavePI(o)+'|'+((o.lotes||[])[0]||''); (antigosPorCompleta.get(kc) || antigosPorCompleta.set(kc,[]).get(kc)).push(o); const kp = chavePI(o); (antigosPorPedidoItem.get(kp) || antigosPorPedidoItem.set(kp,[]).get(kp)).push(o); });
+    const reusarId = ag => {
+      const kp = String(ag.orderNo).trim()+'|'+ag.itemCode;
+      const cand = (antigosPorCompleta.get(kp+'|'+ag.lote)||[]).find(o=>!idsUsados.has(o.id)) || (antigosPorPedidoItem.get(kp)||[]).find(o=>!idsUsados.has(o.id));   // 1º mesmo lote; senão qualquer registro do mesmo pedido e item
+      if(cand){ idsUsados.add(cand.id); return cand.id; }
+      return null;
+    };
+    let vinculosMantidos = 0;
     if(mode==='replace') DB.orders = [];
     // agrega linhas repetidas do mesmo Pedido+Item (lotes diferentes) somando a quantidade,
     // agrega linhas repetidas do mesmo Pedido+Item+LOTE (verdadeiras duplicatas) somando a quantidade.
@@ -2468,10 +2542,14 @@ async function runImport(kind, inputId, modeId, reportId){
         if(ag.orderDate) existing.orderDate = ag.orderDate;
         report.push({line:ag.linhas[0], status:'update', msg:`Pedido ${ag.orderNo} — item ${ag.itemCode}${loteTxt} atualizado para ${fmtL(ag.qty)}${linhasTxt}.`}); updated++;
       } else {
-        DB.orders.push({id:uid(), orderNo:ag.orderNo, itemCode:ag.itemCode, qty:ag.qty, dueDate:ag.dueDate, customer:ag.customer||'Cliente', status:'Aberto', lotes: ag.lote? [ag.lote] : [], ...(ag.orderDate?{orderDate:ag.orderDate}:{})});
+        const idMantido = reusarId(ag);
+        if(idMantido && DB.plan.some(pl=> pl.orderId===idMantido || (pl.orders||[]).some(e=>e.orderId===idMantido))) vinculosMantidos++;
+        DB.orders.push({id:idMantido || uid(), orderNo:ag.orderNo, itemCode:ag.itemCode, qty:ag.qty, dueDate:ag.dueDate, customer:ag.customer||'Cliente', status:'Aberto', lotes: ag.lote? [ag.lote] : [], ...(ag.orderDate?{orderDate:ag.orderDate}:{})});
         report.push({line:ag.linhas[0], status:'ok', msg:`Pedido ${ag.orderNo} — item ${ag.itemCode}${loteTxt} adicionado com ${fmtL(ag.qty)}${linhasTxt}.`}); added++;
       }
     });
+    const religados = reconciliarVinculosPedidos();   // linhas que apontavam para um registro que não existe mais: reata pelo número do pedido
+    if(vinculosMantidos || religados) report.unshift({line:'—', status:'ok', msg:`O que já estava planejado continua abatendo os pedidos: ${vinculosMantidos} pedido(s) mantiveram as linhas do plano${religados?` e ${religados} vínculo(s) foram reatados pelo número do pedido`:''}.`});
   }
 
   if(kind==='estoque'){
@@ -2698,7 +2776,7 @@ function renderManualClientList(){
                     <span style="color:var(--muted)" title="Efetuado nas linhas deste pedido (apontado na Lista Mestre)">efetuado: <strong class="mono">${fmtL(efP.efUn*lpuP)} L</strong></span>
                     <span style="color:${efP.pendUn>0.0001?'#B8590A':'var(--muted)'}" title="Planejado e ainda não efetuado">pendente de efetivo: <strong class="mono">${efP.pendUn>0.0001?fmtL(efP.pendUn*lpuP):'0'} L</strong>${efP.atrasoUn>0.0001?` <span style="color:var(--danger)">(${fmtL(efP.atrasoUn*lpuP)} L em atraso)</span>`:''}</span>
                   </div>
-                  ${it && !it.maxBatchLiters ? `<div class="note" style="margin-bottom:8px;border-color:var(--tank)">⚠ Este item não tem Capacidade Máxima do Lote cadastrada — a quantidade planejada abaixo <strong>não será dividida automaticamente</strong>, mesmo se for grande. <button class="btn btn-sm" style="margin-left:6px" onclick="setCadTab('itens'); showPage('cadastros')">Cadastrar agora</button></div>` : ''}
+                  
                   <div class="pl-line-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
                     <div class="form-field" style="min-width:0"><label>Data</label>
                       <input type="date" id="pl-date-${o.id}" value="${defaultDate}" onchange="atualizarAlocadoNaData('${o.id}','${itemCode.replace(/'/g,"\\'")}')">
@@ -2785,17 +2863,17 @@ function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
     return;
   }
 
-  // respeita a capacidade máxima do lote do item — se a quantidade informada exceder o que o item
-  // aguenta produzir de uma vez, divide em várias linhas (mesma data e recurso), igual à geração automática.
-  const maxBatchUnits = it.maxBatchLiters>0 ? Math.max(1, Math.round(it.maxBatchLiters/it.litersPerUnit)) : qtyUnitsTotal;
+  // lote máximo: só os pedidos de clientes que dividem por lote (MOTUL) são divididos; os demais ficam em UMA linha (a soma do item na data e recurso)
+  const divide = pedidoDivideLote(order);
+  const maxBatchUnits = divide ? loteMaxUnidades(it) : Infinity;
   let restante = qtyUnitsTotal;
   let linhasCompletadas = 0, linhasCriadas = 0;
 
-  // 1) (com "Agrupar por volume" ligado) antes de criar linha nova, tenta ENCHER linhas já existentes do mesmo item+data+recurso que ainda
-  //    têm espaço — assim, uma única OP consegue atender esse pedido junto com outros já planejados ali.
+  // 1) (com "Agrupar por volume" ligado) soma a quantidade em uma linha já existente do mesmo item+data+recurso — assim, uma única OP
+  //    atende esse pedido junto com outros já planejados ali.
   const linhasComEspaco = !juntar ? [] : DB.plan
-    .filter(p=> p.itemCode===it.code && p.date===date && p.resource===resource && p.batchUnits < maxBatchUnits && !linhaProtegida(p) && !p.qtdFixa)
-    .sort((a,b)=> (maxBatchUnits-a.batchUnits) - (maxBatchUnits-b.batchUnits)); // preenche primeiro quem tem menos espaço livre
+    .filter(p=> p.itemCode===it.code && p.date===date && p.resource===resource && p.batchUnits < maxBatchUnits && !linhaProtegida(p) && !p.qtdFixa && linhaDivideLote(p)===divide)
+    .sort((a,b)=> b.batchUnits - a.batchUnits); // junta na linha maior (a soma fica em uma linha só)
 
   for(const linha of linhasComEspaco){
     if(restante<=0) break;
@@ -2841,7 +2919,7 @@ function planejarPedidoLinhaCore(orderId, date, resource, qtyUnitsRaw, opts){
   } else if(linhasCompletadas>0 && linhasCriadas>0){
     showToast(`Parte do pedido ${order.orderNo} completou ${linhasCompletadas} linha(s) já existente(s); o restante (${fmtL(linhasNovas.reduce((s,l)=>s+l.batchUnits,0))} ${it.uom}) virou ${linhasCriadas} linha(s) nova(s).`);
   } else if(linhasCriadas>1){
-    showToast(`Quantidade de ${qtyUnitsTotal} ${it.uom} dividida em ${linhasCriadas} linhas (capacidade máxima do lote: ${maxBatchUnits} ${it.uom}).`);
+    showToast(`Quantidade de ${qtyUnitsTotal} ${it.uom} dividida em ${linhasCriadas} linhas (capacidade máxima do lote, cliente que divide pelo lote: ${maxBatchUnits} ${it.uom}).`);
   } else if(linhasCriadas===1){
     showToast(`Linha adicionada: ${it.code} — ${fmtL(qtyUnitsTotal)} ${it.uom} em ${fmtDate(date)}.`);
   }
@@ -3788,7 +3866,7 @@ function renderDayEditBody(itemCode, date){
     return `<div style="border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;background:#fff">
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Pedido ${l.orderNo}${ord?' · '+ord.customer:''} · Recurso atual: ${l.resource}
         ${l.bucket && l.bucket!=='limpo' ? ` <span class="badge warn">${bucketLabel(l.bucket)}</span>` : ''}
-        ${seloLinhaProduzida(l)}
+        ${seloLinhaProduzida(l)}${seloSolicitacaoOP(l)}
         ${l.viavel===false ? ` <span class="badge danger" style="cursor:pointer;text-decoration:underline" onclick="showMissingInputsModal('${l.id}')">estoque insuficiente ▸</span>` : ''}
         ${l.originalDate && l.originalDate!==l.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline" onclick="showChangeLogModal('${l.id}')">📅 data alterada ▸</span>` : ''}
         ${l.changeLog && l.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline" onclick="showChangeLogModal('${l.id}')">🔔 ${l.changeLog.length} alteração(ões) ▸</span>` : ''}
@@ -4126,7 +4204,7 @@ function runGeneratePlan(escopo){
     porItemRecurso[resource] = porItemRecurso[resource] || {};
     const grupo = (porItemRecurso[resource][it.code] = porItemRecurso[resource][it.code] || { it, totalUnits:0, pedidos:[] });
     grupo.totalUnits += Math.round(order.qty);
-    grupo.pedidos.push({orderId:order.id, orderNo:order.orderNo, qty:Math.round(order.qty), dueDate:order.dueDate, lotes:order.lotes||[]});
+    grupo.pedidos.push({orderId:order.id, orderNo:order.orderNo, qty:Math.round(order.qty), dueDate:order.dueDate, lotes:order.lotes||[], divide:pedidoDivideLote(order)});
   });
 
   // calcula bucket de contaminação, viabilidade de estoque (sobre a demanda TOTAL do item) e vencimento mais urgente
@@ -4151,18 +4229,21 @@ function runGeneratePlan(escopo){
     Object.keys(porItemRecurso[resource]).forEach(itemCode=>{
       const grupo = porItemRecurso[resource][itemCode];
       const it = grupo.it;
-      const maxBatchUnits = it.maxBatchLiters>0 ? Math.max(1, Math.round(it.maxBatchLiters/it.litersPerUnit)) : grupo.totalUnits;
+      let seq = 1;
+      // outros clientes: o total do item é UMA tarefa só (o empacotamento por dia segue só a capacidade diária); cliente MOTUL: divide pelo lote máximo do item
+      [{ped:grupo.pedidos.filter(p=>!p.divide), max:Infinity}, {ped:grupo.pedidos.filter(p=>p.divide), max:loteMaxUnidades(it)}].filter(sg=>sg.ped.length).forEach(sg=>{
+      const total = sg.ped.reduce((t,p)=>t+p.qty,0), maxBatchUnits = isFinite(sg.max) ? sg.max : total;
 
       // proteção contra erro de digitação na quantidade (ex.: quantidade absurda por engano):
       // exigir milhares de lotes trava o navegador — melhor avisar do que travar.
-      const lotesNecessarios = Math.ceil(grupo.totalUnits / maxBatchUnits);
+      const lotesNecessarios = Math.ceil(total / maxBatchUnits);
       if(lotesNecessarios > 1000){
         semRecurso.push({orderNo: grupo.pedidos.map(p=>p.orderNo).join(', '), itemCode:it.code, resource, motivo:`quantidade total do item (${grupo.totalUnits.toLocaleString('pt-BR')}) exigiria ${lotesNecessarios.toLocaleString('pt-BR')} lotes — revise as quantidades dos pedidos`});
         return;
       }
 
-      const filaPedidos = grupo.pedidos.slice().sort((a,b)=> a.dueDate.localeCompare(b.dueDate) || String(a.orderNo).localeCompare(String(b.orderNo), undefined, {numeric:true}));
-      let remainingUnits = grupo.totalUnits, seq = 1;
+      const filaPedidos = sg.ped.slice().sort((a,b)=> a.dueDate.localeCompare(b.dueDate) || String(a.orderNo).localeCompare(String(b.orderNo), undefined, {numeric:true}));
+      let remainingUnits = total;
       while(remainingUnits > 0){
         const batchUnits = Math.min(remainingUnits, maxBatchUnits);
         // consome a fila de pedidos, na ordem, pra saber quais (e quanto de cada) compõem ESTE lote específico
@@ -4184,6 +4265,7 @@ function runGeneratePlan(escopo){
         remainingUnits -= batchUnits;
         seq++;
       }
+      });   // fim do subgrupo (outros clientes / MOTUL)
     });
   });
 
@@ -4489,7 +4571,7 @@ function renderPlano(){
                       ${prioL ? ' '+prioridadeSelo(prioL,{compacto:true}) : ''}
                       ${l.bucket && l.bucket!=='limpo' ? ` <span class="badge warn" title="${bucketLabel(l.bucket)}">${l.bucket==='corante'?'⬤ corante':l.bucket==='enxofre'?'⚠ enxofre':'⬤⚠ corante+enxofre'}</span>` : ''}
                       ${l.viavel===false ? ` <span class="badge danger" style="cursor:pointer;text-decoration:underline" title="Clique para ver o que falta" onclick="showMissingInputsModal('${l.id}')">estoque insuficiente ▸</span>` : ''}
-                      ${seloLinhaProduzida(l)}
+                      ${seloLinhaProduzida(l)}${seloSolicitacaoOP(l)}
                       ${l.manual?' <span class="badge info">editado manualmente</span>':''}
                       ${l.originalDate && l.originalDate!==l.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline" title="Clique para ver o histórico" onclick="showChangeLogModal('${l.id}')">📅 data alterada ▸</span>` : ''}
                       ${l.changeLog && l.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline" title="Clique para ver o histórico" onclick="showChangeLogModal('${l.id}')">🔔 ${l.changeLog.length} alteração(ões) ▸</span>` : ''}</span>
@@ -4536,11 +4618,41 @@ function populateListFilters(){
   populateSelect(document.getElementById('lstRecurso'), DB.resources.map(r=>r.name), true);
   populateSelect(document.getElementById('lstItem'), [...new Set(DB.plan.map(p=>p.itemCode))], true);
 }
+/* ---- filtros por coluna na linha de cabeçalho da Lista Mestre (somam-se aos filtros do topo) ---- */
+const LISTA_COL = {data:'', recurso:'', item:'', desc:'', pedido:'', lote:'', contam:'', op:'', granel:'', local:'', status:''};
+function listaPassaColunas(p){
+  const f = LISTA_COL, t = (v,x)=> !v || normaTxt(String(x==null?'':x)).includes(normaTxt(v));
+  return (!f.data || p.date===f.data) && (!f.recurso || p.resource===f.recurso) && t(f.item,p.itemCode) && t(f.desc,(itemByCode(p.itemCode)||{}).name) &&
+    t(f.pedido,p.orderNo) && t(f.lote,lotesDaLinha(p).join(' ')) && (!f.contam || (p.bucket||'limpo')===f.contam) && t(f.op,p.opNumber) && t(f.granel,p.opGranelNumber) &&
+    (!f.local || String(p.localGranelId||'')===f.local) && (!f.status || p.status===f.status);
+}
+function listaFiltrosColHtml(base){
+  const v = k => acessoEsc(LISTA_COL[k]);
+  const txt = (k,ph) => `<th><input type="text" data-lcol="${k}" value="${v(k)}" placeholder="${ph}" class="${LISTA_COL[k]?'ativo':''}" oninput="listaColSet('${k}',this.value,true)" autocomplete="off"></th>`;
+  const sel = (k,opcoes) => { if(LISTA_COL[k] && !opcoes.some(o=>o[0]===LISTA_COL[k])) opcoes = [...opcoes, [LISTA_COL[k], LISTA_COL[k]+' (fora do filtro do topo)']];
+    return `<th><select data-lcol="${k}" class="${LISTA_COL[k]?'ativo':''}" onchange="listaColSet('${k}',this.value)"><option value="">Todos</option>${opcoes.map(([val,rot])=>`<option value="${acessoEsc(val)}" ${val===LISTA_COL[k]?'selected':''}>${acessoEsc(rot)}</option>`).join('')}</select></th>`; };
+  const datas = [...new Set(base.map(p=>p.date))].sort().map(d=>[d,fmtDate(d)]);
+  const recs = [...new Set(base.map(p=>p.resource))].sort().map(r=>[r,r]);
+  const contam = [...new Map(base.map(p=>[p.bucket||'limpo', bucketLabel(p.bucket||'limpo')])).entries()].sort((a,b)=>a[1].localeCompare(b[1]));
+  const locais = [...new Set(base.map(p=>String(p.localGranelId||'')))].sort().map(id=>[id, id ? nomeLocalGranel(id) : '(sem local)']);
+  const stt = [...new Set(base.map(p=>p.status))].sort().map(x=>[x,x]);
+  const vazio = '<th></th>', ativos = Object.values(LISTA_COL).filter(Boolean).length;
+  return `<tr class="lc-filtros">${sel('data',datas)}${sel('recurso',recs)}${txt('item','filtrar')}${txt('desc','filtrar')}${txt('pedido','filtrar')}${txt('lote','filtrar')}${vazio}${vazio}${sel('contam',contam)}${txt('op','filtrar')}${txt('granel','filtrar')}${sel('local',locais)}${vazio.repeat(6)}${sel('status',stt)}<th>${ativos?`<button class="btn btn-sm" title="Limpar os filtros das colunas" onclick="listaColLimpar()">✕ ${ativos}</button>`:''}</th></tr>`;
+}
+let __lcT = null;
+function listaColSet(chave, valor, texto){
+  LISTA_COL[chave] = valor;
+  clearTimeout(__lcT);
+  if(texto) __lcT = setTimeout(renderLista, 250);   // digitando: espera uma pausa; o foco e o cursor voltam ao campo (renderLista)
+  else renderLista();
+}
+function listaColLimpar(){ Object.keys(LISTA_COL).forEach(k=>LISTA_COL[k]=''); renderLista(); }
 function clearListaFilters(){
   ['lstDe','lstAte','lstRecurso','lstItem','lstPedido','lstStatus'].forEach(id=>document.getElementById(id).value='');
+  Object.keys(LISTA_COL).forEach(k=>LISTA_COL[k]='');   // também limpa os filtros das colunas
   renderLista();
 }
-function getFilteredListaRows(){
+function getFilteredListaRows(opts){
   const de = document.getElementById('lstDe').value;
   const ate = document.getElementById('lstAte').value;
   const res = filtroValores('lstRecurso');
@@ -4551,7 +4663,8 @@ function getFilteredListaRows(){
     (!de || p.date>=de) && (!ate || p.date<=ate) &&
     (!res.length || res.includes(p.resource)) && (!item.length || item.includes(p.itemCode)) &&
     (!ped || String(p.orderNo).toLowerCase().includes(ped)) &&
-    (!stt.length || stt.includes(p.status))
+    (!stt.length || stt.includes(p.status)) &&
+    ((opts && opts.semColunas) || listaPassaColunas(p))        // filtros das colunas (linha de filtros do cabeçalho)
   ).sort((a,b)=>
     cmpGranel(a,b) || a.resource.localeCompare(b.resource) || a.date.localeCompare(b.date) ||
     a.itemCode.localeCompare(b.itemCode) || a.dueDate.localeCompare(b.dueDate) ||
@@ -4604,9 +4717,17 @@ function renderListaResumo(rows){
 let listaLinhasLimite = 500; // evita desenhar milhares de linhas de uma vez; usuário pode expandir sob demanda
 function mostrarMaisLinhasLista(){ listaLinhasLimite = Infinity; renderLista(); }
 function renderLista(){
+  // preserva o foco e o cursor do campo de filtro da coluna (o cabeçalho é redesenhado a cada filtro)
+  const a = document.activeElement;
+  const foco = (a && a.dataset && a.dataset.lcol && a.closest && a.closest('#tblLista')) ? {k:a.dataset.lcol, ini:a.selectionStart, fim:a.selectionEnd} : null;
+  renderListaCore();
+  if(foco){ const el = document.querySelector(`#tblLista [data-lcol="${foco.k}"]`); if(el){ el.focus(); try{ if(foco.ini!=null) el.setSelectionRange(foco.ini, foco.fim); }catch(e){} } }
+}
+function renderListaCore(){
   limparCachePrioridades();
   populateListFilters();
   const rowsAll = getFilteredListaRows();
+  const rowsBase = getFilteredListaRows({semColunas:true});   // opções dos filtros de coluna: só os filtros do topo
   renderListaResumo(rowsAll);
   const rows = rowsAll.slice(0, listaLinhasLimite);
   const ocultas = rowsAll.length - rows.length;
@@ -4627,17 +4748,17 @@ function renderLista(){
 
   document.getElementById('tblLista').innerHTML = `<thead><tr>
     <th>Data</th><th>Recurso</th><th>Item</th><th>Descrição</th><th>Pedido</th><th>Lote(s)</th><th>Qtd. (L)</th><th>Qtd. (unid.)</th><th>Contaminante</th>
-    <th>Nº OP</th><th>Nº OP Granel</th><th>Localização do Granel</th><th>1º turno</th><th>2º turno</th><th>3º turno</th><th>Tempo total</th><th>Qtd. efetiva total</th><th>Última data efetiva</th><th>Status</th><th></th></tr></thead>
+    <th>Nº OP</th><th>Nº OP Granel</th><th>Localização do Granel</th><th>1º turno</th><th>2º turno</th><th>3º turno</th><th>Tempo total</th><th>Qtd. efetiva total</th><th>Última data efetiva</th><th>Status</th><th></th></tr>${listaFiltrosColHtml(rowsBase)}</thead>
     <tbody>${rows.length? rows.map(p=>{
       const __cab = cabecalhoGranel(p);
       const gTxtP = String(p.opGranelNumber||'').trim(), gP = gTxtP ? gmap.get(normaTxt(gTxtP)) : null, granelMulti = !!(gP && gP.itens.size>1);
       const refs = refPorLinha[p.id] || [], refTxt = refs.length ? refs.reduce((s,r)=>s+r.qty,0) : 0;
       const it = itemByCode(p.itemCode);
       const lotesArrLM = lotesDaLinha(p), loteEditado = Array.isArray(p.loteManual);
-      return __cab + `<tr>
+      return __cab + `<tr${p.obs?' class="linha-obs"':''}>
         <td>${fmtDate(p.date)}${p.originalDate && p.originalDate!==p.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-top:2px" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span>` : ''}</td>
         <td><select style="min-width:150px"${attrTrava(p)} onchange="updateListaRecurso('${p.id}', this.value)">${DB.resources.map(r=>`<option value="${r.name}" ${r.name===p.resource?'selected':''}>${r.name}</option>`).join('')}</select></td>
-        <td class="mono">${p.itemCode}${(()=>{ const pr=getPrioridadeResumoItem(p.itemCode); return pr ? ' '+prioridadeSelo(pr,{compacto:true}) : ''; })()}${p.changeLog && p.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline;white-space:nowrap" title="Clique para ver o histórico completo de alterações" onclick="showChangeLogModal('${p.id}')">🔔 ${p.changeLog.length} ▸</span>` : ''}</td><td style="white-space:normal;min-width:230px;max-width:330px;font-size:12px;line-height:1.35">${it?it.name:''}</td><td class="mono">${p.orderNo}</td>
+        <td class="mono">${p.itemCode}${seloSolicitacaoOP(p)}${(()=>{ const pr=getPrioridadeResumoItem(p.itemCode); return pr ? ' '+prioridadeSelo(pr,{compacto:true}) : ''; })()}${p.changeLog && p.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline;white-space:nowrap" title="Clique para ver o histórico completo de alterações" onclick="showChangeLogModal('${p.id}')">🔔 ${p.changeLog.length} ▸</span>` : ''}</td><td style="white-space:normal;min-width:230px;max-width:330px;font-size:12px;line-height:1.35">${it?it.name:''}${p.obs?`<div class="obs-prev" title="${acessoEsc(p.obs)}" onclick="abrirObsLinha('${p.id}')">📝 ${acessoEsc(p.obs.length>90?p.obs.slice(0,90)+'…':p.obs)}</div>`:''}</td><td class="mono">${p.orderNo}</td>
         <td style="min-width:150px;white-space:nowrap"><input class="mono" style="font-size:11px;width:118px${loteEditado?';border-color:#B8590A':''}" value="${acessoEsc(lotesArrLM.join(', '))}" onchange="updateLoteLinha('${p.id}',this.value)" placeholder="—" title="Lote(s) desta linha. Para vários, separe por vírgula. Apague para deixar a linha sem lote.">${loteEditado?` <button type="button" class="btn btn-sm" style="padding:0 6px" title="Lote editado manualmente. Clique para voltar ao lote do pedido" onclick="restaurarLoteLinha('${p.id}')">↺</button>`:''}</td>
         <td class="mono">${fmtL(p.batchLiters)}</td>
         <td><input type="number" min="1" step="1" value="${p.batchUnits}" style="width:80px"${attrTrava(p)} onchange="updateListaQtd('${p.id}', this.value)"> ${it?it.uom:''}</td>
@@ -4656,7 +4777,7 @@ function renderLista(){
               <option ${p.status==='Em produção'?'selected':''}>Em produção</option>
               <option ${p.status==='Concluído'?'selected':''}>Concluído</option>
             </select></td>
-        <td style="white-space:nowrap">${linhaTemProducao(p)?`<span style="cursor:help;margin-right:4px" title="${ehAdmin()?'Linha com produção apontada: só administradores alteram a programação (com justificativa registrada).':'Linha com produção apontada: data, recurso, quantidade e exclusão estão travados (só administrador altera). Os apontamentos continuam editáveis.'}">${ehAdmin()?'⚠':'🔒'}</span>`:''}<button class="icon-btn" title="${refs.length?`Refugo / perdas apontados nesta linha: ${fmtL(refTxt)} (${refs.length} apontamento(s))`:'Apontar refugo / perdas desta linha'}" onclick="abrirRefugoLinha('${p.id}')" style="${refs.length?'color:#B8590A;font-weight:800':''}">♻${refs.length?` ${refs.length}`:''}</button><button class="icon-btn" ${linhaTravada(p)?'disabled data-trava-prog="1" title="🔒 Linha com produção apontada — não pode ser removida"':'title="Remover esta linha"'} onclick="deleteListaLine('${p.id}')">✕</button></td>
+        <td style="white-space:nowrap">${linhaTemProducao(p)?`<span style="cursor:help;margin-right:4px" title="${ehAdmin()?'Linha com produção apontada: só administradores alteram a programação (com justificativa registrada).':'Linha com produção apontada: data, recurso, quantidade e exclusão estão travados (só administrador altera). Os apontamentos continuam editáveis.'}">${ehAdmin()?'⚠':'🔒'}</span>`:''}${botaoObsHtml(p)}<button class="icon-btn" title="${refs.length?`Refugo / perdas apontados nesta linha: ${fmtL(refTxt)} (${refs.length} apontamento(s))`:'Apontar refugo / perdas desta linha'}" onclick="abrirRefugoLinha('${p.id}')" style="${refs.length?'color:#B8590A;font-weight:800':''}">♻${refs.length?` ${refs.length}`:''}</button><button class="icon-btn" ${linhaTravada(p)?'disabled data-trava-prog="1" title="🔒 Linha com produção apontada — não pode ser removida"':'title="Remover esta linha"'} onclick="deleteListaLine('${p.id}')">✕</button></td>
       </tr>`;
     }).join('') : `<tr><td colspan="20"><div class="empty">Nenhuma linha planejada para este filtro. Gere o plano mestre na aba correspondente.</div></td></tr>`}
     ${ocultas>0 ? `<tr><td colspan="20" style="text-align:center;padding:12px">
@@ -4671,14 +4792,42 @@ function renderLista(){
 // (afetando pendência do pedido, prioridades e OTIF).
 /* ---- vínculo automático dos pedidos às linhas (do pedido mais antigo para o mais novo) ---- */
 // "mais antigo" = menor data de entrega; em empate, menor número do pedido
+/* ---- lote máximo: só os pedidos de clientes desta lista (MOTUL) são divididos pelo lote máximo do item; para os demais, a quantidade de um item
+   na mesma data e recurso fica em UMA linha só (a soma). A correspondência é por trecho do nome do cliente, sem diferenciar maiúsculas e acentos. ---- */
+/* A lista de clientes é mantida pelo usuário em Cadastros → Itens (DB.clientesLoteMax, sincronizada). Enquanto ninguém a editar, vale o padrão antigo (clientes "MOTUL"). */
+let __lmCache = {ref:null, len:-1, set:new Set()};
+function clientesLoteMaxLista(){   // nomes (como estão nos pedidos) dos clientes que dividem pelo lote máximo
+  if(Array.isArray(DB.clientesLoteMax)) return DB.clientesLoteMax;
+  return [...new Set((DB.orders||[]).map(o=>o.customer).filter(c=>c && normaTxt(String(c)).includes('motul')))];
+}
+const clienteDivideLote = cliente => {
+  const c = normaTxt(String(cliente||'')); if(!c) return false;
+  const arr = DB.clientesLoteMax;
+  if(!Array.isArray(arr)) return c.includes('motul');          // padrão enquanto a lista não foi editada
+  if(__lmCache.ref!==arr || __lmCache.len!==arr.length) __lmCache = {ref:arr, len:arr.length, set:new Set(arr.map(x=>normaTxt(String(x))))};
+  return __lmCache.set.has(c);
+};
+function toggleClienteLoteMax(nome, marcado){
+  const n = normaTxt(String(nome));
+  const lista = clientesLoteMaxLista().filter(x=>normaTxt(String(x))!==n);
+  if(marcado) lista.push(nome);
+  DB.clientesLoteMax = lista;                                   // sempre um array novo (o sync e o cache percebem a troca)
+  persistDB(); renderItens();
+  showToast(marcado ? `${nome}: passa a dividir os pedidos pela Capacidade Máxima do Lote.` : `${nome}: a quantidade de um item na mesma data e recurso fica em uma linha só.`);
+}
+const pedidoDivideLote = o => !!o && clienteDivideLote(o.customer);
+const loteMaxUnidades = it => (it && it.maxBatchLiters>0 && it.litersPerUnit>0) ? Math.max(1, Math.round(it.maxBatchLiters/it.litersPerUnit)) : Infinity;
+// a linha segue a regra do lote máximo quando TODOS os pedidos dela são de clientes que dividem por lote
+const linhaDivideLote = p => { const os = (p.orders && p.orders.length) ? p.orders : [{orderId:p.orderId}]; return os.length>0 && os.every(e=>pedidoDivideLote((DB.orders||[]).find(o=>o.id===e.orderId))); };
 const cmpPedidoAntigo = (a,b) => String(a.dueDate||'9999-99-99').localeCompare(String(b.dueDate||'9999-99-99')) || String(a.orderNo).localeCompare(String(b.orderNo),'pt',{numeric:true});
 // Depois que as quantidades das linhas de um item mudam, redistribui os pedidos em aberto desse item entre as linhas SEM produção, na ordem das linhas
 // (data, sequência) e dos pedidos (mais antigo primeiro), preenchendo cada linha na quantidade informada. Linhas com produção mantêm os seus vínculos
 // (e abatem a capacidade dos pedidos). Se as linhas somarem mais do que os pedidos em aberto, o excedente fica no pedido mais novo (aparece como excedente).
-function redistribuirPedidosDoItem(itemCode){
-  const pedidos = DB.orders.filter(o=>o.status==='Aberto' && o.itemCode===itemCode).sort(cmpPedidoAntigo);
+function redistribuirPedidosDoItem(itemCode){ redistribuirClasse(itemCode,false); redistribuirClasse(itemCode,true); }   // pedidos/linhas do cliente MOTUL e dos demais não se misturam
+function redistribuirClasse(itemCode, divide){
+  const pedidos = DB.orders.filter(o=>o.status==='Aberto' && o.itemCode===itemCode && pedidoDivideLote(o)===divide).sort(cmpPedidoAntigo);
   if(!pedidos.length) return;
-  const linhas = DB.plan.filter(p=>p.itemCode===itemCode).sort((a,b)=> String(a.date).localeCompare(String(b.date)) || (a.sequence||0)-(b.sequence||0) || String(a.id).localeCompare(String(b.id)));
+  const linhas = DB.plan.filter(p=>p.itemCode===itemCode && linhaDivideLote(p)===divide).sort((a,b)=> String(a.date).localeCompare(String(b.date)) || (a.sequence||0)-(b.sequence||0) || String(a.id).localeCompare(String(b.id)));
   const cap = new Map(pedidos.map(o=>[o.id, o.qty]));
   linhas.filter(linhaProtegida).forEach(p=>(p.orders||[]).forEach(e=>{ if(cap.has(e.orderId)) cap.set(e.orderId, cap.get(e.orderId)-e.qty); }));
   const r2 = v => Math.round(v*100)/100;
@@ -4748,12 +4897,8 @@ function updateListaQtd(id, value){
   const qtyRaw = parseFloat(value);
   if(!qtyRaw || qtyRaw<=0){ alert('Informe uma quantidade maior que zero.'); renderLista(); return; }
   const qty = Math.round(qtyRaw);
-  const maxBatchUnits = it && it.maxBatchLiters>0 ? Math.max(1, Math.round(it.maxBatchLiters/it.litersPerUnit)) : Infinity;
-  if(qty > maxBatchUnits){
-    alert(`Essa quantidade excede a Capacidade Máxima do Lote deste item (${maxBatchUnits} ${it.uom}). Reduza o valor ou crie outra linha para o restante.`);
-    renderLista();
-    return;
-  }
+  // teto do lote máximo só nas linhas do cliente MOTUL; nas demais a quantidade é livre (limitada só pelo que está em aberto nos pedidos, mais abaixo)
+  if(linhaDivideLote(p)){ const mx = loteMaxUnidades(it); if(qty > mx){ alert(`Essa quantidade excede a Capacidade Máxima do Lote deste item (${mx} ${it.uom}) — regra dos clientes que dividem pelo lote máximo. Reduza o valor ou crie outra linha para o restante.`); renderLista(); return; } }
   const exc = aumentaExcessoDoItem(p, qty);
   if(exc && !podeExcederPedido()){ alert(`Essa quantidade deixa o item ${p.itemCode} planejado acima do que está em aberto nos pedidos (${fmtL(exc.aberto)} ${it?it.uom:''} em aberto; ficaria ${fmtL(exc.novo)}).\n\n${MSG_SEM_EXCESSO}`); renderLista(); return; }
   comAutorizacaoLinhaProduzida(p, `Quantidade (Lista Mestre): ${fmtL(p.batchUnits)} → ${fmtL(qty)}`, (just)=>{
@@ -4798,35 +4943,112 @@ function toggleAddLinhaLista(){
   body.style.display = abrir ? 'block' : 'none';
   btn.textContent = abrir ? 'Fechar' : 'Abrir';
   if(abrir){
-    const sel = document.getElementById('lmAddPedido');
-    const comPendencia = DB.orders.filter(o=>o.status==='Aberto' && pendingLitersForOrder(o).pending>0.0001);
-    sel.innerHTML = comPendencia.length ? comPendencia.map(o=>{
-      const it = itemByCode(o.itemCode);
-      const {pending} = pendingLitersForOrder(o);
-      return `<option value="${o.id}">${o.orderNo} — ${o.itemCode}${it?' ('+it.name+')':''} — ${o.customer} — pendente ${fmtL(pending)} L</option>`;
-    }).join('') : '<option value="">Nenhum pedido com pendência</option>';
+    const sel = document.getElementById('lmAddItem');
+    const itens = itensComPedidoAberto();
+    sel.innerHTML = itens.length ? itens.map(x=>`<option value="${acessoEsc(x.code)}" ${x.pend>0?'':'disabled'}>${acessoEsc(x.code)} — ${acessoEsc(x.name)} — ${x.pend>0?'pendente '+fmtL(x.pend)+' '+acessoEsc(x.uom):'sem pedido disponível'}</option>`).join('') : '<option value="">Nenhum item com pedido em aberto</option>';
+    const primeiro = itens.find(x=>x.pend>0); if(primeiro) sel.value = primeiro.code;
     document.getElementById('lmAddRecurso').innerHTML = DB.resources.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
     document.getElementById('lmAddData').value = DB.updatedAt;
     atualizarCamposAddLinha();
   }
 }
+/* ---- adicionar linha pela Lista Mestre: escolhe o ITEM; o vínculo com o(s) pedido(s) é automático, do mais antigo para o mais novo ---- */
+/* ---- Comentários / Observações da linha da Lista Mestre (aparecem destacados para os operadores) ---- */
+const botaoObsHtml = p => p.obs
+  ? `<button class="icon-btn btn-obs tem" title="Observação: ${acessoEsc(p.obs).slice(0,300)}" onclick="abrirObsLinha('${p.id}')">📝 Obs.</button>`
+  : `<button class="icon-btn btn-obs" title="Comentários / Observações desta linha" onclick="abrirObsLinha('${p.id}')">💬 Obs.</button>`;
+function fecharObsLinha(){ const o = document.getElementById('obsOverlay'); if(o) o.remove(); }
+function abrirObsLinha(id){
+  const p = DB.plan.find(x=>x.id===id); if(!p) return;
+  const it = itemByCode(p.itemCode), pode = podeAcao('salvarObsLinha',[id]);
+  fecharObsLinha();
+  const o = document.createElement('div'); o.id = 'obsOverlay';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px';
+  o.innerHTML = `<div style="background:var(--card);color:var(--text);border-radius:12px;max-width:560px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <h3 style="margin:0 0 4px">💬 Comentários / Observações</h3>
+    <div class="card-sub" style="margin:0 0 10px"><strong>${acessoEsc(p.itemCode)}</strong> — ${acessoEsc(it?it.name:'')}<br>${fmtDate(p.date)} · ${acessoEsc(p.resource)} · ${fmtL(p.batchUnits)} ${it?acessoEsc(it.uom):''}</div>
+    <textarea id="obsTexto" rows="7" maxlength="1000" ${pode?'':'readonly'} placeholder="${pode?'Escreva aqui o que a produção precisa saber desta linha…':'Esta linha não tem observação.'}" style="width:100%;font-family:var(--sans);font-size:14px;padding:10px;border:1px solid var(--line-strong);border-radius:8px;resize:vertical">${acessoEsc(p.obs||'')}</textarea>
+    <div class="card-sub" style="margin:6px 0 0">${p.obs && p.obsPor ? `Última alteração: <strong>${acessoEsc(p.obsPor)}</strong> em ${solOpDataHora(p.obsEm)}` : ''}${pode ? '' : (p.obs?' · ':'')+'Somente leitura'}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">${pode && p.obs ? `<button class="btn btn-danger" onclick="limparObsLinha('${id}')">Apagar observação</button>` : ''}<button class="btn btn-ghost" onclick="fecharObsLinha()">${pode?'Cancelar':'Fechar'}</button>${pode ? `<button class="btn btn-primary" onclick="salvarObsLinha('${id}')">Salvar</button>` : ''}</div></div>`;
+  document.body.appendChild(o); setTimeout(()=>{ const t = document.getElementById('obsTexto'); if(t && pode) t.focus(); }, 50);
+}
+function salvarObsLinha(id){
+  const p = DB.plan.find(x=>x.id===id); if(!p) return;
+  const t = document.getElementById('obsTexto'), txt = String(t ? t.value : '').trim();
+  if(txt){ p.obs = txt; p.obsPor = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : ''; p.obsEm = new Date().toISOString(); }
+  else { delete p.obs; delete p.obsPor; delete p.obsEm; }
+  persistDB(); fecharObsLinha(); renderLista(); showToast(txt ? 'Observação salva na linha.' : 'Observação apagada.');
+}
+function limparObsLinha(id){ const t = document.getElementById('obsTexto'); if(t) t.value = ''; salvarObsLinha(id); }
+function pendenteDoItem(code){
+  const pedidos = DB.orders.filter(o=>o.status==='Aberto' && o.itemCode===code).sort(cmpPedidoAntigo)
+    .map(o=>({o, pend:Math.floor(pendenteUnidadesDoPedido(o)+0.0001)})).filter(x=>x.pend>0);
+  return {pend:pedidos.reduce((t,x)=>t+x.pend,0), pedidos};
+}
+function itensComPedidoAberto(){
+  const cods = [...new Set(DB.orders.filter(o=>o.status==='Aberto').map(o=>o.itemCode))].sort((a,b)=>a.localeCompare(b));
+  return cods.map(code=>{ const it = itemByCode(code); return {code, name:it?it.name:'', uom:it?it.uom:'', pend:pendenteDoItem(code).pend}; });
+}
 function atualizarCamposAddLinha(){
-  const orderId = document.getElementById('lmAddPedido').value;
-  const order = DB.orders.find(o=>o.id===orderId);
-  if(!order) return;
-  const it = itemByCode(order.itemCode);
-  const {pending} = pendingLitersForOrder(order);
-  if(it && it.resource && resourceByName(it.resource)) document.getElementById('lmAddRecurso').value = it.resource;
-  const defaultQty = it && pending>0 ? Math.round((pending/it.litersPerUnit)*100)/100 : 0;
-  document.getElementById('lmAddQty').value = defaultQty;
+  const code = document.getElementById('lmAddItem').value, info = document.getElementById('lmAddInfo'), btn = document.getElementById('lmAddBtn');
+  const it = itemByCode(code); if(!code || !it){ if(info) info.textContent = ''; if(btn) btn.disabled = true; return; }
+  const r = pendenteDoItem(code);
+  if(it.resource && resourceByName(it.resource)) document.getElementById('lmAddRecurso').value = it.resource;
+  document.getElementById('lmAddQty').value = r.pend;
+  if(info) info.innerHTML = r.pend>0 ? `Em aberto: <strong>${fmtL(r.pend)} ${acessoEsc(it.uom)}</strong> em ${r.pedidos.length} pedido(s) — o mais antigo vence em ${fmtDate(r.pedidos[0].o.dueDate)}.` : `<span style="color:var(--danger)">Sem pedido em aberto disponível para este item: não é possível inserir a linha.</span>`;
+  if(btn) btn.disabled = r.pend<=0;
 }
 function adicionarLinhaListaMestre(){
-  const orderId = document.getElementById('lmAddPedido').value;
+  const code = document.getElementById('lmAddItem').value;
   const date = document.getElementById('lmAddData').value;
   const resource = document.getElementById('lmAddRecurso').value;
   const qty = parseFloat(document.getElementById('lmAddQty').value);
-  if(!orderId){ alert('Selecione um pedido.'); return; }
-  planejarPedidoLinhaCore(orderId, date, resource, qty);
+  if(!code){ alert('Selecione um item.'); return; }
+  planejarItemLinha(code, date, resource, qty);
+}
+function planejarItemLinha(code, date, resource, qtyRaw){
+  const it = itemByCode(code);
+  if(!it){ alert('Item não encontrado no cadastro.'); return false; }
+  if(!date){ alert('Informe a data.'); return false; }
+  if(!resource){ alert('Selecione o recurso.'); return false; }
+  if(!qtyRaw || qtyRaw<=0){ alert('Informe uma quantidade maior que zero.'); return false; }
+  const qty = Math.round(qtyRaw);
+  const r = pendenteDoItem(code);
+  if(!r.pedidos.length){ alert(`O item ${code} não tem pedido em aberto disponível: não é possível inserir a linha.`); return false; }
+  if(qty > r.pend && !podeExcederPedido()){
+    alert(`Quantidade acima do que está em aberto para o item ${code}: pendente ${fmtL(r.pend)} ${it.uom}; você informou ${fmtL(qty)}.\n\n${MSG_SEM_EXCESSO}`);
+    return false;
+  }
+  // vínculo automático: distribui a quantidade pelos pedidos, do mais antigo para o mais novo
+  let rest = qty; const aloc = [];
+  for(const x of r.pedidos){ if(rest<=0) break; const u = Math.min(rest, x.pend); aloc.push({o:x.o, qty:u}); rest -= u; }
+  if(rest>0){ const ult = r.pedidos[r.pedidos.length-1].o, ex = aloc.find(a=>a.o.id===ult.id); if(ex) ex.qty += rest; else aloc.push({o:ult, qty:rest}); }   // excedente (só quem pode) vai ao pedido mais novo
+  const alocM = aloc.filter(a=>pedidoDivideLote(a.o)), alocN = aloc.filter(a=>!pedidoDivideLote(a.o));
+  alocM.forEach(a=>planejarPedidoLinhaCore(a.o.id, date, resource, a.qty));      // pedidos do cliente MOTUL: dividem pelo lote máximo (mesma regra do planejamento manual)
+  if(!alocN.length){ redistribuirPedidosDoItem(code); persistDB(); return true; }
+  const qtyN = alocN.reduce((t,a)=>t+a.qty,0);
+  const entradas = alocN.map(a=>({orderId:a.o.id, orderNo:a.o.orderNo, qty:a.qty, lotes:a.o.lotes||[]}));
+  const alvo = AGRUPAR_POR_VOLUME ? DB.plan.filter(p=>p.itemCode===code && p.date===date && p.resource===resource && !linhaProtegida(p) && !p.qtdFixa && !linhaDivideLote(p)).sort((a,b)=>b.batchUnits-a.batchUnits)[0] : null;
+  if(alvo){
+    entradas.forEach(e=>{ const x = (alvo.orders||[]).find(o=>o.orderId===e.orderId); if(x) x.qty += e.qty; else (alvo.orders = alvo.orders||[]).push(e); });
+    alvo.batchUnits += qtyN; alvo.batchLiters += qtyN*it.litersPerUnit; alvo.manual = true;
+    if(DB.planConfirmed) logMudancaPlano(alvo, 'Linha completada (adicionada pela Lista Mestre)', fmtL(alvo.batchUnits-qtyN), fmtL(alvo.batchUnits), '');
+    showToast(`${fmtL(qtyN)} ${it.uom} somados à linha já existente de ${code} em ${fmtDate(date)} (uma linha só).`);
+  } else {
+    const ordenados = alocN.map(a=>a.o).sort(cmpPedidoAntigo);
+    const nova = { id: uid(), date, originalDate: date, resource, itemCode: code, orderNo: '', orderId: null, orders: entradas, lotes: [],
+      sequence: DB.plan.filter(p=>p.resource===resource && p.itemCode===code).length + 1, batchLiters: qtyN*it.litersPerUnit, batchUnits: qtyN, dueDate: ordenados[0].dueDate,
+      bucket: classifyContaminacao(code), viavel: isOrderViavel(ordenados[0]), aplicacao: it.application || 'Sem aplicação',
+      opNumber:'', opGranelNumber:'', turno1:null, turno2:null, turno3:null, actualQtyUnits:null, actualDate:null, status:'Planejado', manual:true, changeLog:[] };
+    if(DB.planConfirmed) logMudancaPlano(nova, 'Linha criada', '—', `${fmtL(qtyN)} ${it.uom}`, '');
+    DB.plan.push(nova);
+    showToast(`Linha adicionada: ${code} — ${fmtL(qtyN)} ${it.uom} em ${fmtDate(date)}, vinculada ao(s) pedido(s) ${[...new Set(entradas.map(e=>e.orderNo))].join(', ')}.`);
+  }
+  redistribuirPedidosDoItem(code);        // deixa o vínculo de todas as linhas do item consistente, do pedido mais antigo para o mais novo
+  renderManualClientList(); renderPlano(); populateListFilters(); renderLista(); populateDashFilters(); renderDashboards(); renderVisaoDia();
+  checkExcessoPlanejado(code);
+  persistDB();
+  return true;
 }
 // célula de um turno na Lista Mestre: quantidade + data em que foi efetuado (+ selo se for fora do dia planejado)
 function turnoCelulaHtml(p,k){
@@ -5288,58 +5510,41 @@ function doPrint(){
   const totalPlanejado = resumo.reduce((s,r)=>s+r.planejado,0);
   const totalEfetivo = resumo.reduce((s,r)=>s+r.efetivo,0);
 
-  // agrupa por Data → Recurso, para um layout de acompanhamento claro na produção
-  const porData = {};
-  rows.forEach(p=>{
-    (porData[p.date] = porData[p.date]||{});
-    (porData[p.date][p.resource] = porData[p.date][p.resource]||[]).push(p);
-  });
-  const datasOrdenadas = Object.keys(porData).sort();
-
-  const blocosHtml = datasOrdenadas.map((data,di)=>{
-    const recursos = Object.keys(porData[data]).sort();
-    const totalDia = recursos.reduce((s,r)=> s + porData[data][r].reduce((s2,p)=>s2+p.batchLiters,0), 0);
-    return `<div class="dia-bloco" style="${di>0?'page-break-before:always;':''}">
-      <div class="dia-header">
-        <div><div class="dia-data">${fmtDate(data)}</div><div class="dia-semana">${weekdayPtBR(data)}</div></div>
-        <div class="dia-total">${fmtL(totalDia)} L no dia</div>
-      </div>
-      ${recursos.map(res=>{
-        const linhas = porData[data][res];
-        const totalRec = linhas.reduce((s,p)=>s+p.batchLiters,0);
-        return `<div class="recurso-bloco">
-          <div class="recurso-header"><span>🏭 ${res}</span><span>${fmtL(totalRec)} L planejados</span></div>
-          <table class="tabela-producao">
-            <thead><tr>
-              <th style="width:28px">✓</th><th>Item</th><th>Pedido</th><th>Lote(s)</th><th>Qtd (L)</th><th>Qtd (unid.)</th><th>Nº OP</th><th>Nº OP Granel</th><th>Local. granel</th><th>Qtd. Real</th><th>Assinatura / Hora</th>
-            </tr></thead>
-            <tbody>
-              ${linhas.map(p=>{
-                const it = itemByCode(p.itemCode);
-                const lotesArrPrint = lotesDaLinha(p);
-                const lotesTxt = lotesArrPrint.length ? lotesArrPrint.join(', ') : '—';
-                const contaminante = p.bucket && p.bucket!=='limpo' ? `<div class="tag-contam">⚠ ${bucketLabel(p.bucket)}</div>` : '';
-                const dataAlterada = p.originalDate && p.originalDate!==p.date ? `<div class="tag-data-alt">📅 data alterada (era ${fmtDate(p.originalDate)})</div>` : '';
-                return `<tr>
-                  <td class="checkbox-cell">☐</td>
-                  <td><strong>${p.itemCode}</strong><span class="desc-item">${it?it.name:''}</span>${contaminante}${dataAlterada}</td>
-                  <td class="mono-cell">${p.orderNo}</td>
-                  <td class="mono-cell" style="font-size:10px">${lotesTxt}</td>
-                  <td class="qtd-grande">${fmtL(p.batchLiters)}</td>
-                  <td>${fmtL(p.batchUnits)} ${it?it.uom:''}</td>
-                  <td>${p.opNumber || ''}</td>
-                  <td>${p.opGranelNumber || ''}</td>
-                  <td>${acessoEsc(nomeLocalGranel(p.localGranelId))}</td>
-                  <td class="linha-vazia-cell"></td>
-                  <td class="linha-vazia-cell"></td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>`;
-      }).join('')}
-    </div>`;
+  // mesma lógica da Lista Mestre: classificação 1º Nº OP Granel, 2º Recurso, 3º Data (já vem de getFilteredListaRows) e uma faixa de cabeçalho a cada novo Nº OP Granel
+  const gmapP = mapaGranel(), grpContP = {};
+  rows.forEach(p=>{ const k = normaTxt(String(p.opGranelNumber||'').trim()); grpContP[k] = (grpContP[k]||0)+1; });
+  const haGranelP = rows.some(p=>String(p.opGranelNumber||'').trim());
+  const NCOLP = 12; let ultP = null;
+  const faixaP = p => {
+    const gTxt = String(p.opGranelNumber||'').trim(), gKey = normaTxt(gTxt);
+    if(!haGranelP || gKey===ultP) return '';
+    ultP = gKey;
+    if(!gTxt) return `<tr class="grp-granel"><td colspan="${NCOLP}">Sem Nº OP Granel · ${grpContP[gKey]} linha(s)</td></tr>`;
+    const g = gmapP.get(gKey), multi = g && g.itens.size>1;
+    return `<tr class="grp-granel"><td colspan="${NCOLP}">📦 Nº OP Granel <strong>${acessoEsc(gTxt)}</strong> · ${grpContP[gKey]} linha(s) neste filtro · ${g?g.itens.size:1} item(ns)${multi?` <span class="granel-alerta">⚠ ${MSG_GRANEL}</span>`:''}</td></tr>`;
+  };
+  const linhasPrint = rows.map(p=>{
+    const it = itemByCode(p.itemCode);
+    const lotesArrPrint = lotesDaLinha(p);
+    const lotesTxt = lotesArrPrint.length ? lotesArrPrint.join(', ') : '—';
+    const contaminante = p.bucket && p.bucket!=='limpo' ? `<div class="tag-contam">⚠ ${bucketLabel(p.bucket)}</div>` : '';
+    const dataAlterada = p.originalDate && p.originalDate!==p.date ? `<div class="tag-data-alt">📅 data alterada (era ${fmtDate(p.originalDate)})</div>` : '';
+    return faixaP(p) + `<tr>
+      <td class="checkbox-cell">☐</td>
+      <td class="mono-cell">${fmtDate(p.date)}</td>
+      <td>${acessoEsc(p.resource)}</td>
+      <td><strong>${p.itemCode}</strong><span class="desc-item">${it?it.name:''}</span>${contaminante}${dataAlterada}${p.obs?`<div class="obs-print">📝 Obs.: ${acessoEsc(p.obs)}</div>`:''}</td>
+      <td class="mono-cell" style="font-size:10px">${lotesTxt}</td>
+      <td class="qtd-grande">${fmtL(p.batchLiters)}</td>
+      <td>${fmtL(p.batchUnits)} ${it?it.uom:''}</td>
+      <td>${p.opNumber || ''}</td>
+      <td>${p.opGranelNumber || ''}</td>
+      <td>${acessoEsc(nomeLocalGranel(p.localGranelId))}</td>
+      <td class="linha-vazia-cell"></td>
+      <td class="linha-vazia-cell"></td>
+    </tr>`;
   }).join('');
+  const blocosHtml = rows.length ? `<table class="tabela-producao"><thead><tr><th style="width:28px">✓</th><th>Data</th><th>Recurso</th><th>Item</th><th>Lote(s)</th><th>Qtd (L)</th><th>Qtd (unid.)</th><th>Nº OP</th><th>Nº OP Granel</th><th>Local. granel</th><th>Qtd. Real</th><th>Assinatura / Hora</th></tr></thead><tbody>${linhasPrint}</tbody></table>` : '';
 
   const docHtml = `<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista Mestre de Produção</title>
@@ -5372,11 +5577,15 @@ function doPrint(){
   .linha-vazia-cell{min-width:80px;}
   .assinatura-rodape{margin-top:30px;display:flex;gap:50px;}
   .assinatura-rodape div{flex:1;border-top:1px solid #999;padding-top:6px;font-size:11px;color:#667085;text-align:center;}
+  .obs-print{margin-top:5px;padding:4px 8px;background:#FFF0B3;border-left:3px solid #FDDA25;font-size:11px;font-weight:700;color:#5C4A00;}
+  .grp-granel td{background:#E8EEF7;font-weight:700;padding:7px 10px;font-size:12px;border:1px solid #ccc;}
+  .granel-alerta{color:#B8590A;font-weight:700;}
+  thead{display:table-header-group;} tr{page-break-inside:avoid;}
   @media print{ .no-print{display:none;} }
 </style></head>
 <body>
   <div class="no-print" style="margin-bottom:16px;padding:10px 14px;background:#FFF3CE;border:1px solid #E5DDC9;border-radius:8px;font-size:12.5px;">
-    Abra o menu de impressão do seu navegador (Ctrl+P ou ⌘+P) para imprimir esta lista. Cada dia começa em uma página nova.
+    Abra o menu de impressão do seu navegador (Ctrl+P ou ⌘+P) para imprimir esta lista. Ela segue a mesma ordem da Lista Mestre: agrupada por Nº OP Granel, depois por recurso e data.
   </div>
   <div class="brand" style="margin-bottom:10px"><img src="${LOGO_MENZOIL_H}" alt="Menzoil" style="height:46px;display:block"></div>
   <h1>Lista Mestre de Produção</h1>
@@ -6141,7 +6350,7 @@ function dashBase(){
   const fTot = turF.length ? turF.length/3 : 1; // com filtro de turno, a capacidade comparável é a dos turnos escolhidos (dia ÷ 3 por turno)
   const diasProd = [...new Set(efet.map(f=>f.date))].sort();
   const tot = {
-    planL: somaCampo(plan,'litros'), planUn: somaCampo(plan,'un'), efL: somaCampo(efet,'litros'), efUn: somaCampo(efet,'un'), diasProd,
+    planL: somaCampo(plan,'litros'), planUn: somaCampo(plan,'un'), efL: somaCampo(efet,'litros'), efUn: somaCampo(efet,'un'), efT:[1,2,3].map(k=>somaCampo(efet.filter(f=>f.turno===k),'litros')), diasProd,
     capP: dias.reduce((s,d)=>s+capDia(d),0)*fTot, capDP: diasProd.reduce((s,d)=>s+capDia(d),0)*fTot,
     semanas: new Set(diasProd.map(isoWeek)).size, meses: new Set(diasProd.map(d=>d.slice(0,7))).size, anos: new Set(diasProd.map(d=>d.slice(0,4))).size,
     noDia: efet.filter(f=>f.date===f.planDate && f.planDate>=de && f.planDate<=ate).reduce((s,f)=>s+f.litros,0),
@@ -6178,7 +6387,7 @@ function dashAgrupar(B, agr){
       tempoProprio: agr!=='uom',
       paradasMin: agr==='recurso' ? DB.paradas.filter(x=>x.date>=B.de && x.date<=B.ate && x.resource===nome).reduce((s,x)=>s+(x.duracaoMin||0),0) : null,
       planL: P ? somaCampo(P,'litros') : null, planUn: P ? somaCampo(P,'un') : null,
-      efL: somaCampo(E,'litros'), efUn: somaCampo(E,'un'),
+      efL: somaCampo(E,'litros'), efUn: somaCampo(E,'un'), efT:[1,2,3].map(k=>somaCampo(E.filter(f=>f.turno===k),'litros')),
       capP: B.dias.reduce((s,d)=>s+capDiaG(nome,d),0), capDP: diasProd.reduce((s,d)=>s+capDiaG(nome,d),0),
       capDia: d => capDiaG(nome,d), capPropria: agr!=='uom',
       semanas: new Set(diasProd.map(isoWeek)).size, meses: new Set(diasProd.map(d=>d.slice(0,7))).size, anos: new Set(diasProd.map(d=>d.slice(0,4))).size};
@@ -6276,14 +6485,17 @@ function renderDashboards(){
   // ---------- Totalizador: os três recortes lado a lado ----------
   const cortes = ['recurso','uom','turno'].map(a=> a===B.agr ? G : dashAgrupar(B,a));
   document.getElementById('dashTotalizador').innerHTML = cortes.map(c=>{
+    const comT = c.agr!=='turno';                      // "por turno": as próprias linhas já são os turnos; nos outros recortes entram as colunas 1º, 2º e 3º turno
+    const tcel = efT => comT ? efT.map(v=>`<td class="mono">${v?fmtL(v):'—'}</td>`).join('') : '';
+    const hp = min => min==null ? '—' : (min>0 ? fmtL(min/60) : '0');   // minutos → horas (só há horas paradas por recurso)
     const linhas = c.grupos.map(x=>{
       const plan = x.planL!=null && planOk;
-      return `<tr><td>${acessoEsc(x.nome)}</td><td class="mono">${x.planL!=null?fmtL(x.planL):'—'}</td><td class="mono">${fmtL(x.efL)}</td>
+      return `<tr><td>${acessoEsc(x.nome)}</td><td class="mono">${x.planL!=null?fmtL(x.planL):'—'}</td><td class="mono">${fmtL(x.efL)}</td>${tcel(x.efT)}
         <td class="mono">${plan?fmtL(x.efL-x.planL):'—'}</td>${plan?celPct(razaoPct(x.efL,x.planL)):'<td class="mono">—</td>'}
-        <td class="mono">${x.capPropria?fmtL(x.capP):'—'}</td>${celPct(razaoPct(x.efL,x.capP),'cap')}<td class="mono">${x.minutos?fmtL(x.minutos/60):'—'}</td><td class="mono">${x.prodMin?fmtL(x.prodLitros/(x.prodMin/60)):'—'}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(x.E)}</td></tr>`;
+        <td class="mono">${x.capPropria?fmtL(x.capP):'—'}</td>${celPct(razaoPct(x.efL,x.capP),'cap')}<td class="mono">${x.minutos?fmtL(x.minutos/60):'—'}</td><td class="mono">${hp(x.paradasMin)}</td><td class="mono">${x.prodMin?fmtL(x.prodLitros/(x.prodMin/60)):'—'}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(x.E)}</td></tr>`;
     });
-    const rodape = `<tr><td>Total</td><td class="mono">${fmtL(T.planL)}</td><td class="mono">${fmtL(T.efL)}</td><td class="mono">${planOk?fmtL(T.efL-T.planL):'—'}</td>${planOk?celPct(execPct):'<td class="mono">—</td>'}<td class="mono">${fmtL(T.capP)}</td>${celPct(aderCap,'cap')}<td class="mono">${T.minutos?fmtL(T.minutos/60):'—'}</td><td class="mono">${produtiv==null?'—':fmtL(produtiv)}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(B.efet)}</td></tr>`;
-    return `<div><div class="dash-3-t">Por ${c.rotulo.toLowerCase()}</div><div class="tbl-wrap"><table class="data">${dashTabela([c.rotulo,'Planejado (L)','Efetuado (L)','Dif. (L)','Execução','Capacidade (L)',c.agr==='uom'?'Contribuição':'Utilização','Horas','L/h','Qtd. efetuada'], linhas, rodape)}</table></div></div>`;
+    const rodape = `<tr><td>Total</td><td class="mono">${fmtL(T.planL)}</td><td class="mono">${fmtL(T.efL)}</td>${tcel(T.efT)}<td class="mono">${planOk?fmtL(T.efL-T.planL):'—'}</td>${planOk?celPct(execPct):'<td class="mono">—</td>'}<td class="mono">${fmtL(T.capP)}</td>${celPct(aderCap,'cap')}<td class="mono">${T.minutos?fmtL(T.minutos/60):'—'}</td><td class="mono">${hp(T.paradasMin)}</td><td class="mono">${produtiv==null?'—':fmtL(produtiv)}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(B.efet)}</td></tr>`;
+    return `<div><div class="dash-3-t">Por ${c.rotulo.toLowerCase()}</div><div class="tbl-wrap"><table class="data">${dashTabela([c.rotulo,'Planejado (L)','Efetuado (L)',...(comT?['1º turno (L)','2º turno (L)','3º turno (L)']:[]),'Dif. (L)','Execução','Capacidade (L)',c.agr==='uom'?'Contribuição':'Utilização','Horas','Horas paradas','L/h','Qtd. efetuada'], linhas, rodape)}</table></div></div>`;
   }).join('');
 
   // ---------- Planejado x Efetuado ----------
@@ -6366,13 +6578,13 @@ function exportDashCsv(){
   L.push('');
   const bloco = (titulo, c) => {
     L.push(titulo);
-    L.push([c.rotulo,'Planejado (L)','Efetuado (L)','Diferença (L)','Execução (%)','Capacidade (L)','Utilização (%)','Dias com produção','Média diária (L)','Semanas com produção','Média semanal (L)','Capacidade média/dia (L)','Média diária ÷ capacidade (%)','Qtd. efetuada','Horas utilizadas','Produtividade (L/h)','Horas disponíveis','Utilização do tempo (%)','Paradas (h)'].join(';'));
+    L.push([c.rotulo,'Planejado (L)','Efetuado (L)','1º turno (L)','2º turno (L)','3º turno (L)','Diferença (L)','Execução (%)','Capacidade (L)','Utilização (%)','Dias com produção','Média diária (L)','Semanas com produção','Média semanal (L)','Capacidade média/dia (L)','Média diária ÷ capacidade (%)','Qtd. efetuada','Horas utilizadas','Horas paradas','Produtividade (L/h)','Horas disponíveis','Utilização do tempo (%)','Paradas (h)'].join(';'));
     c.grupos.forEach(x=>{
       const nd = x.diasProd.length, pl = x.planL!=null && !B.turF.length;
-      L.push([q(x.nome), n(x.planL), n(x.efL), pl?n(x.efL-x.planL):'', pl?n(razaoPct(x.efL,x.planL)):'', x.capPropria?n(x.capP):'', n(razaoPct(x.efL,x.capP)), nd, n(nd?x.efL/nd:0), x.semanas, n(x.semanas?x.efL/x.semanas:0), nd?n(x.capDP/nd):'', n(razaoPct(x.efL,x.capDP)), q(qtdPorUm(x.E)), n(x.minutos/60), x.prodMin?n(x.prodLitros/(x.prodMin/60)):'', x.tempoProprio?n(x.horasDisp):'', n(razaoPct(x.minutos/60, x.tempoProprio?x.horasDisp:T.horasDisp)), x.paradasMin==null?'':n(x.paradasMin/60)].join(';'));
+      L.push([q(x.nome), n(x.planL), n(x.efL), n(x.efT[0]), n(x.efT[1]), n(x.efT[2]), pl?n(x.efL-x.planL):'', pl?n(razaoPct(x.efL,x.planL)):'', x.capPropria?n(x.capP):'', n(razaoPct(x.efL,x.capP)), nd, n(nd?x.efL/nd:0), x.semanas, n(x.semanas?x.efL/x.semanas:0), nd?n(x.capDP/nd):'', n(razaoPct(x.efL,x.capDP)), q(qtdPorUm(x.E)), n(x.minutos/60), x.paradasMin!=null?n(x.paradasMin/60):'', x.prodMin?n(x.prodLitros/(x.prodMin/60)):'', x.tempoProprio?n(x.horasDisp):'', n(razaoPct(x.minutos/60, x.tempoProprio?x.horasDisp:T.horasDisp)), x.paradasMin==null?'':n(x.paradasMin/60)].join(';'));
     });
     const nd = T.diasProd.length;
-    L.push([q('TOTAL'), n(T.planL), n(T.efL), !B.turF.length?n(T.efL-T.planL):'', !B.turF.length?n(razaoPct(T.efL,T.planL)):'', n(T.capP), n(razaoPct(T.efL,T.capP)), nd, n(nd?T.efL/nd:0), T.semanas, n(T.semanas?T.efL/T.semanas:0), nd?n(T.capDP/nd):'', n(razaoPct(T.efL,T.capDP)), q(qtdPorUm(B.efet)), n(T.minutos/60), T.prodMin?n(T.prodLitros/(T.prodMin/60)):'', n(T.horasDisp), n(razaoPct(T.minutos/60,T.horasDisp)), n(T.paradasMin/60)].join(';'));
+    L.push([q('TOTAL'), n(T.planL), n(T.efL), n(T.efT[0]), n(T.efT[1]), n(T.efT[2]), !B.turF.length?n(T.efL-T.planL):'', !B.turF.length?n(razaoPct(T.efL,T.planL)):'', n(T.capP), n(razaoPct(T.efL,T.capP)), nd, n(nd?T.efL/nd:0), T.semanas, n(T.semanas?T.efL/T.semanas:0), nd?n(T.capDP/nd):'', n(razaoPct(T.efL,T.capDP)), q(qtdPorUm(B.efet)), n(T.minutos/60), n(T.paradasMin/60), T.prodMin?n(T.prodLitros/(T.prodMin/60)):'', n(T.horasDisp), n(razaoPct(T.minutos/60,T.horasDisp)), n(T.paradasMin/60)].join(';'));
     L.push('');
   };
   ['recurso','uom','turno'].forEach(a=> bloco('TOTALIZADOR — por '+({recurso:'recurso',uom:'unidade de medida',turno:'turno'})[a], a===B.agr?G:dashAgrupar(B,a)));
@@ -6644,6 +6856,8 @@ function paginaInicial(){
    O campo '*' (oculto) vale para "abrir o editor": liberado se o usuário puder editar pelo menos um campo da tela. */
 const CATALOGO_CAMPOS = {
   plano: [
+    {id:'solicitarop', label:'Solicitar ordem de produção',        acoes:['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']},
+    {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
     {id:'gerar',     label:'Gerar o plano automaticamente',       acoes:['generatePlan','gerarPlanoPorEscopo','runGeneratePlan']},
     {id:'limpar',    label:'Limpar o plano (por critérios)',      acoes:['toggleClearPanel','executeClearPlan']},
     {id:'mover',     label:'Alterar a data de um dia inteiro',    acoes:['toggleMovePanel','moveEntireDay']},
@@ -6659,6 +6873,8 @@ const CATALOGO_CAMPOS = {
     {id:'paradas',   label:'Registrar parada',                    acoes:['abrirParadaRapida','addParada']},
   ],
   visaodia: [
+    {id:'solicitarop', label:'Solicitar ordem de produção',        acoes:['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']},
+    {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
     {id:'*', oculto:true, label:'Abrir o editor do dia',          acoes:['openDayItemEditor']},
     {id:'data',      label:'Data de produção da linha',           acoes:[['updatePlanLineFieldAndRefreshDay',1,'date'],['updatePlanLineField',1,'date']]},
     {id:'quantidade',label:'Quantidade da linha',                 acoes:[['updatePlanLineFieldAndRefreshDay',1,'batchUnits'],['updatePlanLineField',1,'batchUnits']]},
@@ -6666,6 +6882,9 @@ const CATALOGO_CAMPOS = {
     {id:'excluir',   label:'Remover linhas',                      acoes:['deletePlanLine']},
   ],
   lista: [
+    {id:'obs',        label:'Comentários / Observações da linha', acoes:['salvarObsLinha','limparObsLinha']},
+    {id:'solicitarop', label:'Solicitar ordem de produção',        acoes:['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']},
+    {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
     {id:'turnos',    label:'Quantidades, datas e horários dos turnos (apontamento)', acoes:['updateTurno','updateTurnoData','updateTurnoHora']},
     {id:'quantidade',label:'Quantidade da linha',                 acoes:['updateListaQtd']},
     {id:'recurso',   label:'Recurso da linha',                    acoes:['updateListaRecurso']},
@@ -6693,6 +6912,7 @@ const CATALOGO_CAMPOS = {
   cadastros: [
     {id:'itens',     label:'Itens (incluir e excluir)',           acoes:['addItem','deleteItem']},
     {id:'lote',      label:'Capacidade máxima do lote do item',   acoes:['updateItemMaxBatch']},
+    {id:'clienteslote', label:'Clientes que dividem pelo lote máximo', acoes:['toggleClienteLoteMax']},
     {id:'receitas',  label:'Receitas',                            acoes:['addRecipe','deleteRecipe']},
     {id:'recursos',  label:'Recursos (incluir e excluir)',        acoes:['addResource','deleteResource']},
     {id:'capacidade',label:'Capacidade diária e ajustes do dia',  acoes:['updateResourceCapacity','addOverride','removeOverride','atualizarDataVigencia']},
@@ -6752,9 +6972,9 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
-const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel'];
+const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
   FUNCOES_QUE_ALTERAM.forEach(nome=>{
     const orig = window[nome];
@@ -6888,6 +7108,7 @@ function reaplicarAcesso(){
 function sair(){
   if(USUARIO_ATUAL) registrarAcesso('logout', USUARIO_ATUAL.usuario);
   gravarAcesso(); limparSessao(); USUARIO_ATUAL = null; fecharModalAcesso();
+  Object.keys(LISTA_COL).forEach(k=>LISTA_COL[k]='');   // os filtros das colunas da Lista Mestre não passam de um usuário para o outro
   document.querySelectorAll('#dayEditOverlay').forEach(e=>e.remove());
   mostrarLogin(ACESSO.usuarios.length ? 'login' : 'primeiro');
 }
@@ -7743,6 +7964,287 @@ function exportMateriaisCsv(){
 }
 
 /* =========================================================================
+   SOLICITAÇÃO DE ORDEM DE PRODUÇÃO
+   Botão nas telas Itens por Dia, Lista Mestre e Plano Mestre: o usuário escolhe os filtros (data, recurso, cliente, item, grupo, pedido), vê a tabela
+   AGRUPADA POR ITEM (quantidades somadas), e ao gerar a ferramenta REGISTRA a solicitação (número, data, usuário) e MARCA as linhas do plano como solicitadas.
+   Dados:  DB.solicitacoesOP [{id, numero, ts, usuario, status:'Solicitada'|'Cancelada', filtros, itens[], linhaIds[], totalLinhas, totalLitros, ...}]
+           linha do plano:  p.opSolicitacao (id), p.opSolicitacaoNo (número), p.opSolicitadaQty (quantidade na hora), p.opSolicitadaEm
+   ========================================================================= */
+const solOpHoje = () => todayISO();
+function solOpValorFiltro(id){
+  const e = document.getElementById(id); if(!e) return '';
+  const m = e.__cbGet ? e.__cbGet() : null;
+  if(Array.isArray(m)) return m.length===1 ? String(m[0]) : '';          // seleção múltipla: só aproveita quando há exatamente um valor
+  return e.value || '';
+}
+function solOpPrefill(){
+  const pg = paginaAtivaId(), v = solOpValorFiltro;
+  let f = {de:'', ate:'', recurso:'', cliente:'', item:'', pedido:''};
+  if(pg==='visaodia') f = {de:v('vdDe'), ate:v('vdAte'), recurso:v('vdRecurso'), cliente:v('vdCliente'), item:v('vdBuscaItem'), pedido:''};
+  else if(pg==='lista') f = {de:v('lstDe'), ate:v('lstAte'), recurso:v('lstRecurso'), cliente:'', item:v('lstItem'), pedido:v('lstPedido')};
+  else if(pg==='plano') f = {de:v('escDe'), ate:v('escAte'), recurso:v('escRecurso'), cliente:v('escCliente'), item:v('escItem'), pedido:''};
+  if(!f.de && !f.ate){ f.de = solOpHoje(); f.ate = addDays(solOpHoje(), 6); }       // sem filtro de data na tela: hoje até 6 dias à frente
+  f.item = String(f.item||'').split(/\s+[—-]\s+/)[0].trim();
+  return f;
+}
+const solOpClientesDaLinha = p => {
+  const ids = (p.orders && p.orders.length) ? p.orders.map(o=>o.orderId) : [p.orderId];
+  return [...new Set(ids.map(id=>{ const o = (DB.orders||[]).find(x=>x.id===id); return o && o.customer; }).filter(Boolean))];
+};
+// linhas do plano dentro dos filtros
+function solOpLinhas(f){
+  const busca = normaTxt(String(f.item||'').trim()), ped = normaTxt(String(f.pedido||'').trim());
+  return (DB.plan||[]).filter(p=>{
+    if(f.de && p.date < f.de) return false; if(f.ate && p.date > f.ate) return false;
+    if(f.recurso && p.resource !== f.recurso) return false;
+    const it = itemByCode(p.itemCode);
+    if(f.grupo && (!it || it.group !== f.grupo)) return false;
+    if(busca && !normaTxt(p.itemCode+' '+(it?it.name:'')).includes(busca)) return false;
+    if(ped && !normaTxt(String(p.orderNo||'')).includes(ped)) return false;
+    if(f.cliente && !solOpClientesDaLinha(p).includes(f.cliente)) return false;
+    if(f.mostrar !== 'todas'){ if(p.opNumber || p.opSolicitacao || linhaTemProducao(p)) return false; }   // padrão: só linhas sem OP, sem produção e ainda não solicitadas
+    return true;
+  });
+}
+// uma linha por item, quantidades somadas
+function solOpAgrupar(linhas){
+  const mapa = new Map();
+  linhas.forEach(p=>{
+    const it = itemByCode(p.itemCode);
+    if(!mapa.has(p.itemCode)) mapa.set(p.itemCode, {itemCode:p.itemCode, descricao:it?it.name:'', uom:it?it.uom:'', qty:0, litros:0, linhas:0, de:p.date, ate:p.date, recursos:new Set(), clientes:new Set(), pedidos:new Set()});
+    const g = mapa.get(p.itemCode);
+    g.qty += p.batchUnits; g.litros += p.batchLiters; g.linhas++;
+    if(p.date < g.de) g.de = p.date; if(p.date > g.ate) g.ate = p.date;
+    g.recursos.add(p.resource); solOpClientesDaLinha(p).forEach(c=>g.clientes.add(c));
+    String(p.orderNo||'').split(/,\s*/).filter(Boolean).forEach(n=>g.pedidos.add(n));
+  });
+  return [...mapa.values()].sort((a,b)=>a.itemCode.localeCompare(b.itemCode)).map(g=>({...g, qty:Math.round(g.qty*100)/100, litros:Math.round(g.litros*100)/100, recursos:[...g.recursos].sort(), clientes:[...g.clientes].sort(), pedidos:[...g.pedidos]}));
+}
+const solOpTotais = itens => ({linhas:itens.reduce((s,i)=>s+i.linhas,0), litros:Math.round(itens.reduce((s,i)=>s+i.litros,0)*100)/100, itens:itens.length});
+const solOpDataHora = ts => { try{ const d = new Date(ts); const p = n=>String(n).padStart(2,'0'); return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; }catch(e){ return ts; } };
+function solOpTabelaHtml(itens, comTotais){
+  const t = solOpTotais(itens);
+  return `<div class="tbl-wrap" style="max-height:340px"><table class="data"><thead><tr><th>Código</th><th>Descrição</th><th>UM</th><th>Quantidade</th><th>Litros</th><th>Linhas</th><th>Datas</th><th>Recursos</th></tr></thead><tbody>${
+    itens.length ? itens.map(i=>`<tr><td class="mono"><strong>${acessoEsc(i.itemCode)}</strong></td><td style="white-space:normal;max-width:260px">${acessoEsc(i.descricao)}</td><td>${acessoEsc(i.uom)}</td><td class="mono" style="font-weight:700">${fmtL(i.qty)}</td><td class="mono">${fmtL(i.litros)}</td><td class="mono">${i.linhas}</td><td class="mono">${i.de===i.ate?fmtDate(i.de):fmtDate(i.de)+' a '+fmtDate(i.ate)}</td><td>${acessoEsc(i.recursos.join(', '))}</td></tr>`).join('') : '<tr><td colspan="8"><div class="empty">Nenhuma linha dentro destes filtros.</div></td></tr>'}</tbody>${comTotais && itens.length ? `<tfoot><tr><td colspan="4"><strong>Total: ${t.itens} item(ns)</strong></td><td class="mono"><strong>${fmtL(t.litros)} L</strong></td><td class="mono"><strong>${t.linhas}</strong></td><td colspan="2"></td></tr></tfoot>` : ''}</table></div>`;
+}
+
+/* ---------- janela ---------- */
+let SOL_OP_VISAO = 'filtros';
+let SOL_OP_EXCL = new Set(), SOL_OP_ABERTOS = new Set();   // linhas excluídas desta solicitação (antes de gerar) e itens com as linhas à mostra
+function solOpOverlay(){
+  let o = document.getElementById('solOpOverlay');
+  if(!o){ o = document.createElement('div'); o.id = 'solOpOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto';
+    o.innerHTML = '<div id="solOpCard" style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:1100px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)"></div>'; document.body.appendChild(o); }
+  return o;
+}
+function fecharSolicitarOP(){ const o = document.getElementById('solOpOverlay'); if(o) o.remove(); }
+function solOpLerFiltros(){
+  const v = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  return {de:v('solDe'), ate:v('solAte'), recurso:v('solRecurso'), cliente:v('solCliente'), item:v('solItem'), grupo:v('solGrupo'), pedido:v('solPedido'), mostrar:v('solMostrar')||'novas'};
+}
+function abrirSolicitarOP(){
+  const f = solOpPrefill(); SOL_OP_VISAO = 'filtros'; SOL_OP_EXCL = new Set(); SOL_OP_ABERTOS = new Set();
+  const opt = (lista, sel, todos) => `<option value="">${todos}</option>` + lista.map(x=>`<option value="${acessoEsc(x)}" ${x===sel?'selected':''}>${acessoEsc(x)}</option>`).join('');
+  const recursos = (DB.resources||[]).map(r=>r.name).sort(), clientes = [...new Set((DB.orders||[]).map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), grupos = [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  solOpOverlay(); document.getElementById('solOpCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📄 Solicitar ordem de produção</h3>
+      <div class="card-sub" style="margin:0">Escolha os filtros. A tabela soma as quantidades <strong>por item</strong>. Ao gerar, a solicitação é <strong>registrada</strong> e as linhas do plano ficam <strong>marcadas como solicitadas</strong>.</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="solOpMostrarHistorico()">📜 Solicitações anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharSolicitarOP()">✕ Fechar</button></div></div>
+    <div id="solOpCorpo">
+      <div class="filters" style="margin:14px 0 10px;position:static">
+        <div class="f"><label>De</label><input type="date" id="solDe" value="${f.de}" onchange="solOpAtualizar()"></div>
+        <div class="f"><label>Até</label><input type="date" id="solAte" value="${f.ate}" onchange="solOpAtualizar()"></div>
+        <div class="f"><label>Recurso</label><select id="solRecurso" onchange="solOpAtualizar()">${opt(recursos,f.recurso,'Todos')}</select></div>
+        <div class="f"><label>Cliente</label><select id="solCliente" onchange="solOpAtualizar()">${opt(clientes,f.cliente,'Todos')}</select></div>
+        <div class="f"><label>Item (código ou descrição)</label><input type="text" id="solItem" value="${acessoEsc(f.item)}" placeholder="digite para filtrar" oninput="solOpAtualizar()"></div>
+        <div class="f"><label>Grupo</label><select id="solGrupo" onchange="solOpAtualizar()">${opt(grupos,'','Todos')}</select></div>
+        <div class="f"><label>Pedido</label><input type="text" id="solPedido" value="${acessoEsc(f.pedido)}" placeholder="nº do pedido" oninput="solOpAtualizar()"></div>
+        <div class="f"><label>Mostrar</label><select id="solMostrar" onchange="solOpAtualizar()"><option value="novas">Só linhas sem OP e ainda não solicitadas</option><option value="todas">Todas as linhas do filtro (inclusive já solicitadas)</option></select></div>
+      </div>
+      <div id="solOpResumo" class="card-sub" style="margin:6px 0"></div><div id="solOpPreview"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap"><span id="solOpAviso" style="align-self:center;font-size:12px;color:var(--muted)"></span><button class="btn btn-primary" id="solOpGerar" onclick="gerarSolicitacaoOP()">✔ Gerar e registrar solicitação</button></div>
+    </div>`;
+  solOpAtualizar();
+}
+function solOpEfetivas(f){ return solOpLinhas(f).filter(p=>!SOL_OP_EXCL.has(p.id)); }
+// tabela de prévia: uma linha por item; a caixa exclui/inclui o item todo e a seta mostra as linhas do plano (cada uma pode ser excluída)
+function solOpPreviewHtml(cand){
+  const porItem = new Map(); cand.forEach(p=>{ if(!porItem.has(p.itemCode)) porItem.set(p.itemCode, []); porItem.get(p.itemCode).push(p); });
+  const codigos = [...porItem.keys()].sort((a,b)=>a.localeCompare(b));
+  const corpo = codigos.map(cod=>{
+    const ls = porItem.get(cod), inc = ls.filter(p=>!SOL_OP_EXCL.has(p.id)), it = itemByCode(cod);
+    const q = Math.round(inc.reduce((s,p)=>s+p.batchUnits,0)*100)/100, lt = Math.round(inc.reduce((s,p)=>s+p.batchLiters,0)*100)/100;
+    const datas = inc.map(p=>p.date).sort(), recs = [...new Set(inc.map(p=>p.resource))].sort();
+    const todas = inc.length===ls.length, nenhuma = inc.length===0, aberto = SOL_OP_ABERTOS.has(cod);
+    const linha = `<tr class="solItem" data-item="${acessoEsc(cod)}" style="${nenhuma?'opacity:.45':''}">
+      <td style="white-space:nowrap"><input type="checkbox" ${todas?'checked':''} ${(!todas&&!nenhuma)?'data-parcial="1"':''} onchange="solOpToggleItem('${acessoEsc(cod)}', this.checked)" title="Incluir ou excluir este item (todas as linhas dele)"> <span style="cursor:pointer;user-select:none" onclick="solOpAbrirItem('${acessoEsc(cod)}')" title="Ver as linhas do plano deste item">${aberto?'▾':'▸'}</span></td>
+      <td class="mono"><strong>${acessoEsc(cod)}</strong></td><td style="white-space:normal;max-width:260px">${acessoEsc(it?it.name:'')}</td><td>${acessoEsc(it?it.uom:'')}</td>
+      <td class="mono" style="font-weight:700">${nenhuma?'—':fmtL(q)}</td><td class="mono">${nenhuma?'—':fmtL(lt)}</td><td class="mono">${todas?inc.length:inc.length+'/'+ls.length}</td>
+      <td class="mono">${nenhuma?'—':(datas[0]===datas[datas.length-1]?fmtDate(datas[0]):fmtDate(datas[0])+' a '+fmtDate(datas[datas.length-1]))}</td><td>${nenhuma?'—':acessoEsc(recs.join(', '))}</td></tr>`;
+    const filhas = aberto ? ls.map(p=>{ const ex = SOL_OP_EXCL.has(p.id);
+      return `<tr class="solLin" data-linha="${acessoEsc(p.id)}" style="background:var(--g50);${ex?'opacity:.5;text-decoration:line-through':''}"><td style="text-align:right"><input type="checkbox" ${ex?'':'checked'} onchange="solOpToggleLinha('${acessoEsc(p.id)}')" title="Incluir ou excluir esta linha"></td>
+        <td class="mono" colspan="2">${fmtDate(p.date)} · ${acessoEsc(p.resource)}</td><td></td><td class="mono">${fmtL(p.batchUnits)}</td><td class="mono">${fmtL(p.batchLiters)}</td><td colspan="3" style="font-size:11px;color:var(--muted)">pedido ${acessoEsc(String(p.orderNo||'—'))}${p.status && p.status!=='Planejado' ? ' · '+acessoEsc(p.status) : ''}</td></tr>`; }).join('') : '';
+    return linha + filhas; }).join('');
+  return `<div class="tbl-wrap" style="max-height:340px"><table class="data"><thead><tr><th></th><th>Código</th><th>Descrição</th><th>UM</th><th>Quantidade</th><th>Litros</th><th>Linhas</th><th>Datas</th><th>Recursos</th></tr></thead><tbody>${corpo || '<tr><td colspan="9"><div class="empty">Nenhuma linha dentro destes filtros.</div></td></tr>'}</tbody></table></div>`;
+}
+function solOpAtualizar(){
+  const f = solOpLerFiltros(), cand = solOpLinhas(f), efet = cand.filter(p=>!SOL_OP_EXCL.has(p.id)), itens = solOpAgrupar(efet), t = solOpTotais(itens);
+  const jaSol = efet.filter(p=>p.opSolicitacao).length, exc = cand.length - efet.length;
+  document.getElementById('solOpPreview').innerHTML = solOpPreviewHtml(cand);
+  document.querySelectorAll('#solOpPreview input[data-parcial]').forEach(c=>{ c.indeterminate = true; });
+  document.getElementById('solOpResumo').innerHTML = `<strong>${t.itens}</strong> item(ns) · <strong>${t.linhas}</strong> linha(s) do plano · <strong>${fmtL(t.litros)} L</strong>${exc?` · <span style="color:var(--danger)">${exc} linha(s) excluída(s)</span> <a href="javascript:void(0)" onclick="solOpRestaurar()" style="font-size:12px">↺ restaurar</a>`:''}`;
+  const b = document.getElementById('solOpGerar'); if(b) b.disabled = t.linhas===0;
+  const av = document.getElementById('solOpAviso'); if(av) av.textContent = jaSol ? `${jaSol} linha(s) já solicitada(s) neste filtro: gerar de novo cria outra solicitação.` : (f.mostrar==='novas' ? 'Desmarque a caixa de um item (ou de uma linha) para tirá-lo do relatório.' : '');
+}
+function solOpToggleItem(cod, marcado){
+  solOpLinhas(solOpLerFiltros()).filter(p=>p.itemCode===cod).forEach(p=>{ if(marcado) SOL_OP_EXCL.delete(p.id); else SOL_OP_EXCL.add(p.id); }); solOpAtualizar();
+}
+function solOpToggleLinha(id){ if(SOL_OP_EXCL.has(id)) SOL_OP_EXCL.delete(id); else SOL_OP_EXCL.add(id); solOpAtualizar(); }
+function solOpAbrirItem(cod){ if(SOL_OP_ABERTOS.has(cod)) SOL_OP_ABERTOS.delete(cod); else SOL_OP_ABERTOS.add(cod); solOpAtualizar(); }
+function solOpRestaurar(){ SOL_OP_EXCL = new Set(); solOpAtualizar(); }
+/* ---------- registrar (guardada por permissão) ---------- */
+function gerarSolicitacaoOP(){
+  const f = solOpLerFiltros(), todas = solOpLinhas(f), linhas = todas.filter(p=>!SOL_OP_EXCL.has(p.id)), itens = solOpAgrupar(linhas), t = solOpTotais(itens), excl = todas.length - linhas.length;
+  if(!linhas.length){ alert('Nenhuma linha do plano dentro destes filtros (ou todas foram excluídas).'); return; }
+  customConfirm(`Registrar a solicitação de ordem de produção com <strong>${t.itens}</strong> item(ns), <strong>${t.linhas}</strong> linha(s) e <strong>${fmtL(t.litros)} L</strong>?<br><span style="font-size:12px">As linhas serão marcadas como solicitadas.${excl?` ${excl} linha(s) excluída(s) ficam de fora.`:''}</span>`, ()=>{
+    DB.solicitacoesOP = DB.solicitacoesOP || [];
+    const maxN = DB.solicitacoesOP.reduce((m,s)=>Math.max(m, parseInt(String(s.numero).replace(/\D/g,''),10)||0), 0);
+    const ts = new Date().toISOString(), id = 'sop_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const numero = 'SOLOP-'+String(maxN+1).padStart(4,'0'), usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '';
+    const s = {id, numero, ts, usuario, status:'Solicitada', filtros:{...f}, itens:itens.map(i=>({...i})), linhaIds:linhas.map(p=>p.id), totalLinhas:t.linhas, totalLitros:t.litros, excluidas:excl};
+    DB.solicitacoesOP.push(s);
+    linhas.forEach(p=>{ p.opSolicitacao = id; p.opSolicitacaoNo = numero; p.opSolicitadaQty = p.batchUnits; p.opSolicitadaEm = ts; });
+    persistDB(); solOpRerender(); showToast(`📄 Solicitação ${numero} registrada: ${t.itens} item(ns), ${t.linhas} linha(s) marcada(s).`);
+    solOpVerSolicitacao(id);
+  });
+}
+function cancelarSolicitacaoOP(id){
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===id); if(!s || s.status==='Cancelada') return;
+  customConfirm(`Cancelar a solicitação <strong>${acessoEsc(s.numero)}</strong>? As linhas voltam a ficar sem a marca de solicitadas.`, ()=>{
+    s.status = 'Cancelada'; s.canceladaEm = new Date().toISOString(); s.canceladaPor = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '';
+    (DB.plan||[]).forEach(p=>{ if(p.opSolicitacao===id){ delete p.opSolicitacao; delete p.opSolicitacaoNo; delete p.opSolicitadaQty; delete p.opSolicitadaEm; } });
+    persistDB(); solOpRerender(); showToast(`Solicitação ${s.numero} cancelada.`); solOpMostrarHistorico();
+  });
+}
+function solOpRerender(){ const pg = paginaAtivaId(); try{ renderPagina(pg); }catch(e){} }
+function desmarcarSolicitacaoOPLinha(id){
+  const p = (DB.plan||[]).find(x=>x.id===id); if(!p || !p.opSolicitacao) return;
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===p.opSolicitacao), no = p.opSolicitacaoNo || (s?s.numero:'');
+  customConfirm(`Desmarcar esta linha como <strong>OP solicitada ${acessoEsc(no)}</strong>?<br><span style="font-size:12px">Ela volta a poder entrar em uma nova solicitação. A solicitação continua registrada.</span>`, ()=>{
+    if(s){ s.desmarcadas = s.desmarcadas || []; s.desmarcadas.push({linha:id, usuario:(typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL)?USUARIO_ATUAL.usuario:'', ts:new Date().toISOString()}); }
+    delete p.opSolicitacao; delete p.opSolicitacaoNo; delete p.opSolicitadaQty; delete p.opSolicitadaEm;
+    persistDB(); solOpRerender(); showToast(`Linha desmarcada da solicitação ${no}.`);
+  });
+}
+/* ---------- visões: resultado e histórico ---------- */
+function solOpVerSolicitacao(id){
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===id); if(!s) return; solOpOverlay();
+  document.getElementById('solOpCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">📄 Solicitação ${acessoEsc(s.numero)} ${s.status==='Cancelada'?'<span class="badge danger">cancelada</span>':'<span class="badge ok">registrada</span>'}</h3>
+      <div class="card-sub" style="margin:4px 0 0">${solOpDataHora(s.ts)} · por <strong>${acessoEsc(s.usuario||'—')}</strong> · ${s.itens.length} item(ns), ${s.totalLinhas} linha(s), ${fmtL(s.totalLitros)} L${s.desmarcadas&&s.desmarcadas.length?` · ${s.desmarcadas.length} linha(s) desmarcada(s) depois`:''}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm" onclick="solOpImprimir('${s.id}')">🖨 Imprimir</button><button class="btn btn-sm" onclick="solOpCsv('${s.id}')">⬇ Exportar (.csv)</button><button class="btn btn-sm" onclick="solOpMostrarHistorico()">📜 Solicitações anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharSolicitarOP()">✕ Fechar</button></div></div>
+    <div style="margin-top:12px">${solOpTabelaHtml(s.itens, true)}</div>`;
+}
+function solOpMostrarHistorico(){
+  const lista = [...(DB.solicitacoesOP||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))); solOpOverlay();
+  document.getElementById('solOpCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📜 Solicitações de ordem de produção</h3><div class="card-sub" style="margin:0">Todas as solicitações registradas, da mais recente para a mais antiga.</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="abrirSolicitarOP()">＋ Nova solicitação</button><button class="btn btn-sm btn-ghost" onclick="fecharSolicitarOP()">✕ Fechar</button></div></div>
+    <div class="tbl-wrap" style="margin-top:12px;max-height:420px"><table class="data"><thead><tr><th>Solicitação</th><th>Data e hora</th><th>Usuário</th><th>Itens</th><th>Linhas</th><th>Litros</th><th>Situação</th><th></th></tr></thead><tbody>${
+      lista.length ? lista.map(s=>`<tr><td class="mono"><strong>${acessoEsc(s.numero)}</strong></td><td>${solOpDataHora(s.ts)}</td><td>${acessoEsc(s.usuario||'—')}</td><td>${s.itens.length}</td><td>${s.totalLinhas}</td><td class="mono">${fmtL(s.totalLitros)}</td><td>${s.status==='Cancelada'?'<span class="badge danger">cancelada</span>':'<span class="badge ok">registrada</span>'}</td>
+        <td style="white-space:nowrap"><button class="btn btn-sm" onclick="solOpVerSolicitacao('${s.id}')">Ver</button> <button class="btn btn-sm" onclick="solOpCsv('${s.id}')">CSV</button> <button class="btn btn-sm" onclick="solOpImprimir('${s.id}')">🖨</button> ${s.status==='Cancelada'?'':`<button class="btn btn-sm btn-danger" onclick="cancelarSolicitacaoOP('${s.id}')">Cancelar</button>`}</td></tr>`).join('') : '<tr><td colspan="8"><div class="empty">Nenhuma solicitação registrada ainda.</div></td></tr>'}</tbody></table></div>`;
+}
+/* ---------- saídas: CSV e impressão ---------- */
+function solOpCsvTexto(s){
+  const n = v => (v===null||v===undefined) ? '' : String(v).replace('.',',');
+  const cab = ['Solicitação','Data e hora','Usuário','Código','Descrição','UM','Quantidade','Litros','Linhas','Data inicial','Data final','Recursos','Pedidos'];
+  const lin = s.itens.map(i=>[s.numero, solOpDataHora(s.ts), s.usuario||'', i.itemCode, i.descricao, i.uom, n(i.qty), n(i.litros), i.linhas, i.de, i.ate, i.recursos.join(' | '), (i.pedidos||[]).join(' | ')]);
+  return '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+}
+function solOpCsv(id){
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===id); if(!s) return '';
+  const csv = solOpCsvTexto(s);
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `${s.numero}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível neste ambiente'); }
+  return csv;
+}
+function solOpHtmlImpressao(s){
+  const t = solOpTotais(s.itens), f = s.filtros||{};
+  const filtros = [f.de||f.ate?`Período: ${f.de?fmtDate(f.de):'…'} a ${f.ate?fmtDate(f.ate):'…'}`:'', f.recurso?`Recurso: ${f.recurso}`:'', f.item?`Item: ${f.item}`:'', f.grupo?`Grupo: ${f.grupo}`:'', f.pedido?`Pedido: ${f.pedido}`:''].filter(Boolean).join(' · ');
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>${acessoEsc(s.numero)}</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#222}h1{font-size:20px;margin:0}.sub{color:#555;font-size:12px;margin:4px 0 14px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #999;padding:5px 7px;text-align:left;vertical-align:top}th{background:#eee}td.n{text-align:right;font-family:monospace}tfoot td{font-weight:bold;background:#f6f6f6}.ass{display:flex;gap:40px;margin-top:40px}.ass div{flex:1;border-top:1px solid #333;padding-top:4px;font-size:11px}@media print{@page{size:A4 landscape;margin:12mm}}</style></head><body>
+    <h1>Solicitação de ordem de produção — ${acessoEsc(s.numero)}${s.status==='Cancelada'?' (CANCELADA)':''}</h1>
+    <div class="sub">${solOpDataHora(s.ts)} · solicitante: ${acessoEsc(s.usuario||'—')} · ${t.itens} item(ns), ${t.linhas} linha(s), ${fmtL(t.litros)} L${filtros?'<br>Filtros: '+acessoEsc(filtros):''}</div>
+    <table><thead><tr><th>Código</th><th>Descrição</th><th>UM</th><th>Quantidade</th><th>Litros</th><th>Linhas</th><th>Datas</th><th>Recursos</th></tr></thead><tbody>${s.itens.map(i=>`<tr><td>${acessoEsc(i.itemCode)}</td><td>${acessoEsc(i.descricao)}</td><td>${acessoEsc(i.uom)}</td><td class="n">${fmtL(i.qty)}</td><td class="n">${fmtL(i.litros)}</td><td class="n">${i.linhas}</td><td>${i.de===i.ate?fmtDate(i.de):fmtDate(i.de)+' a '+fmtDate(i.ate)}</td><td>${acessoEsc(i.recursos.join(', '))}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="4">Total: ${t.itens} item(ns)</td><td class="n">${fmtL(t.litros)}</td><td class="n">${t.linhas}</td><td colspan="2"></td></tr></tfoot></table>
+    <div class="ass"><div>Solicitante</div><div>PCP</div><div>Produção</div></div></body></html>`;
+}
+function solOpImprimir(id){
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===id); if(!s) return '';
+  const html = solOpHtmlImpressao(s);
+  try{ const w2 = window.open('', '_blank'); if(!w2){ showToast('Permita pop-ups para imprimir.', 'error'); return html; } w2.document.write(html); w2.document.close(); w2.focus(); setTimeout(()=>{ try{ w2.print(); }catch(e){} }, 300); }catch(e){ console.warn('Impressão indisponível neste ambiente'); }
+  return html;
+}
+/* ---------- marca na linha (Lista Mestre e Plano Mestre) ---------- */
+function seloSolicitacaoOP(p){
+  if(!p || !p.opSolicitacao) return '';
+  const s = (DB.solicitacoesOP||[]).find(x=>x.id===p.opSolicitacao);
+  const alterada = p.opSolicitadaQty!=null && Math.abs(p.opSolicitadaQty - p.batchUnits) > 0.001;
+  return ` <span class="badge info" title="Solicitação ${acessoEsc(p.opSolicitacaoNo||'')} em ${s?solOpDataHora(s.ts):''}${s&&s.usuario?' por '+acessoEsc(s.usuario):''}: ${fmtL(p.opSolicitadaQty||0)} un.">📄 OP solicitada ${acessoEsc(p.opSolicitacaoNo||'')}</span>`
+    + ` <span style="cursor:pointer;font-weight:700;color:var(--danger)" title="Desmarcar esta linha como OP solicitada" onclick="event.stopPropagation();desmarcarSolicitacaoOPLinha('${acessoEsc(p.id)}')">✕</span>`
+    + (alterada ? ` <span class="badge warn" title="A quantidade desta linha mudou depois da solicitação (solicitado ${fmtL(p.opSolicitadaQty)}, agora ${fmtL(p.batchUnits)}).">⚠ qtd. alterada</span>` : '');
+}
+
+/* =========================================================================
+   COLUNAS CONGELADAS — nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista.
+   A tabela continua a mesma: só as colunas escolhidas ganham "position: sticky" (classe .frz) com o deslocamento certo, e o cabeçalho também.
+   Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho e quando a tabela passa a ser exibida.
+   ========================================================================= */
+const COLUNAS_CONGELADAS = [
+  {sel:'#tblLista',          cols:[1,3,4]}, // Data (que já era fixa), Item e Descrição; o Recurso rola normalmente
+  {sel:'#tblVisaoDiaMatrix', cols:[1,2]},   // Nº do item, Descrição
+  {sel:'#tblEfetuadoMatrix', cols:[1,2]},   // Nº do item, Descrição
+  {sel:'#tblMateriais',      cols:[1]},     // Material (código e descrição na mesma coluna)
+  {sel:'#tblNecessidades',   cols:[1,2]},   // Código, Insumo
+  {sel:'#tblItens',          cols:[1,2]},   // Código, Descrição (Cadastros)
+  {sel:'#tblLcPedidos',      cols:[1,2]},   // Pedido, Cliente
+  {sel:'#tblProdDia',        cols:[1,2]},   // Recurso/grupo, Total
+];
+function aplicarCongelamento(tbl, cols){
+  const linhas = [...tbl.rows]; if(!linhas.length) return;
+  const fl = tbl.tHead && tbl.tHead.querySelector('tr.lc-filtros');            // linha de filtros: gruda logo abaixo da linha de títulos
+  if(fl){ const h = Math.round(tbl.tHead.rows[0].getBoundingClientRect().height); [...fl.cells].forEach(c=>{ c.style.top = h+'px'; }); }
+  const cabLinhas = tbl.tHead && tbl.tHead.rows.length ? tbl.tHead.rows : null;
+  const cab = cabLinhas ? cabLinhas[cabLinhas.length-1] : linhas[0];
+  const larg = cols.map(c=> cab.cells[c-1] ? Math.round(cab.cells[c-1].getBoundingClientRect().width) : 0);
+  let acum = 0; const left = cols.map((c,i)=>{ const v = acum; acum += larg[i]; return v; });
+  const maior = Math.max(...cols);
+  linhas.forEach(tr=>{
+    if(tr.cells.length < maior) return;                                  // linhas de grupo/vazias (com colspan) ficam como estão
+    cols.forEach((c,i)=>{
+      const cel = tr.cells[c-1]; if(!cel || cel.colSpan>1) return;
+      cel.classList.add('frz'); cel.style.left = left[i]+'px'; cel.classList.toggle('frz-last', i===cols.length-1);
+    });
+  });
+}
+function iniciarCongelamento(){
+  COLUNAS_CONGELADAS.forEach(cfg=>{
+    const t = document.querySelector(cfg.sel); if(!t || t.__frz) return; t.__frz = true;
+    let pend = false;
+    const agenda = () => { if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ aplicarCongelamento(t, cfg.cols); }catch(e){} }); };
+    try{ new MutationObserver(agenda).observe(t, {childList:true, subtree:true}); }catch(e){}
+    if(typeof ResizeObserver !== 'undefined'){ try{ new ResizeObserver(agenda).observe(t); }catch(e){} }   // quando a tabela passa a ser exibida ou muda de largura
+    window.addEventListener('resize', agenda);
+    aplicarCongelamento(t, cfg.cols);
+  });
+}
+iniciarCongelamento();
+// tabelas criadas DEPOIS da carga da página (ex.: Cadastro de Itens) também entram: ao surgir novos elementos, procura de novo as que ainda não foram tratadas
+(function(){
+  let pend = false;
+  const agenda = () => { if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ iniciarCongelamento(); }catch(e){} }); };
+  try{ new MutationObserver(agenda).observe(document.body, {childList:true, subtree:true}); }catch(e){}
+})();
+
+/* =========================================================================
    MODO ONLINE — dados compartilhados em tempo real entre vários usuários
    -------------------------------------------------------------------------
    Ligado por configuração (arquivo config.js → window.MENZOIL_CONFIG). Sem configuração, a ferramenta
@@ -7756,10 +8258,10 @@ function exportMateriaisCsv(){
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-10-31.4';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-05.4';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao'];
-const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt'];   // viram registros da coleção "config"
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP'];
+const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
 

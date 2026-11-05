@@ -3,6 +3,84 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-05.4
+- **Reimportar a base de pedidos não devolve mais o planejado para "pendente".** A pendência de um pedido é o que ele pede menos o que as linhas do plano (planejadas e
+  produzidas) já cobrem, e as linhas apontam para o pedido pelo **id**. As importações (tanto "atualizar" quanto "substituir toda a base") **recriavam os pedidos com
+  ids novos**, e com isso todas as linhas perdiam o vínculo e tudo voltava como pendente no Plano Mestre. Agora os pedidos que já existiam **mantêm o mesmo id**
+  (casando por número do pedido + item + lote; se o lote mudou, por número do pedido + item), então o que já foi planejado e produzido **continua abatendo**, e só a
+  diferença de quantidade (para mais) fica pendente. O relatório da importação informa quantos pedidos mantiveram as linhas do plano.
+- **Reparo automático dos dados já quebrados.** Ao abrir a ferramenta, ao restaurar um backup e ao carregar do servidor, as linhas cujo pedido tinha sido recriado por
+  uma importação antiga são **reatadas pelo número do pedido + item (+ lote)**. Aparece o aviso "Vínculos reatados: N linha(s)…". Linhas cujo pedido não está mais na
+  base ficam como estão.
+- Não exige mudança no servidor.
+
+## 2026-11-05.3
+- **Lote máximo por cliente, em uma lista que você mantém.** Em **Cadastros → Itens** há o cartão **"Clientes que dividem pelo lote máximo"**: marque os clientes
+  cujos pedidos devem ser divididos em linhas pela Capacidade Máxima do Lote (geração do plano, planejar pedido, adicionar linha, reprogramar e o teto na edição de
+  quantidade). Para os clientes **não marcados**, a quantidade de um item na mesma data e recurso fica em **uma linha só** (a soma). Antes isso estava fixo no cliente
+  MOTUL; **enquanto ninguém editar a lista, continua valendo o MOTUL** (padrão). A lista vazia significa que ninguém divide. A mudança vale para os próximos
+  planejamentos; as linhas que já existem não são refeitas. O cartão mostra, por cliente, os pedidos em aberto e os itens sem Capacidade Máxima. A lista é
+  **compartilhada entre os usuários** (não exige mudança no servidor) e tem **permissão própria** ("Clientes que dividem pelo lote máximo", em Cadastros).
+
+## 2026-11-05.2
+- **Comentários / Observações na linha da Lista Mestre.** Cada linha tem o botão **"Obs."**; ao clicar abre a janela para escrever a observação (com item, data e
+  quantidade da linha), e a ferramenta guarda **quem escreveu e quando**. Linha com observação fica **evidente para os operadores**: fundo amarelo na linha, botão **📝 amarelo**
+  e em negrito (com o texto ao passar o mouse) e o texto da observação **sai na impressão** da Lista Mestre, junto do item. Quem só consulta abre e lê, mas não grava.
+  **Permissão nova** por usuário: campo "Comentários / Observações" (Lista Mestre).
+- **Lote máximo só para o cliente MOTUL.** A Capacidade Máxima do Lote passou a dividir as linhas **somente dos itens do cliente MOTUL** (geração do plano, planejar pedido,
+  adicionar linha, reprogramar pendência e edição de quantidade). Para os **demais clientes**, a quantidade de um item na mesma data e recurso fica em **uma linha só** (a soma),
+  sem teto de lote máximo. Em um item com pedidos dos dois tipos, as linhas não se misturam (cada linha só se vincula a pedidos da sua classe). O Cadastro de Itens avisa os itens com
+  pedido do MOTUL sem Capacidade Máxima do Lote.
+- **Adicionar linha direto na Lista Mestre, escolhendo o ITEM.** A lista é de **itens** com pedido em aberto (sem pedido: desabilitado, "sem pedido disponível"). O **vínculo com o(s)
+  pedido(s) é automático**, do mais antigo para o mais novo; se o item não tiver pedido em aberto, **a inserção não é liberada** (nem para o administrador). A quantidade acima do em aberto
+  continua exigindo administrador ou a permissão própria. Quantidade igual ao em aberto é sugerida, e o recurso do item é preenchido.
+- **Correção:** o índice interno de itens não era atualizado quando a lista de itens era trocada por outra do mesmo tamanho (ex.: ao restaurar um backup), e a ferramenta podia usar dados
+  antigos do item (recurso, litros por unidade, capacidade).
+- Não exige mudança no servidor além da já exigida pela versão 2026-11-04.1.
+
+## 2026-11-05.1
+- **Lista Mestre — filtros por coluna.** O cabeçalho da tabela ganhou uma **linha de filtros**, logo abaixo dos títulos: campo de **texto** em Item, Descrição, Pedido,
+  Lote(s), Nº OP e Nº OP Granel (sem diferenciar maiúsculas nem acentos) e **lista de opções** em Data, Recurso, Contaminante, Localização do Granel e Status. Os filtros
+  das colunas **somam-se** aos filtros do topo e valem também para o **resumo por recurso** e para a **impressão**. Os campos ativos ficam destacados e o botão **✕ N**
+  limpa todos; "Limpar filtros" do topo também os limpa. Ao digitar, o campo mantém o foco e o cursor. A linha de filtros acompanha as colunas congeladas (Data, Item e
+  Descrição) e fica logo abaixo dos títulos ao rolar.
+- Não exige mudança no servidor além da já exigida pela versão 2026-11-04.1.
+
+## 2026-11-04.3
+- **Solicitar ordem de produção — excluir linhas antes de gerar.** Na janela, cada item tem uma **caixa** para incluir ou excluir (marcada por padrão) e uma **seta**
+  que mostra as linhas do plano daquele item, cada uma com a sua caixa. O resumo, a tabela e o registro consideram só o que ficou marcado; é possível **restaurar** as
+  excluídas. A solicitação guarda quantas linhas foram excluídas, e só as incluídas recebem a marca de solicitadas.
+- **Desmarcar o selo "OP solicitada" de uma linha.** O selo ganhou um **✕**: ele tira a marca daquela linha (que volta a poder entrar em uma nova solicitação) e registra
+  quem desmarcou, sem cancelar a solicitação. **Nova permissão por tela** ("Desmarcar OP solicitada") nas telas Itens por Dia, Lista Mestre e Plano Mestre, separada da
+  de solicitar.
+- **Impressão da Lista Mestre:** **sem a coluna Pedido** e com o **mesmo agrupamento da Lista Mestre**: ordem por Nº OP Granel, depois recurso e data, com a faixa de
+  cabeçalho a cada novo Nº OP Granel (linhas, itens e o aviso "Este granel compõe mais de um item"). Data e Recurso passam a ser colunas (não há mais um bloco e uma
+  página por dia).
+- Não exige mudança no servidor além da já exigida pela versão 2026-11-04.1.
+
+## 2026-11-04.2
+- **Totalizador (Dashboards):** novas colunas **1º, 2º e 3º turno (L)** (volume efetuado por turno) nas tabelas "Por recurso" e "Por unidade de medida", e a coluna
+  **Horas paradas** nas três tabelas (as paradas são registradas por recurso: por unidade de medida e por turno aparece "—"; a linha Total soma todas). A exportação
+  CSV do Dashboard também traz as colunas novas.
+- **Colunas congeladas:** nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista, junto com o cabeçalho: Lista Mestre
+  (Data, Item e Descrição), Itens por Dia e Planejado x Efetuado (Nº do item e Descrição), Necessidades (Código e Insumo), Cadastro de Itens (Código e Descrição),
+  Pedidos & Lead Time (Pedido e Cliente), Produção diária do Dashboard (Recurso e Total) e Planejamento de Materiais (Material).
+- **Solicitar ordem de produção:** o relatório (tabela da janela, impressão e CSV) **não traz mais o cliente**. O filtro por cliente continua disponível na janela.
+- Não exige mudanças no servidor (não precisa rodar o schema.sql de novo além do exigido pela versão 2026-11-04.1).
+
+## 2026-11-04.1
+- **Solicitar ordem de produção.** Botão **"📄 Solicitar ordem de produção"** nas telas **Itens por Dia**, **Lista Mestre** e **Plano Mestre**. A janela abre já com os
+  filtros da tela (período, recurso, cliente, item, pedido) e permite ajustar: data, recurso, cliente, item (código ou descrição), grupo e pedido. A tabela mostra
+  **uma linha por item, com as quantidades somadas** (também linhas, datas, recursos, clientes e litros) e o total geral.
+- **Ao gerar, a solicitação é registrada** (número SOLOP-0001, data, hora e usuário) e as linhas do plano ficam **marcadas como solicitadas** ("📄 OP solicitada
+  SOLOP-0001"), visível na Lista Mestre e no Plano Mestre; se a quantidade da linha mudar depois, aparece "⚠ qtd. alterada". Por padrão entram só linhas sem Nº OP,
+  sem produção e ainda não solicitadas (dá para incluir todas). Há **histórico** das solicitações, **impressão**, **exportação CSV** e **cancelamento**
+  (que tira a marca das linhas).
+- **Permissão por tela:** campo "Solicitar ordem de produção" na janela de permissões das três telas. Somente leitura não registra.
+- **Ação necessária no Supabase:** rodar o arquivo `supabase/schema.sql` de novo no SQL Editor (nova coleção `solicitacoesOP`). Sem isso, as solicitações não
+  sincronizam entre os usuários.
+- Limite conhecido: gerar o plano automaticamente de novo recalcula as linhas e **remove a marca** das linhas recalculadas (a solicitação continua no histórico).
+
 ## 2026-10-31.4
 - **Vínculo dos pedidos ajustado automaticamente ao editar quantidades.** Ao alterar a quantidade de uma linha (Lista Mestre ou Plano Mestre), os pedidos em
   aberto do item são **redistribuídos entre as linhas**, do pedido **mais antigo para o mais novo** (menor data de entrega primeiro; empate: menor número
