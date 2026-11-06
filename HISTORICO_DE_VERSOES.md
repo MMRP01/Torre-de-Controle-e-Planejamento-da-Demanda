@@ -3,6 +3,27 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-06.1
+- **Relatório de insumos** (botão **📊 Relatório de insumos** na Lista Mestre). Resumo dos insumos a consumir nas linhas dentro dos filtros (data, recurso, cliente, item, grupo,
+  pedido, "só sem produção apontada"), **antes de gerar**: janela com prévia, indicadores, abas (Resumo por insumo, Por OP e granel, Granel consumido, Pendências, Linhas) e caixa
+  para **excluir linhas**. Ao gerar, o relatório é **registrado** (RINS-0001, usuário, data, filtros) e pode ser exportado em **Excel** (uma aba por bloco), **PDF** (pela impressão
+  do navegador) e **CSV**; há histórico. O consumo vem das **OPs do ERP**: o **Nº OP** (envase) e o **Nº OP Granel** (mistura) de cada linha; **cada OP é contada uma vez**, mesmo
+  que apareça em várias linhas. O Nº OP Granel pode ter **vários números** (separados por vírgula, ponto e vírgula, barra, + ou "e"). Quando falta OP (não digitada ou fora da
+  importação), a parte que falta é **estimada pela receita** e marcada como estimada. Vale a **quantidade da OP do ERP**, com aviso quando a Lista Mestre diverge (tolerância de 1%).
+  Só entram como insumo os componentes **INS-…**; recursos e mão de obra são ignorados; o granel consumido aparece à parte; códigos suspeitos (ex.: RNS-OB-…) são avisados.
+- **Importação "Ordens de Produção do ERP (componentes)"** (Importação de Dados): lê o relatório do ERP (Nº DA OP, item, quantidades, componentes), uma OP por registro; atualizar
+  substitui só as OPs que vierem no arquivo; "substituir" troca toda a base de OPs. Normaliza códigos em minúsculas.
+- Nova permissão **"Relatório de insumos"** (Lista Mestre). **Duas coleções novas no servidor** (ordensERP e relatoriosInsumos): é preciso rodar o **supabase/schema.sql** de novo.
+
+## 2026-11-05.5
+- **Plano de Reposição** (ajuste recebido, aplicado sobre esta versão). Nova tela no menu **Planejamento**: mostra o **saldo diário de cada material** (estoque + entregas −
+  consumo do plano) comparado ao **estoque de segurança** e ao **estoque máximo**, e o que comprar, quanto e para quando. Traz indicadores (compra emergencial / antecipar,
+  pedidos a emitir, entregas que geram excesso, acima do máximo), filtros (ação do plano, tipo, grupo, material, pedidos de compra atrasados, horizonte e ciclo de reposição),
+  a **grade de saldos por dia** colorida (atende, abaixo do segurança, falta, excesso, entrega programada) e a **lista de ações** (comprar / antecipar), com exportação em CSV.
+- **Estoque Máximo** nas importações do Planejamento de Materiais: os cartões "Estoque de Segurança e Prazo de Entrega" e "Grupos de Reposição" ganharam a coluna opcional
+  "Estoque Máximo" (célula em branco não apaga o valor existente). Sem estoque máximo, o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)).
+- A tela de permissões passa a listar o Plano de Reposição (16 telas operacionais). Não exige mudança no servidor.
+
 ## 2026-11-05.4
 - **Reimportar a base de pedidos não devolve mais o planejado para "pendente".** A pendência de um pedido é o que ele pede menos o que as linhas do plano (planejadas e
   produzidas) já cobrem, e as linhas apontam para o pedido pelo **id**. As importações (tanto "atualizar" quanto "substituir toda a base") **recriavam os pedidos com

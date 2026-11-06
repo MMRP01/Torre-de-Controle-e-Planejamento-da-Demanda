@@ -421,6 +421,28 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
   .page-head,.filters{position:static !important;}
   .tbl-wrap{max-height:none !important;overflow:visible !important;}
 }
+
+/* ---- Plano de Reposição: grade de saldo diário ---- */
+.rp-tabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap;}
+.rp-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;margin:0 0 10px;}
+.rp-leg span{display:inline-flex;align-items:center;gap:6px;}
+.rp-sw{width:14px;height:14px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.15);}
+.rp-sw.ent{background:#fff;box-shadow:inset 0 0 0 2px #1F4E9E;} .rp-sw.rec{background:#fff;box-shadow:inset 0 0 0 2px #7030A0;}
+.tbl-wrap.rp-wrap{max-height:70vh;}
+table.rp-grade{border-collapse:separate;border-spacing:0;font-size:11px;font-variant-numeric:tabular-nums;}
+table.rp-grade th,table.rp-grade td{padding:3px 6px;text-align:right;white-space:nowrap;min-width:64px;border-right:1px solid #fff;border-bottom:1px solid #fff;}
+table.rp-grade thead th{position:sticky;top:0;z-index:3;background:var(--card);border-bottom:1px solid var(--line-strong);color:var(--muted);font-weight:600;}
+table.rp-grade .rp-fix{position:sticky;left:0;z-index:2;background:var(--card);text-align:left;min-width:250px;max-width:250px;white-space:normal;border-right:1px solid var(--line-strong);}
+table.rp-grade thead .rp-fix{z-index:4;}
+table.rp-grade tbody tr{cursor:pointer;}
+table.rp-grade tbody tr:hover .rp-fix{background:#EEF1F5;}
+table.rp-grade td.rp-ok{background:#C6EFCE;color:#1a1a1a;} table.rp-grade td.rp-abaixo{background:#FFF2AB;color:#1a1a1a;}
+table.rp-grade td.rp-falta{background:#8B0000;color:#fff;font-weight:700;} table.rp-grade td.rp-exc{background:#F4B183;color:#1a1a1a;}
+table.rp-grade td.rp-ent{box-shadow:inset 0 0 0 2px #1F4E9E;font-weight:700;} table.rp-grade td.rp-rec{box-shadow:inset 0 0 0 2px #7030A0;font-weight:700;}
+table.rp-grade td.rp-ref{color:var(--muted);}
+.badge.exc{background:#FCE4D6;color:#9A3B00;}
+#rpTip{position:fixed;z-index:9999;display:none;pointer-events:none;background:#fff;border:1px solid var(--line-strong);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:8px 10px;font-size:12px;line-height:1.5;max-width:330px;}
+#rpTip .l{display:flex;justify-content:space-between;gap:18px;} #rpTip .h{color:var(--muted);margin-bottom:2px;} #rpTip hr{border:0;border-top:1px solid #e3e5e8;margin:4px 0;}
 </style>
 </head>
 <body>
@@ -515,6 +537,56 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
         <div class="chart-box"><div id="chartMatSaldo"></div></div>
         <div class="tbl-wrap" style="max-height:340px"><table class="data" id="tblMatSerie"></table></div>
         <div id="matPedidos"></div>
+      </div>
+    </section>
+
+    <!-- ============ PLANO DE REPOSIÇÃO ============ -->
+    <section class="page" id="page-reposicao">
+      <div class="page-head">
+        <div>
+          <h2>Plano de Reposição</h2>
+          <div class="desc">Saldo diário de cada material (estoque + entregas − consumo do plano) comparado ao estoque de segurança e ao estoque máximo, e o que comprar, quanto e para quando, para não faltar, não ficar abaixo do segurança e não gerar excesso.</div>
+        </div>
+        <div class="head-actions"><button class="btn" onclick="renderReposicao()">↻ Recalcular</button><button class="btn" onclick="exportReposicaoCsv()">⬇ Exportar lista (.csv)</button></div>
+      </div>
+      <div class="note" id="rpAviso" style="margin-bottom:14px"></div>
+      <div class="grid grid-4" id="rpKpis"></div>
+      <div class="filters">
+        <div class="f"><label>Ação do plano</label><select id="rpAcao" onchange="renderReposicao()">
+          <option value="emergencial">Compra emergencial / antecipar</option><option value="pedir_hoje">Emitir pedido hoje</option><option value="pedir_ate">Emitir pedido até a data</option><option value="excesso_entrega">Entrega gera excesso</option><option value="nao_comprar">Acima do máximo: não comprar</option><option value="ok">Sem ação</option></select></div>
+        <div class="f"><label>Tipo</label><select id="rpTipo" data-unico onchange="renderReposicao()"><option value="">Itens e grupos</option><option value="grupo">Só grupos de reposição</option><option value="item">Só itens</option></select></div>
+        <div class="f"><label>Grupo do cadastro</label><select id="rpGrupo" onchange="renderReposicao()"></select></div>
+        <div class="f"><label>Material (código ou descrição)</label><input type="text" id="rpBusca" placeholder="digite para buscar" autocomplete="off" oninput="renderReposicao()"></div>
+        <div class="f"><label>Pedidos de compra atrasados</label><select id="rpAtrasados" data-unico onchange="renderReposicao()"><option value="hoje">Considerar chegando hoje</option><option value="ignorar">Ignorar</option></select></div>
+        <div class="f"><label>Horizonte até</label><input type="date" id="rpFim" onchange="renderReposicao()"></div>
+        <div class="f"><label>Ciclo de reposição (dias)</label><input type="number" id="rpCiclo" min="1" step="1" value="20" title="Só vale para materiais sem estoque máximo cadastrado: o nível alvo do pedido passa a ser segurança + consumo médio × (prazo + ciclo)" onchange="renderReposicao()"></div>
+        <div class="f-actions"><button class="btn btn-ghost" onclick="clearReposFiltros()">Limpar filtros</button></div>
+      </div>
+      <div class="rp-tabs"><button class="btn btn-primary" id="rpTabGrade" onclick="rpMostrar('grade')">Grade de saldos por dia</button><button class="btn" id="rpTabLista" onclick="rpMostrar('lista')">Lista de ações (comprar / antecipar)</button></div>
+      <div class="card" id="rpCardGrade">
+        <h3>Saldo diário por material <span class="dash-por" id="rpCountGrade"></span></h3>
+        <div class="card-sub">Cada célula mostra o saldo do dia (estoque + entregas − consumo do plano). Passe o mouse para ver de onde vem o número; clique na linha para ver o gráfico e o plano do material. Ordenado por urgência.</div>
+        <div class="rp-leg">
+          <span><i class="rp-sw" style="background:#C6EFCE"></i>Atende (entre o segurança e o máximo)</span>
+          <span><i class="rp-sw" style="background:#FFF2AB"></i>Atende, mas abaixo do estoque de segurança</span>
+          <span><i class="rp-sw" style="background:#8B0000"></i>Não atende (falta)</span>
+          <span><i class="rp-sw" style="background:#F4B183"></i>Acima do estoque máximo (excesso)</span>
+          <span><i class="rp-sw ent"></i>Dia com entrega programada</span>
+          <span><i class="rp-sw rec"></i>Dia com recebimento sugerido pelo plano</span>
+        </div>
+        <label style="display:inline-flex;gap:8px;align-items:center;font-size:12.5px;margin:0 0 10px;cursor:pointer"><input type="checkbox" id="rpComPlano" onchange="renderReposicao()"> Mostrar o saldo com o plano de reposição (pedidos sugeridos incluídos)</label>
+        <div class="tbl-wrap rp-wrap"><table class="rp-grade" id="tblReposGrade"></table></div>
+      </div>
+      <div class="card" id="rpCardLista" style="display:none">
+        <h3>Lista de ações <span class="dash-por" id="rpCountLista"></span></h3>
+        <div class="card-sub">Uma linha por ação: compra emergencial ou antecipação de entrega (por data em que precisa chegar), pedidos a emitir (data de emissão e chegada necessária), entregas a reduzir ou adiar e materiais acima do máximo. Ordenada por data. Clique na linha para ver o material.</div>
+        <div class="tbl-wrap rp-wrap"><table class="data" id="tblReposLista"></table></div>
+      </div>
+      <div class="card" id="rpDetalheCard" style="display:none">
+        <h3 id="rpDetalheTitulo"></h3>
+        <div class="card-sub" id="rpDetalheSub"></div>
+        <div class="chart-box"><div id="chartReposSaldo"></div></div>
+        <div class="tbl-wrap" style="max-height:320px"><table class="data" id="tblReposItem"></table></div>
       </div>
     </section>
 
@@ -847,6 +919,7 @@ button[data-trava-prog]:disabled{opacity:.35;cursor:not-allowed;}
         <div class="head-actions">
           <button class="btn btn-danger" onclick="abrirParadaRapida('')">🛑 Registrar parada</button>
           <button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button>
+          <button class="btn btn-primary" onclick="abrirRelatorioInsumos()">📊 Relatório de insumos</button>
           <button class="btn" onclick="doPrint()">🖨 Abrir lista para impressão</button>
         </div>
       </div>
@@ -1235,7 +1308,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-05","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-06","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -1281,6 +1354,7 @@ const NAV = [
     {id:'necessidades', label:'Necessidades', ico:'◧'},
     {id:'necgrupo', label:'Necessidades por Grupo', ico:'▧'},
     {id:'materiais', label:'Planejamento de Materiais', ico:'▥'},
+    {id:'reposicao', label:'Plano de Reposição', ico:'⇄'},
     {id:'plano', label:'Plano Mestre', ico:'▤'},
     {id:'visaodia', label:'Itens por Dia', ico:'▦'},
     {id:'efetuado', label:'Planejado x Efetuado', ico:'✅'},
@@ -1357,6 +1431,7 @@ function renderPagina(id){
     if(id==='necessidades') renderNecessidades();
     if(id==='necgrupo') renderNecessidadesGrupo();
     if(id==='materiais') renderMateriais();
+    if(id==='reposicao') renderReposicao();
     if(id==='cadastros') renderCadastros();
     if(id==='importacao') renderImportacao();
     if(id==='plano'){ renderPlano(); if(planMode==='manual') renderManualClientList(); }
@@ -1927,6 +2002,8 @@ function garantirEstruturas(){
   DB.paramMateriais = DB.paramMateriais || [];        // estoque de segurança e prazo por item
   DB.gruposReposicao = DB.gruposReposicao || [];      // grupos de reposição (vários códigos somados)
   DB.solicitacoesOP = DB.solicitacoesOP || [];        // solicitações de ordem de produção (registro)
+  DB.ordensERP = DB.ordensERP || [];                  // OPs importadas do ERP (componentes) — alimentam o relatório de insumos
+  DB.relatoriosInsumos = DB.relatoriosInsumos || [];  // relatórios de insumos gerados (registro)
   // reata as linhas do plano aos pedidos cujo id foi trocado por uma importação antiga (o que já foi planejado volta a abater o pedido)
   const reatados = reconciliarVinculosPedidos();
   if(reatados>0) setTimeout(()=>{ try{ persistDB(); showToast(`Vínculos reatados: ${reatados} linha(s) do plano voltaram a abater os pedidos (pelo número do pedido).`); }catch(e){} }, 1200);
@@ -2587,6 +2664,10 @@ async function runImport(kind, inputId, modeId, reportId){
     });
     if(!algumaLinhaValida) DB.prioridadeBatchCounter--; // nenhuma linha válida: não "gasta" um número de lote à toa
   }
+  if(kind==='ordenserp'){                                       // OPs do ERP (relatório de insumos)
+    const RO = importarOrdensERP(rawRows, def, mode);
+    RO.report.forEach(x=>report.push(x)); added += RO.added; updated += RO.updated; errors += RO.errors;
+  }
   if(['compras','parametros','gruposrep'].includes(kind)){       // Planejamento de Materiais
     const RM = importarMateriais(kind, rawRows, def, mode);
     RM.report.forEach(x=>report.push(x)); added += RM.added; updated += RM.updated; errors += RM.errors;
@@ -2609,6 +2690,7 @@ async function runImport(kind, inputId, modeId, reportId){
   if(cadActive) renderCadastros();
   if(document.getElementById('page-prioridades')?.classList.contains('active')) renderPrioridades();
   if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
+  if(document.getElementById('page-reposicao')?.classList.contains('active')) renderReposicao();
   persistDB();
 }
 
@@ -2620,6 +2702,7 @@ function renderImportacao(){
     {kind:'estoque', title:'Estoque Atual', desc:'Atualiza somente o saldo de estoque dos itens já cadastrados, pelo código do item.', showMode:false},
     {kind:'compras', title:'Pedidos de Compra em Aberto', desc:'Entregas de insumos programadas: pedido, item, quantidade e data prevista de chegada. A cada importação a lista é SUBSTITUÍDA (os pedidos já recebidos saem do ERP). Data anterior a hoje conta como chegando hoje. Alimenta o Planejamento de Materiais.', showMode:false},
     {kind:'parametros', title:'Estoque de Segurança e Prazo de Entrega', desc:'Por item: estoque de segurança e prazo de entrega em dias corridos. Célula em branco não apaga o valor que já existe. Alimenta o Planejamento de Materiais.', showMode:true},
+    {kind:'ordenserp', title:'Ordens de Produção do ERP (componentes)', desc:'Relatório do ERP com o Nº da OP, o item, a quantidade e os componentes de cada OP (envase e granel). Alimenta o Relatório de insumos da Lista Mestre. Atualizar substitui os dados das OPs que vierem no arquivo e mantém as demais; só entram como insumo os componentes INS-…; recursos e mão de obra são ignorados.', showMode:true},
     {kind:'gruposrep', title:'Grupos de Reposição', desc:'Vários códigos analisados SOMADOS (estoque, consumo, entregas, segurança e prazo do grupo), como os aditivos da mesma família. Os itens do grupo deixam de ser analisados um a um. Liste os códigos separados por vírgula.', showMode:true},
   ];
   document.getElementById('importCards').innerHTML = specs.map(s=>{
@@ -6882,6 +6965,7 @@ const CATALOGO_CAMPOS = {
     {id:'excluir',   label:'Remover linhas',                      acoes:['deletePlanLine']},
   ],
   lista: [
+    {id:'relatorioinsumos', label:'Relatório de insumos (abrir, gerar e registrar)', acoes:['abrirRelatorioInsumos','gerarRelatorioInsumos']},
     {id:'obs',        label:'Comentários / Observações da linha', acoes:['salvarObsLinha','limparObsLinha']},
     {id:'solicitarop', label:'Solicitar ordem de produção',        acoes:['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']},
     {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
@@ -6931,6 +7015,7 @@ const CATALOGO_CAMPOS = {
     {id:'compras',   label:'Importar pedidos de compra em aberto', acoes:[['runImport',0,'compras']]},
     {id:'parametros',label:'Importar estoque de segurança e prazos', acoes:[['runImport',0,'parametros']]},
     {id:'gruposrep', label:'Importar grupos de reposição',         acoes:[['runImport',0,'gruposrep']]},
+    {id:'ordenserp', label:'Importar ordens de produção do ERP (componentes)', acoes:[['runImport',0,'ordenserp']]},
     {id:'backup',    label:'Restaurar backup dos dados',          acoes:['restaurarBackup']},
   ],
 };
@@ -6972,7 +7057,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
@@ -7612,8 +7697,53 @@ function init(){
        compras:    [{ id, item, qtd, data, pedido, fornecedor? }]      (pedidos de compra em aberto)
        prazos:     [{ tipo:'item'|'grupo', chave, dias }]
        seguranca:  [{ tipo:'item'|'grupo', chave, qtd }]
-       gruposReposicao: [{ chave, itens:[códigos], seguranca, prazo }]   (vários códigos analisados SOMADOS: estoque, consumo, entregas, segurança e prazo do grupo)
-       opcoes:     { fim?: 'AAAA-MM-DD' (horizonte; padrão = fim do plano), pedidoAtrasado?: 'hoje'|'ignorar' }                    */
+       gruposReposicao: [{ chave, itens:[códigos], seguranca, prazo, maximo? }]   (vários códigos analisados SOMADOS: estoque, consumo, entregas, segurança, máximo e prazo do grupo)
+       maximos:    [{ tipo:'item'|'grupo', chave, qtd }]   (estoque máximo por item; opcional)
+       opcoes:     { fim?: 'AAAA-MM-DD' (horizonte; padrão = fim do plano), pedidoAtrasado?: 'hoje'|'ignorar', ciclo?: dias (alvo estimado quando não há máximo; padrão 20), incluirExcesso?: boolean (analisa também quem está acima do máximo) }                    */
+  /* PLANO DE REPOSIÇÃO — simula dia a dia os recebimentos que mantêm o saldo entre o estoque de segurança e o máximo.
+     Prazo em DIAS CORRIDOS: um pedido emitido hoje só chega em hoje + prazo.
+     • Antes disso (dia < prazo) a falta só se resolve antecipando entregas ou comprando com urgência: recebimento EMERGENCIAL, só até o estoque de segurança.
+     • Depois, o pedido chega no dia em que o saldo cruzaria o estoque de segurança e repõe até o nível alvo (o estoque máximo; sem máximo, segurança + consumo médio × (prazo + ciclo)).
+     • Excesso: saldo acima do máximo, sem contar os recebimentos emergenciais (que só levam ao estoque de segurança). Se há entregas programadas, o plano pede reduzir/adiar; senão, não comprar. */
+  function planoReposicao(p){
+    const dias = p.dias, n = dias.length, seg = num(p.seguranca), mx = num(p.maximo);
+    const prazo = (p.prazo === null || p.prazo === undefined) ? 0 : Math.max(0, Math.ceil(num(p.prazo)));
+    const ciclo = p.ciclo > 0 ? p.ciclo : 20, media = num(p.consumoTotal) / Math.max(1, n);
+    let alvo, alvoOrigem;
+    if(mx > seg + 1e-9){ alvo = mx; alvoOrigem = 'máximo cadastrado'; }
+    else { alvo = seg + media * (prazo + ciclo); alvoOrigem = 'estimado: segurança + consumo médio × (prazo + ciclo)'; }
+    let S = num(p.estoque), cumE = 0, pico = 0, diasExc = 0, totE = 0, totR = 0;
+    const emerg = [], pedidos = [], serie = [];
+    for(let j = 0; j < n; j++){
+      const d = dias[j], c = p.cons.get(d) || 0, e = p.ent.get(d) || 0, B = S + e - c;
+      let E = 0, R = 0;
+      if(B < seg - 1e-9){
+        if(j < prazo) E = seg - B;
+        else R = Math.max(0, Math.floor(alvo - B + 1e-9));
+      }
+      if(E > 1e-9) emerg.push({ data:d, qtd:arred(E), saldoAntes:arred(B), saldoApos:arred(B + E) });
+      if(R > 0) pedidos.push({ emitir:somaDias(d, -prazo), chegada:d, qtd:R, saldoAntes:arred(B), saldoApos:arred(B + R) });
+      S = B + E + R; cumE += E; totE += E; totR += R;
+      if(mx > 0){ const x = S - cumE; if(x > mx + 0.005){ diasExc++; if(x - mx > pico) pico = x - mx; } }
+      serie.push({ saldoPlano:arred(S), recEmergencial:arred(E), recPedido:R });
+    }
+    pedidos.forEach(x=>{ x.hoje = x.emitir <= p.hoje; });
+    let anteciparQtd = 0, anteciparData = null;
+    if(emerg.length){
+      const d0 = emerg[0].data;
+      p.ent.forEach((q, d)=>{ if(d > d0 && q > 0){ anteciparQtd += q; if(anteciparData === null || d < anteciparData) anteciparData = d; } });
+    }
+    const entTot = num(p.entradasTotal);
+    let acao = 'ok';
+    if(emerg.length) acao = 'emergencial';
+    else if(pedidos.length) acao = pedidos[0].hoje ? 'pedir_hoje' : 'pedir_ate';
+    else if(pico > 0.5) acao = entTot > 0 ? 'excesso_entrega' : 'nao_comprar';
+    const alertaExcesso = pico > 0.5 ? (entTot > 0 ? 'excesso_entrega' : 'nao_comprar') : '';
+    return { alvo:arred(alvo), alvoOrigem, emergencial:emerg, pedidos, totalRepor:arred(totE + totR), acao, alertaExcesso,
+      picoExcesso:arred(pico), diasExcesso:diasExc, reduzirEntrega: alertaExcesso === 'excesso_entrega' ? arred(Math.min(pico, entTot)) : 0,
+      anteciparQtd:arred(anteciparQtd), anteciparData, serie };
+  }
+
   function projetarMateriais(entrada){
     const E = entrada || {};
     const hoje = E.hoje, opc = E.opcoes || {};
@@ -7624,7 +7754,7 @@ function init(){
     const receitaPor = new Map();
     const codigoOriginal = new Map();     // chave normalizada -> código como veio (para exibir quando o item não tem cadastro)
     receitas.forEach(r=>{ const k = K(r.product); if(!receitaPor.has(k)) receitaPor.set(k, []); receitaPor.get(k).push({ material:String(r.material).trim(), q:num(r.qtyPerUnit) }); if(!codigoOriginal.has(K(r.material))) codigoOriginal.set(K(r.material), String(r.material).trim()); });
-    const prazoDe = mapaParametro(E.prazos, 'dias'), segDe = mapaParametro(E.seguranca, 'qtd');
+    const prazoDe = mapaParametro(E.prazos, 'dias'), segDe = mapaParametro(E.seguranca, 'qtd'), maxDe = mapaParametro(E.maximos, 'qtd');
     // grupos de reposição: vários códigos analisados como UM material (um código só pertence a um grupo)
     const grupos = (E.gruposReposicao||[]).filter(g=>g && g.chave && Array.isArray(g.itens));
     const grupoPor = new Map(grupos.map(g=>[String(g.chave), g])), grupoDe = new Map();
@@ -7681,6 +7811,10 @@ function init(){
     const estoqueGrupo = g => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? num(i.stock) : 0); }, 0);
     itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && num(i.stock) < s.valor) codigos.add('I:'+K(i.code)); });
     grupos.forEach(g=>{ if(num(g.seguranca) > 0 && estoqueGrupo(g) < num(g.seguranca)) codigos.add('G:'+g.chave); });
+    if(opc.incluirExcesso){          // tela de reposição: também analisa quem está acima do estoque máximo (mesmo sem consumo no plano)
+      itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const m = maxDe(i.code, i.group); if(m && m.valor > 0 && num(i.stock) > m.valor) codigos.add('I:'+K(i.code)); });
+      grupos.forEach(g=>{ if(num(g.maximo) > 0 && estoqueGrupo(g) > num(g.maximo)) codigos.add('G:'+g.chave); });
+    }
 
     const materiais = [];
     codigos.forEach(chaveInterna=>{
@@ -7715,6 +7849,10 @@ function init(){
         else acao = 'comprar_ate';
       }
       const qtdSugerida = gatilho ? sobe(Math.max(0, seguranca - minSaldo)) : 0;
+      const mxi = ehGrupo ? (num(grp.maximo) > 0 ? { valor:num(grp.maximo), origem:'grupo de reposição' } : null) : maxDe(cod, it && it.group);
+      const pl = planoReposicao({ dias, cons, ent, estoque, seguranca, maximo: mxi ? mxi.valor : 0, prazo, hoje, ciclo: opc.ciclo, consumoTotal:consTot, entradasTotal:entTot });
+      pl.serie.forEach((x, i)=>Object.assign(serie[i], x));
+      const planoObj = Object.assign({}, pl); delete planoObj.serie;
       const umGrupo = ehGrupo ? ((membros.map(c=>itemPor.get(K(c))).find(Boolean)||{}).uom || '') : '';
       const codExibe = ehGrupo ? cod : (it ? it.code : (codigoOriginal.get(cod) || cod));
       materiais.push({
@@ -7725,6 +7863,7 @@ function init(){
         consumoTotal:arred(consTot), entradasTotal:arred(entTot), saldoFinal:arred(saldo), minSaldo:arred(minSaldo), dataMinSaldo:dataMin,
         primeiraFalta, dataGatilho:gatilho, situacao, acao, dataLimitePedido:dataLimite, atrasoDias, chegadaMaisCedo, rupturaDias,
         qtdSugerida, pedidos:(pedidosPor.get(chaveInterna)||[]).slice(), serie,
+        maximo:arred(mxi ? mxi.valor : 0), maximoOrigem: mxi ? mxi.origem : null, plano:planoObj,
       });
     });
     const peso = { ruptura_inevitavel:0, comprar_ja:1, comprar_ate:2, ok:3 };
@@ -7733,7 +7872,8 @@ function init(){
     return {
       hoje, fim, dias:dias.length, avisos, materiais,
       resumo:{ analisados:materiais.length, ok:cont('ok'), comprarAte:cont('comprar_ate'), comprarJa:cont('comprar_ja'), rupturaInevitavel:cont('ruptura_inevitavel'),
-               comFalta:materiais.filter(m=>m.situacao==='falta').length, semPrazo:materiais.filter(m=>m.semPrazo && m.acao!=='ok').length, linhasConsideradas },
+               comFalta:materiais.filter(m=>m.situacao==='falta').length, semPrazo:materiais.filter(m=>m.semPrazo && m.acao!=='ok').length, linhasConsideradas,
+               plano:{ emergencial:materiais.filter(m=>m.plano.emergencial.length).length, pedidos:materiais.reduce((t,m)=>t+m.plano.pedidos.length,0), excessoEntrega:materiais.filter(m=>m.plano.alertaExcesso==='excesso_entrega').length, naoComprar:materiais.filter(m=>m.plano.alertaExcesso==='nao_comprar').length } },
     };
   }
 
@@ -7756,7 +7896,7 @@ function init(){
     return { alterados:saida, novasFaltas:saida.filter(x=>x.novaFalta).length, pioram:saida.filter(x=>x.variacao==='piora').length, melhoram:saida.filter(x=>x.variacao==='melhora').length };
   }
 
-  const API = { projetarMateriais, compararCenarios, restanteLinha, somaDias, difDias };
+  const API = { projetarMateriais, compararCenarios, restanteLinha, somaDias, difDias, planoReposicao };
   if(typeof module !== 'undefined' && module.exports) module.exports = API;
   raiz.MateriaisMotor = API;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -7765,8 +7905,8 @@ function init(){
    PLANEJAMENTO DE MATERIAIS — tela, importações e exportação (usa o MateriaisMotor)
    Dados novos (todos sincronizados entre os usuários, como o resto):
      DB.comprasAbertas   pedidos de compra em aberto   {id, pedido, itemCode, qty, data, fornecedor, destino}
-     DB.paramMateriais   estoque de segurança e prazo por item {id(=item), item, seguranca, prazo}
-     DB.gruposReposicao  grupos analisados somados     {id(=chave), chave, itens[], seguranca, prazo}
+     DB.paramMateriais   estoque de segurança, prazo e estoque máximo por item {id(=item), item, seguranca, prazo, maximo}
+     DB.gruposReposicao  grupos analisados somados     {id(=chave), chave, itens[], seguranca, prazo, maximo}
    ========================================================================= */
 IMPORT_DEFS.compras = {
   label:'Pedidos de Compra em Aberto', key:'pedido',
@@ -7787,9 +7927,10 @@ IMPORT_DEFS.parametros = {
     {field:'item', required:true, aliases:['item','codigo do item','insumo','material','codigo','chave']},
     {field:'seguranca', required:false, type:'number', aliases:['estoque de seguranca','estoque seguranca','estoque minimo','seguranca','es']},
     {field:'prazo', required:false, type:'number', aliases:['prazo de entrega (dias corridos)','prazo de entrega','prazo de entrega (dias)','prazo','lead time','lead time (dias)']},
+    {field:'maximo', required:false, type:'number', aliases:['estoque maximo','maximo','nivel maximo','estoque max']},
   ],
-  template:['Item','Estoque de Segurança','Prazo de Entrega (dias corridos)'],
-  example:[['INS-EXEMPLO-1','250','14'],['INS-EXEMPLO-2','20000','14']],
+  template:['Item','Estoque de Segurança','Prazo de Entrega (dias corridos)','Estoque Máximo'],
+  example:[['INS-EXEMPLO-1','250','14','900'],['INS-EXEMPLO-2','20000','14','60000']],
 };
 IMPORT_DEFS.gruposrep = {
   label:'Grupos de Reposição', key:'chave',
@@ -7798,9 +7939,10 @@ IMPORT_DEFS.gruposrep = {
     {field:'itens', required:true, aliases:['itens','codigos','itens do grupo','codigos dos itens','insumos']},
     {field:'seguranca', required:false, type:'number', aliases:['estoque de seguranca','estoque seguranca','estoque minimo','seguranca','es']},
     {field:'prazo', required:false, type:'number', aliases:['prazo de entrega (dias corridos)','prazo de entrega','prazo de entrega (dias)','prazo','lead time','lead time (dias)']},
+    {field:'maximo', required:false, type:'number', aliases:['estoque maximo','maximo','nivel maximo','estoque max']},
   ],
-  template:['Grupo','Itens','Estoque de Segurança','Prazo de Entrega (dias corridos)'],
-  example:[['FAMÍLIA EXEMPLO','INS-EXEMPLO-1, INS-EXEMPLO-3','500','14']],
+  template:['Grupo','Itens','Estoque de Segurança','Prazo de Entrega (dias corridos)','Estoque Máximo'],
+  example:[['FAMÍLIA EXEMPLO','INS-EXEMPLO-1, INS-EXEMPLO-3','500','14','1800']],
 };
 
 // importação dos três tipos (chamada por runImport); devolve {added, updated, errors, report}
@@ -7832,13 +7974,13 @@ function importarMateriais(kind, rawRows, def, mode){
     rawRows.forEach((raw,i)=>{
       const {out, missing} = mapa(raw);
       if(missing.length) return erro(i, `Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`);
-      if(out.seguranca===undefined && out.prazo===undefined) return erro(i, 'Informe o estoque de segurança e/ou o prazo de entrega.');
+      if(out.seguranca===undefined && out.prazo===undefined && out.maximo===undefined) return erro(i, 'Informe o estoque de segurança, o prazo de entrega e/ou o estoque máximo.');
       if(!itemByCode(out.item)) return erro(i, `Item ${out.item} não encontrado nos Itens.`);
       out.item = itemByCode(out.item).code;
       const ex = DB.paramMateriais.find(p=>p.item===out.item);
-      if(ex){ if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo;     // célula em branco não apaga o valor existente
+      if(ex){ if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo; if(out.maximo!==undefined) ex.maximo = out.maximo;     // célula em branco não apaga o valor existente
         rep.push({line:i+2, status:'update', msg:`${out.item}: segurança ${fmtL(ex.seguranca||0)} · prazo ${ex.prazo??'—'} dia(s).`}); R.updated++; }
-      else{ DB.paramMateriais.push({id:out.item, item:out.item, seguranca:out.seguranca, prazo:out.prazo});
+      else{ DB.paramMateriais.push({id:out.item, item:out.item, seguranca:out.seguranca, prazo:out.prazo, maximo:out.maximo});
         rep.push({line:i+2, status:'ok', msg:`${out.item}: segurança ${fmtL(out.seguranca||0)} · prazo ${out.prazo??'—'} dia(s).`}); R.added++; }
     });
     return R;
@@ -7856,9 +7998,9 @@ function importarMateriais(kind, rawRows, def, mode){
       const emOutro = itens.filter(c=>DB.gruposReposicao.some(g=>g.chave!==chave && (g.itens||[]).includes(c)));
       const aviso = (semCad.length ? ` · sem cadastro de item: ${semCad.join(', ')}` : '') + (emOutro.length ? ` · já em outro grupo (vale o primeiro): ${emOutro.join(', ')}` : '');
       const ex = DB.gruposReposicao.find(g=>g.chave===chave);
-      if(ex){ ex.itens = itens; if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo;
+      if(ex){ ex.itens = itens; if(out.seguranca!==undefined) ex.seguranca = out.seguranca; if(out.prazo!==undefined) ex.prazo = out.prazo; if(out.maximo!==undefined) ex.maximo = out.maximo;
         rep.push({line:i+2, status:'update', msg:`Grupo ${chave}: ${itens.length} código(s)${aviso}.`}); R.updated++; }
-      else{ DB.gruposReposicao.push({id:chave, chave, itens, seguranca:out.seguranca, prazo:out.prazo});
+      else{ DB.gruposReposicao.push({id:chave, chave, itens, seguranca:out.seguranca, prazo:out.prazo, maximo:out.maximo});
         rep.push({line:i+2, status:'ok', msg:`Grupo ${chave}: ${itens.length} código(s)${aviso}.`}); R.added++; }
     });
     return R;
@@ -7868,15 +8010,16 @@ function importarMateriais(kind, rawRows, def, mode){
 
 /* ---------- cálculo e tela ---------- */
 let MATERIAIS_ULTIMO = null;
-function materiaisEntrada(){
+function materiaisEntrada(opcExtra){
   const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const par = DB.paramMateriais || [];
   return { hoje:todayISO(), plano:DB.plan||[], receitas:DB.recipes||[], itens:DB.items||[],
     compras:(DB.comprasAbertas||[]).map(c=>({id:c.id, item:c.itemCode, qtd:c.qty, data:c.data, pedido:c.pedido, fornecedor:c.fornecedor})),
     prazos:par.filter(p=>p.prazo!==undefined && p.prazo!==null && p.prazo!=='').map(p=>({tipo:'item', chave:p.item, dias:p.prazo})),
     seguranca:par.filter(p=>p.seguranca!==undefined && p.seguranca!==null && p.seguranca!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.seguranca})),
-    gruposReposicao:(DB.gruposReposicao||[]).map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo})),
-    opcoes:{ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje' } };
+    maximos:par.filter(p=>p.maximo!==undefined && p.maximo!==null && p.maximo!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.maximo})),
+    gruposReposicao:(DB.gruposReposicao||[]).map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo, maximo:g.maximo})),
+    opcoes:Object.assign({ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje' }, opcExtra||{}) };
 }
 const MAT_ACAO = {
   ruptura_inevitavel:{rot:'Ruptura inevitável', cls:'danger'},
@@ -7960,6 +8103,184 @@ function exportMateriaisCsv(){
   const lin = f.map(m=>[m.codigo, m.tipo==='grupo'?'Grupo':'Item', m.nome, m.uom, n(m.estoqueAtual), n(m.seguranca), m.prazoDias===null?'':m.prazoDias, n(m.consumoTotal), n(m.entradasTotal), n(m.minSaldo), m.dataMinSaldo, m.primeiraFalta||'', m.dataGatilho||'', m.dataLimitePedido||'', m.chegadaMaisCedo||'', MAT_ACAO[m.acao].rot, n(m.qtdSugerida), (m.membros||[]).join(' ')]);
   const csv = '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
   try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `planejamento_materiais_${todayISO()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível neste ambiente'); }
+  return csv;
+}
+
+/* =========================================================================
+   PLANO DE REPOSIÇÃO — grade de saldo diário, estoque máximo/excesso e lista de ações (usa o MateriaisMotor)
+   Parâmetro novo: "maximo" (estoque máximo) em DB.paramMateriais e DB.gruposReposicao, importado junto com o estoque de segurança.
+   ========================================================================= */
+let REPOS_ULTIMO = null, REPOS_VIEW = 'grade', REPOS_ABERTO = '', REPOS_VIS = [];
+const REPOS_ACAO = {
+  emergencial:{rot:'Compra emergencial / antecipar', cls:'danger'}, pedir_hoje:{rot:'Emitir pedido hoje', cls:'warn'}, pedir_ate:{rot:'Emitir pedido até a data', cls:'info'},
+  excesso_entrega:{rot:'Entrega gera excesso', cls:'exc'}, nao_comprar:{rot:'Acima do máximo: não comprar', cls:'exc'}, ok:{rot:'Sem ação', cls:'ok'},
+};
+const REPOS_PESO = {emergencial:0, pedir_hoje:1, pedir_ate:2, excesso_entrega:3, nao_comprar:4, ok:5};
+const REPOS_TIPO = {
+  emergencial:{rot:'Compra emergencial / antecipar', cls:'danger', ord:0}, pedido:{rot:'Pedido a emitir', cls:'info', ord:1},
+  reduzir:{rot:'Reduzir / adiar entrega', cls:'exc', ord:2}, nao_comprar:{rot:'Não comprar (acima do máximo)', cls:'exc', ord:3},
+};
+const dmCurto = iso => iso ? iso.slice(8,10)+'/'+iso.slice(5,7) : '—';
+const dSemana = iso => ['dom','seg','ter','qua','qui','sex','sáb'][new Date(iso+'T00:00:00').getDay()];
+const reposCat = (s, es, mx) => s < -0.005 ? 'rp-falta' : (s < es - 0.005 ? 'rp-abaixo' : ((mx > 0 && s > mx + 0.005) ? 'rp-exc' : 'rp-ok'));
+const REPOS_CAT_TXT = {'rp-falta':'Não atende (falta)', 'rp-abaixo':'Atende, mas abaixo do estoque de segurança', 'rp-exc':'Acima do estoque máximo (excesso)', 'rp-ok':'Atende'};
+
+function reposEntrada(){
+  const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  const ciclo = Number(String(val('rpCiclo')).replace(',','.'));
+  return materiaisEntrada({ fim: val('rpFim') || undefined, pedidoAtrasado: val('rpAtrasados') || 'hoje', ciclo: ciclo > 0 ? ciclo : 20, incluirExcesso: true });
+}
+function filtrarRepos(lista){
+  const acao = filtroValores('rpAcao'), grp = filtroValores('rpGrupo');
+  const tipo = (document.getElementById('rpTipo')||{}).value || '', busca = normaTxt(((document.getElementById('rpBusca')||{}).value||'').trim());
+  return lista.filter(m=> (!acao.length || acao.includes(m.plano.acao)) && (!grp.length || grp.includes(m.grupo)) && (!tipo || m.tipo===tipo) &&
+    (!busca || normaTxt(m.codigo+' '+m.nome+' '+(m.membros||[]).join(' ')).includes(busca)));
+}
+function reposOrdenar(lista){
+  const dataAcao = m => m.plano.emergencial.length ? m.plano.emergencial[0].data : (m.plano.pedidos.length ? m.plano.pedidos[0].emitir : '9999');
+  return lista.slice().sort((a,b)=> REPOS_PESO[a.plano.acao]-REPOS_PESO[b.plano.acao] || dataAcao(a).localeCompare(dataAcao(b)) || String(a.codigo).localeCompare(String(b.codigo)));
+}
+function rpAplicarAba(){
+  const g = REPOS_VIEW==='grade';
+  const a = document.getElementById('rpCardGrade'), b = document.getElementById('rpCardLista');
+  if(a) a.style.display = g ? '' : 'none'; if(b) b.style.display = g ? 'none' : '';
+  const ta = document.getElementById('rpTabGrade'), tb = document.getElementById('rpTabLista');
+  if(ta) ta.className = 'btn' + (g ? ' btn-primary' : ''); if(tb) tb.className = 'btn' + (g ? '' : ' btn-primary');
+}
+function rpMostrar(v){ REPOS_VIEW = v; rpAplicarAba(); renderReposicao(); }
+function clearReposFiltros(){
+  ['rpAcao','rpGrupo'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('rpTipo').value=''; document.getElementById('rpBusca').value=''; document.getElementById('rpFim').value=''; document.getElementById('rpAtrasados').value='hoje'; document.getElementById('rpCiclo').value='20';
+  renderReposicao();
+}
+
+function renderReposicao(){
+  const pg = document.getElementById('page-reposicao'); if(!pg || !pg.classList.contains('active')) return;
+  const r = MateriaisMotor.projetarMateriais(reposEntrada()); REPOS_ULTIMO = r;
+  populateSelectSeguro(document.getElementById('rpGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
+  const av = [];
+  if(!(DB.plan||[]).length) av.push('Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.');
+  if(!(DB.paramMateriais||[]).length && !(DB.gruposReposicao||[]).length) av.push('Nenhum estoque de segurança, prazo ou máximo foi importado (cartões em <strong>Importação de Dados</strong>).');
+  else if(!(DB.paramMateriais||[]).some(p=>Number(p.maximo)>0) && !(DB.gruposReposicao||[]).some(g=>Number(g.maximo)>0)) av.push('Nenhum <strong>estoque máximo</strong> foi importado: o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)) e não há alerta de excesso. Importe a coluna "Estoque Máximo" junto com o estoque de segurança.');
+  if(!(DB.comprasAbertas||[]).length) av.push('Nenhum pedido de compra em aberto foi importado: o cálculo considera só o estoque atual.');
+  r.avisos.forEach(a=>{ if(a.tipo==='pedido_atrasado') av.push(a.texto); if(a.tipo==='sem_receita') av.push(`${a.itens.length} item(ns) do plano sem receita (não entram no cálculo): ${acessoEsc(a.itens.slice(0,6).join(', '))}${a.itens.length>6?'…':''}.`); });
+  const sp = r.materiais.filter(m=>m.semPrazo && m.plano.acao!=='ok').length;
+  if(sp) av.push(`${sp} material(is) com ação sugerida sem prazo de entrega cadastrado: o plano considera que o pedido chega no mesmo dia.`);
+  const ctr = document.getElementById('rpAviso'); ctr.style.display = av.length ? '' : 'none'; ctr.innerHTML = av.map(x=>'• '+x).join('<br>');
+  const P = r.resumo.plano, hojeN = r.materiais.reduce((t,m)=>t+m.plano.pedidos.filter(p=>p.hoje).length,0);
+  document.getElementById('rpKpis').innerHTML = `
+    ${kpi('Compra emergencial / antecipar', P.emergencial, P.emergencial?'o prazo de entrega não evita ficar abaixo do segurança':'nenhum', P.emergencial?'down':'up')}
+    ${kpi('Pedidos a emitir', P.pedidos, `${hojeN} para emitir hoje`, hojeN?'down':'up')}
+    ${kpi('Entregas que geram excesso', P.excessoEntrega, P.excessoEntrega?'reduzir ou adiar entregas':'nenhuma', P.excessoEntrega?'down':'up')}
+    ${kpi('Acima do máximo (não comprar)', P.naoComprar, `${r.materiais.length} materiais analisados`)}`;
+  const f = reposOrdenar(filtrarRepos(r.materiais));
+  rpAplicarAba();
+  if(REPOS_VIEW==='grade') renderReposGrade(f, r); else renderReposLista(f, r);
+  if(REPOS_ABERTO) abrirDetalheRepos(REPOS_ABERTO, true);
+}
+
+function renderReposGrade(f, r){
+  const t = document.getElementById('tblReposGrade'); if(!t) return;
+  const com = !!(document.getElementById('rpComPlano')||{}).checked, LIM = 250, vis = f.slice(0, LIM); REPOS_VIS = vis;
+  const dias = r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [];
+  document.getElementById('rpCountGrade').textContent = `— ${f.length} de ${r.materiais.length}` + (f.length>LIM ? ` (mostrando os ${LIM} primeiros: refine os filtros)` : '');
+  const campo = com ? 'saldoPlano' : 'saldo';
+  const head = `<thead><tr><th class="rp-fix">Material</th><th>UM</th><th>Estoque</th><th>Segurança</th><th>Máximo</th>${dias.map(d=>`<th>${dmCurto(d)}<div style="font-weight:400">${dSemana(d)}</div></th>`).join('')}</tr></thead>`;
+  const corpo = vis.length ? vis.map((m,i)=>{ const a = REPOS_ACAO[m.plano.acao];
+    return `<tr data-id="${acessoEsc(m.id)}"><td class="rp-fix"><strong class="mono">${acessoEsc(m.codigo)}</strong> <span class="badge ${a.cls}">${a.rot}</span><div style="font-size:11px;color:var(--muted)">${acessoEsc(m.nome)}${m.tipo==='grupo'?` · grupo de ${m.membros.length}`:''}</div></td>
+      <td class="rp-ref">${acessoEsc(m.uom)}</td><td class="${reposCat(m.estoqueAtual, m.seguranca, m.maximo)}">${fmtL(m.estoqueAtual)}</td><td class="rp-ref">${fmtL(m.seguranca)}</td><td class="rp-ref">${m.maximo>0?fmtL(m.maximo):'—'}</td>
+      ${m.serie.map((s,j)=>`<td data-i="${i}" data-j="${j}" class="${reposCat(s[campo], m.seguranca, m.maximo)}${com && (s.recEmergencial>0 || s.recPedido>0) ? ' rp-rec' : (s.entradas>0 ? ' rp-ent' : '')}">${fmtL(s[campo])}</td>`).join('')}</tr>`; }).join('')
+    : `<tr><td colspan="${5+dias.length}"><div class="empty">Nenhum material para este filtro.</div></td></tr>`;
+  t.innerHTML = head + '<tbody>' + corpo + '</tbody>';
+  if(!t.__rp){ t.__rp = true;
+    t.addEventListener('mousemove', ev=>{
+      const td = ev.target.closest ? ev.target.closest('td[data-j]') : null, tip = rpTipEl();
+      if(!td){ tip.style.display = 'none'; return; }
+      const m = REPOS_VIS[+td.dataset.i]; if(!m) return;
+      tip.innerHTML = reposTipHtml(m, +td.dataset.j, !!(document.getElementById('rpComPlano')||{}).checked); tip.style.display = 'block';
+      const w = tip.offsetWidth, h = tip.offsetHeight; let x = ev.clientX + 14, y = ev.clientY + 16;
+      if(x + w > window.innerWidth - 8) x = ev.clientX - w - 14; if(y + h > window.innerHeight - 8) y = ev.clientY - h - 12;
+      tip.style.left = Math.max(4, x)+'px'; tip.style.top = Math.max(4, y)+'px';
+    });
+    t.addEventListener('mouseleave', ()=>{ rpTipEl().style.display = 'none'; });
+    t.addEventListener('click', ev=>{ const tr = ev.target.closest ? ev.target.closest('tr[data-id]') : null; if(tr) abrirDetalheRepos(tr.dataset.id); });
+  }
+}
+function rpTipEl(){ let t = document.getElementById('rpTip'); if(!t){ t = document.createElement('div'); t.id = 'rpTip'; document.body.appendChild(t); } return t; }
+function reposTipHtml(m, j, com){
+  const s = m.serie[j], u = acessoEsc(m.uom||''), campo = com ? 'saldoPlano' : 'saldo';
+  const ant = j === 0 ? m.estoqueAtual : m.serie[j-1][campo], sv = s[campo];
+  const L = (rot, val, cor) => `<div class="l"${cor?` style="color:${cor}"`:''}><span>${rot}</span><b>${val}</b></div>`;
+  let h = `<div class="h">${acessoEsc(m.codigo)} · ${fmtDate(s.data)} (${dSemana(s.data)})</div>`;
+  h += L(j===0 ? 'Estoque atual' : 'Saldo do dia anterior', fmtL(ant)+' '+u);
+  h += L('+ Entregas programadas', fmtL(s.entradas)+' '+u, s.entradas>0 ? '#1F4E9E' : '');
+  if(com){ if(s.recEmergencial>0) h += L('+ Recebimento emergencial', fmtL(s.recEmergencial)+' '+u, '#7030A0'); if(s.recPedido>0) h += L('+ Pedido sugerido (chegada)', fmtL(s.recPedido)+' '+u, '#7030A0'); }
+  h += L('− Consumo do plano', fmtL(s.consumo)+' '+u) + '<hr>' + L('= Saldo do dia', fmtL(sv)+' '+u) + '<hr>';
+  h += L('Estoque de segurança', fmtL(m.seguranca)+' '+u);
+  if(m.maximo > 0) h += L('Estoque máximo', fmtL(m.maximo)+' '+u);
+  if(sv < -0.005) h += L('Falta para atender o dia', fmtL(-sv)+' '+u);
+  else if(sv < m.seguranca - 0.005) h += L('Falta para o segurança', fmtL(m.seguranca - sv)+' '+u);
+  else if(m.maximo > 0 && sv > m.maximo + 0.005) h += L('Acima do máximo', fmtL(sv - m.maximo)+' '+u);
+  return h + `<div style="font-weight:700;margin-top:4px">${REPOS_CAT_TXT[reposCat(sv, m.seguranca, m.maximo)]}</div>`;
+}
+
+function reposLinhas(f){
+  const L = [];
+  f.forEach(m=>{
+    const totE = m.plano.emergencial.reduce((t,x)=>t+x.qtd,0);
+    m.plano.emergencial.forEach(e=>L.push({ tipo:'emergencial', data:e.data, m, qtd:e.qtd, emitir:'', chegada:e.data, antes:e.saldoAntes, apos:e.saldoApos,
+      obs: m.plano.anteciparQtd>0 ? `Antecipar a entrega já programada para ${fmtDate(m.plano.anteciparData)} (${fmtL(m.plano.anteciparQtd)})${m.plano.anteciparQtd < totE - 0.005 ? '; o restante é compra emergencial' : ''}` : 'Nenhum pedido novo chega a tempo (prazo de entrega): antecipar entrega ou comprar com urgência' }));
+    m.plano.pedidos.forEach(p=>L.push({ tipo:'pedido', data:p.emitir, m, qtd:p.qtd, emitir:p.emitir, chegada:p.chegada, antes:p.saldoAntes, apos:p.saldoApos,
+      obs: `${p.hoje?'Emitir hoje. ':''}Chega no dia em que o saldo cruzaria o estoque de segurança e repõe até ${fmtL(m.plano.alvo)} (${m.plano.alvoOrigem})` }));
+    if(m.plano.alertaExcesso==='excesso_entrega'){
+      const d = m.pedidos.map(x=>x.atrasado ? r_hoje() : x.data).filter(Boolean).sort()[0] || '';
+      L.push({ tipo:'reduzir', data:d, m, qtd:m.plano.reduzirEntrega, emitir:'', chegada:d, antes:null, apos:null, obs:'As entregas programadas deixam o saldo acima do estoque máximo: reduzir ou adiar' });
+    }
+    if(m.plano.alertaExcesso==='nao_comprar') L.push({ tipo:'nao_comprar', data:'', m, qtd:m.plano.picoExcesso, emitir:'', chegada:'', antes:null, apos:null, obs:'Estoque acima do máximo no horizonte: não comprar (excesso de '+fmtL(m.plano.picoExcesso)+')' });
+  });
+  L.sort((a,b)=> (a.data||'9999').localeCompare(b.data||'9999') || REPOS_TIPO[a.tipo].ord - REPOS_TIPO[b.tipo].ord || String(a.m.codigo).localeCompare(String(b.m.codigo)));
+  return L;
+}
+const r_hoje = () => (REPOS_ULTIMO && REPOS_ULTIMO.hoje) || todayISO();
+function reposTabelaLinhas(L, comMaterial){
+  return `<thead><tr><th>Data da ação</th><th>Ação</th>${comMaterial?'<th>Material</th><th>UM</th>':''}<th>Quantidade</th><th>Emitir até</th><th>Chegada necessária</th><th>Saldo antes</th><th>Saldo após</th><th>Segurança</th><th>Máximo</th><th>Observação</th></tr></thead><tbody>${
+    L.length ? L.map(x=>{ const tp = REPOS_TIPO[x.tipo], m = x.m, hoje = x.tipo==='pedido' && x.emitir <= r_hoje();
+      return `<tr style="cursor:pointer" data-id="${acessoEsc(m.id)}" onclick="abrirDetalheRepos(this.dataset.id)"><td class="mono">${x.data ? (hoje?'<strong>HOJE</strong> · ':'')+fmtDate(x.data) : '—'}</td><td><span class="badge ${tp.cls}">${tp.rot}</span></td>
+        ${comMaterial?`<td><strong class="mono">${acessoEsc(m.codigo)}</strong><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(m.nome)}</div></td><td>${acessoEsc(m.uom)}</td>`:''}
+        <td class="mono" style="font-weight:700">${fmtL(x.qtd)}</td><td class="mono">${x.emitir ? fmtDate(x.emitir) : '—'}</td><td class="mono">${x.chegada ? fmtDate(x.chegada) : '—'}</td>
+        <td class="mono">${x.antes===null?'—':fmtL(x.antes)}</td><td class="mono">${x.apos===null?'—':fmtL(x.apos)}</td><td class="mono">${fmtL(m.seguranca)}</td><td class="mono">${m.maximo>0?fmtL(m.maximo):'—'}</td>
+        <td style="white-space:normal;min-width:260px;font-size:12px">${acessoEsc(x.obs)}</td></tr>`; }).join('')
+    : `<tr><td colspan="${comMaterial?12:10}"><div class="empty">Nenhuma ação para este filtro.</div></td></tr>`}</tbody>`;
+}
+function renderReposLista(f){
+  const L = reposLinhas(f);
+  document.getElementById('rpCountLista').textContent = `— ${L.length} ação(ões) em ${new Set(L.map(x=>x.m.id)).size} material(is)`;
+  document.getElementById('tblReposLista').innerHTML = reposTabelaLinhas(L, true);
+}
+
+function abrirDetalheRepos(id, manter){
+  const r = REPOS_ULTIMO; if(!r) return; const m = r.materiais.find(x=>x.id===id);
+  const card = document.getElementById('rpDetalheCard');
+  if(!m){ REPOS_ABERTO = ''; card.style.display = 'none'; return; }
+  REPOS_ABERTO = id; card.style.display = '';
+  const a = REPOS_ACAO[m.plano.acao];
+  document.getElementById('rpDetalheTitulo').innerHTML = `${acessoEsc(m.codigo)} — ${acessoEsc(m.nome)} <span class="badge ${a.cls}">${a.rot}</span>`;
+  document.getElementById('rpDetalheSub').innerHTML = `Estoque hoje <strong>${fmtL(m.estoqueAtual)} ${acessoEsc(m.uom)}</strong> · segurança <strong>${fmtL(m.seguranca)}</strong> · máximo <strong>${m.maximo>0?fmtL(m.maximo):'não cadastrado'}</strong> · prazo <strong>${m.prazoDias===null?'não cadastrado':m.prazoDias+' dia(s) corridos'}</strong> · nível alvo do pedido <strong>${fmtL(m.plano.alvo)}</strong> (${acessoEsc(m.plano.alvoOrigem)}) · total a repor no horizonte <strong>${fmtL(m.plano.totalRepor)}</strong>`
+    + (m.membros ? `<br>Códigos somados neste grupo: <span class="mono">${acessoEsc(m.membros.join(', '))}</span>` : '');
+  const ds = [ {label:'Saldo sem novos pedidos', color:'#C10016', data:m.serie.map(s=>s.saldo)}, {label:'Saldo com o plano', color:'#7030A0', data:m.serie.map(s=>s.saldoPlano)}, {label:'Estoque de segurança', color:'#B8590A', data:m.serie.map(()=>m.seguranca)} ];
+  if(m.maximo > 0) ds.push({label:'Estoque máximo', color:'#2E7D32', data:m.serie.map(()=>m.maximo)});
+  svgLineChart('chartReposSaldo', m.serie.map(s=>fmtDate(s.data)), ds);
+  document.getElementById('tblReposItem').innerHTML = reposTabelaLinhas(reposLinhas([m]), false);
+  if(!manter && card.scrollIntoView) card.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function exportReposicaoCsv(){
+  const r = REPOS_ULTIMO || MateriaisMotor.projetarMateriais(reposEntrada()); const L = reposLinhas(reposOrdenar(filtrarRepos(r.materiais)));
+  const n = v => (v===null||v===undefined||v==='') ? '' : String(v).replace('.',',');
+  const cab = ['Data da ação','Ação','Código','Tipo','Descrição','UM','Quantidade','Emitir até','Chegada necessária','Saldo antes','Saldo após','Estoque de segurança','Estoque máximo','Observação'];
+  const lin = L.map(x=>[x.data||'', REPOS_TIPO[x.tipo].rot, x.m.codigo, x.m.tipo==='grupo'?'Grupo':'Item', x.m.nome, x.m.uom, n(x.qtd), x.emitir||'', x.chegada||'', n(x.antes), n(x.apos), n(x.m.seguranca), n(x.m.maximo), x.obs]);
+  const csv = '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `plano_reposicao_${todayISO()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Não foi possível baixar o arquivo', e); }
   return csv;
 }
 
@@ -8194,6 +8515,401 @@ function seloSolicitacaoOP(p){
 }
 
 /* =========================================================================
+   RELATÓRIO DE INSUMOS — consumo de insumos das linhas da Lista Mestre
+   • Os números vêm de Nº OP (envase) e Nº OP Granel (mistura; pode haver vários, separados por vírgula) e das OPs importadas do ERP
+     (coleção "ordensERP": uma OP por registro, com os componentes). Cada OP é contada UMA vez, mesmo que apareça em várias linhas.
+   • Quando falta OP (não digitada, ou fora da importação), a parte que falta é ESTIMADA pela receita cadastrada e marcada como estimada.
+   • Só entram como insumo os componentes "INS-…". Recursos e mão de obra (ENVA, MIST, OPCQ…) ficam de fora; o granel consumido
+     (componente que é produto) aparece à parte e não soma nos insumos.
+   ========================================================================= */
+
+IMPORT_DEFS.ordenserp = {
+  label:'Ordens de Produção do ERP (componentes)', key:'op',
+  cols:[
+    {field:'op',       required:true,  aliases:['nº da op','n da op','no da op','numero da op','nº op','n op','op','ordem de producao','numero da ordem']},
+    {field:'data',     required:false, type:'date',   aliases:['data','data da op','data de abertura']},
+    {field:'itemCode', required:false, aliases:['nº do item','n do item','no do item','numero do item','item','codigo do item']},
+    {field:'itemNome', required:false, aliases:['descricao do item','descricao','nome do item']},
+    {field:'qtdPlan',  required:false, type:'number', aliases:['qntde planejada','qtde planejada','quantidade planejada','qnt planejada']},
+    {field:'qtdEfet',  required:false, type:'number', aliases:['qntde efetuada','qtde efetuada','quantidade efetuada','qnt efetuada']},
+    {field:'comp',     required:false, aliases:['cod componente','codigo componente','codigo do componente','componente']},
+    {field:'compNome', required:false, aliases:['nome componente','descricao componente','nome do componente']},
+    {field:'base',     required:false, type:'number', aliases:['qtde base','quantidade base','qnt base']},
+    {field:'compPlan', required:false, type:'number', aliases:['qtde planejada - componentes','qtde planejada componentes','quantidade planejada do componente','qtde planejada comp']},
+    {field:'compEfet', required:false, type:'number', aliases:['qtde efetuada - componentes','qtde efetuada componentes','quantidade efetuada do componente','qtde efetuada comp']},
+    {field:'obs',      required:false, aliases:['observacoes op','observacoes','observacao']},
+  ],
+  template:['Nº DA OP','DATA','Nº DO ITEM','DESCRIÇÃO DO ITEM','QNTDE PLANEJADA','QNTDE EFETUADA','COD COMPONENTE','NOME COMPONENTE','QTDE BASE','QTDE PLANEJADA - COMPONENTES','QTDE EFETUADA - COMPONENTES','OBSERVAÇÕES OP'],
+  example:[
+    ['30001','2026-11-10','99.99.99.001','PRODUTO EXEMPLO (BOMBONA)','144','0','99.99.99.002','PRODUTO EXEMPLO (GRANEL)','20','2880','0',''],
+    ['30001','2026-11-10','99.99.99.001','PRODUTO EXEMPLO (BOMBONA)','0','0','INS-EXEMPLO-1','BOMBONA EXEMPLO','1','144','0',''],
+    ['30001','2026-11-10','99.99.99.001','PRODUTO EXEMPLO (BOMBONA)','0','0','RECURSO-EX','Envasadora (recurso: é ignorado)','1','144','0',''],
+    ['30002','2026-11-09','99.99.99.002','PRODUTO EXEMPLO (GRANEL)','11314','0','INS-EXEMPLO-2','ADITIVO EXEMPLO','0.086','973.004','0',''],
+    ['30002','2026-11-09','99.99.99.002','PRODUTO EXEMPLO (GRANEL)','0','0','INS-EXEMPLO-3','ÓLEO BÁSICO EXEMPLO','0.1773','2006.31','0',''],
+  ],
+};
+
+/* ---------- números de OP e classificação dos componentes ---------- */
+// "29396, 29397" · "29396;29397" · "29396 / 29397" · "29396 + 29397" · "29396 e 29397" → ['29396','29397'] (sem repetir, sem zeros à esquerda)
+function rinsNumerosOP(txt){
+  const partes = String(txt==null?'':txt).split(/[,;\/+|\n\r]+|\s+e\s+|\s+/).map(x=>x.trim()).filter(Boolean);
+  const out = []; partes.forEach(p=>{ const n = /^\d+$/.test(p) ? String(parseInt(p,10)) : p; if(!out.includes(n)) out.push(n); });
+  return out;
+}
+function rinsTipoComponente(cod){            // 'insumo' (INS-…) · 'produto' (item com código numérico: granel/produto) · 'recurso' (ENVA, MIST, OPCQ…) · 'vazio'
+  const c = String(cod||'').trim().toUpperCase(); if(!c) return 'vazio';
+  if(c.startsWith('INS-')) return 'insumo';
+  if(/^\d{2}\.\d{2}\.\d{2}\.\d{3}G?$/.test(c)) return 'produto';
+  return 'recurso';
+}
+function rinsCodigoSuspeito(cod){ const c = String(cod||'').trim().toUpperCase(); return /^[A-Z]NS-/.test(c) && !c.startsWith('INS-'); }   // ex.: RNS-OB-0003 (parece erro de digitação de INS-)
+function rinsClasseInsumo(cod){              // formulação (aditivo, óleo básico) · embalagem (rótulo, caixa, tampa, frasco, tambor, bombona, resina) · outro
+  const p = String(cod||'').trim().toUpperCase().split('-')[1] || '';
+  if(p==='AD' || p==='OB') return 'formulacao';
+  if(['ROT','CX','TP','FRA','FR','TB','BB','IND'].includes(p)) return 'embalagem';
+  return 'outro';
+}
+const RINS_EMB_FORTE = ['CX','TP','FRA','FR','TB','BB','IND'];   // rótulo sozinho (ROT) não prova que a embalagem está coberta
+const RINS_CLASSE_ROTULO = {formulacao:'Formulação (aditivos e óleos)', embalagem:'Embalagem', outro:'Outros'};
+
+/* ---------- importação das OPs do ERP ---------- */
+function importarOrdensERP(rawRows, def, mode){
+  const rep = [], R = {added:0, updated:0, errors:0, report:rep};
+  const porOp = new Map(); let semNumero = 0, recursosIgnorados = 0, minusculas = 0; const suspeitos = new Map();
+  rawRows.forEach((raw,i)=>{
+    const {out, missing} = mapRow(raw, def);
+    const op = missing.includes('op') || out.op===undefined ? '' : rinsNumerosOP(out.op)[0];
+    if(!op){ semNumero++; R.errors++; if(semNumero<=3) rep.push({line:i+2, status:'error', msg:'Linha sem Nº da OP: ignorada.'}); return; }
+    let o = porOp.get(op);
+    if(!o){ o = {id:op, op, data:out.data||'', itemCode:String(out.itemCode||'').trim(), itemNome:String(out.itemNome||'').trim(), qtdPlanejada:0, qtdEfetuada:0, obs:'', comps:[], recursos:0}; porOp.set(op,o); }
+    // a quantidade da OP só vem na 1ª linha (nas demais é 0): vale o maior valor
+    if((out.qtdPlan||0) > o.qtdPlanejada) o.qtdPlanejada = out.qtdPlan;
+    if((out.qtdEfet||0) > o.qtdEfetuada) o.qtdEfetuada = out.qtdEfet;
+    if(!o.data && out.data) o.data = out.data;
+    if(!o.obs && out.obs) o.obs = String(out.obs).trim();
+    const cod = String(out.comp==null?'':out.comp).trim();
+    if(!cod) return;
+    const cu = cod.toUpperCase(); if(cod!==cu) minusculas++;
+    const tipo = rinsTipoComponente(cu);
+    if(tipo==='recurso' && !rinsCodigoSuspeito(cu)){ o.recursos++; recursosIgnorados++; return; }     // recursos e mão de obra não são insumos
+    const t = tipo==='insumo' ? 'i' : tipo==='produto' ? 'p' : 's';                                    // i = insumo · p = produto/granel · s = código suspeito
+    if(t==='s') suspeitos.set(cu, String(out.compNome||'').trim());
+    o.comps.push({cod:cu, nome:String(out.compNome||'').trim(), base:out.base||0, plan:out.compPlan||0, efet:out.compEfet||0, tipo:t});
+  });
+  if(!porOp.size){ rep.push({line:'—', status:'error', msg:`Nenhuma OP válida no arquivo${semNumero?` (${semNumero} linha(s) sem Nº da OP)`:''}: a base de OPs atual foi MANTIDA.`}); R.errors++; return R; }
+  if(mode==='replace') DB.ordensERP = [];
+  DB.ordensERP = DB.ordensERP || [];
+  const idx = new Map(DB.ordensERP.map((o,k)=>[String(o.id),k]));
+  let comps = 0, datas = [];
+  porOp.forEach(o=>{
+    comps += o.comps.length; if(o.data) datas.push(o.data);
+    if(idx.has(o.id)){ DB.ordensERP[idx.get(o.id)] = o; R.updated++; } else { DB.ordensERP.push(o); R.added++; }
+  });
+  datas.sort();
+  rep.unshift({line:'—', status:'ok', msg:`${porOp.size} OP(s) lida(s) (${R.added} nova(s), ${R.updated} atualizada(s)) com ${comps} componente(s) de insumo/produto${datas.length?`, de ${fmtDate(datas[0])} a ${fmtDate(datas[datas.length-1])}`:''}. ${recursosIgnorados} linha(s) de recursos/mão de obra foram ignoradas (não são insumos).`});
+  if(minusculas) rep.push({line:'—', status:'update', msg:`⚠ ${minusculas} código(s) de componente vieram em minúsculas: foram normalizados para maiúsculas.`});
+  [...suspeitos.entries()].slice(0,10).forEach(([c,n])=>rep.push({line:'—', status:'update', msg:`⚠ Código suspeito ${c}${n?` (${n})`:''}: não é INS-…; guardado, mas não soma nos insumos. Confira no ERP.`}));
+  if(!R.added && !R.updated) R.errors++;
+  return R;
+}
+
+/* ---------- cálculo (puro) ---------- */
+/* entrada: {linhas (linhas da Lista Mestre selecionadas), plano (todas as linhas, p/ conferir divergência e compartilhamento), ordens (DB.ordensERP),
+             receitas (DB.recipes), itemPorCodigo (fn), base:'planejada'|'efetuada', tolerancia (padrão 1%)} */
+function rinsCalcular(e){
+  const ordens = new Map((e.ordens||[]).map(o=>[String(o.id), o]));
+  const base = e.base==='efetuada' ? 'efet' : 'plan', tol = e.tolerancia==null ? 0.01 : e.tolerancia;
+  const itemDe = e.itemPorCodigo || (()=>null);
+  const recPorProduto = new Map(); (e.receitas||[]).forEach(r=>{ const k = String(r.product).toUpperCase(); if(!recPorProduto.has(k)) recPorProduto.set(k, []); recPorProduto.get(k).push(r); });
+  const usadas = new Map();                      // Nº da OP → {tipo:'envase'|'granel', linhas:Set(id das linhas selecionadas)}
+  const est = new Map(), pendencias = [], linhasInfo = new Map(), detalheEst = [];
+  const pend = (tipo, msg, ref)=>pendencias.push({tipo, msg, ref:ref||''});
+  let linhasEstimadas = 0, linhasParciais = 0, linhasSemDados = 0;
+  const usar = (n, tipo, L)=>{ if(!usadas.has(n)) usadas.set(n, {tipo, linhas:new Set()}); usadas.get(n).linhas.add(L.id); };
+
+  (e.linhas||[]).forEach(L=>{
+    const env = rinsNumerosOP(L.opNumber), gra = rinsNumerosOP(L.opGranelNumber);
+    const achouEnv = env.filter(n=>ordens.has(n)), faltaEnv = env.filter(n=>!ordens.has(n));
+    const achouGra = gra.filter(n=>ordens.has(n)), faltaGra = gra.filter(n=>!ordens.has(n));
+    achouEnv.forEach(n=>usar(n,'envase',L)); achouGra.forEach(n=>usar(n,'granel',L));
+    const rotulo = `${L.itemCode} · ${fmtDate(L.date)}`;
+    // classes de insumo que as OPs encontradas já cobrem
+    const cobertas = new Set();
+    [...achouEnv,...achouGra].forEach(n=>(ordens.get(n).comps||[]).forEach(c=>{ if(c.tipo!=='i') return;
+      const cl = rinsClasseInsumo(c.cod); if(cl==='formulacao') cobertas.add('formulacao'); if(cl==='embalagem' && RINS_EMB_FORTE.includes(String(c.cod).split('-')[1])) cobertas.add('embalagem'); }));
+    const nenhuma = !achouEnv.length && !achouGra.length;
+    const classes = nenhuma ? ['formulacao','embalagem','outro'] : [ ...(achouEnv.length || !env.length ? [] : []), ...['formulacao','embalagem'].filter(c=>!cobertas.has(c)) ];
+    if(nenhuma){ linhasEstimadas++; } else if(classes.length){ linhasParciais++; }
+    if(!env.length) pend('Sem Nº OP', `Linha ${rotulo}: sem Nº OP (envase).`, L.id);
+    if(!gra.length) pend('Sem Nº OP Granel', `Linha ${rotulo}: sem Nº OP Granel.`, L.id);
+    faltaEnv.forEach(n=>pend('OP fora da importação', `OP de envase ${n} (linha ${rotulo}) não está na importação do ERP.`, L.id));
+    faltaGra.forEach(n=>pend('OP fora da importação', `OP de granel ${n} (linha ${rotulo}) não está na importação do ERP.`, L.id));
+    let estimou = false;
+    if(classes.length){
+      const rec = recPorProduto.get(String(L.itemCode).toUpperCase());
+      if(!rec || !rec.length) pend('Sem receita', `Linha ${rotulo}: sem OP encontrada e sem receita cadastrada — insumos não calculados.`, L.id);
+      else rec.forEach(r=>{ const cl = rinsClasseInsumo(r.material); if(!classes.includes(cl)) return;
+        const q = r.qtyPerUnit * L.batchUnits, cu = String(r.material).toUpperCase();
+        const x = est.get(cu) || {qtd:0, linhas:new Set()}; x.qtd += q; x.linhas.add(L.id); est.set(cu, x);
+        detalheEst.push({cod:cu, qtd:q, itemCode:L.itemCode, data:L.date, linha:L.id, classe:cl}); estimou = true; });
+    }
+    linhasInfo.set(L.id, {env, gra, achouEnv, achouGra, faltaEnv, faltaGra, status: nenhuma ? (estimou?'estimado':'sem dados') : (classes.length && estimou ? 'parcial' : 'erp')});
+    if(nenhuma && !estimou) linhasSemDados++;
+  });
+
+  // ERP: cada OP usada, uma vez
+  const erp = new Map(), detalhe = [], graneis = [];
+  usadas.forEach((u, n)=>{
+    const o = ordens.get(n), linhasSel = [...u.linhas].map(id=>(e.linhas||[]).find(L=>L.id===id)).filter(Boolean);
+    const datas = linhasSel.map(L=>L.date).sort();
+    (o.comps||[]).forEach(c=>{
+      const q = base==='efet' ? c.efet : c.plan;
+      if(c.tipo==='i'){
+        const x = erp.get(c.cod) || {qtd:0, nome:c.nome, ops:new Set()}; x.qtd += q; x.ops.add(n); if(!x.nome) x.nome = c.nome; erp.set(c.cod, x);
+        detalhe.push({op:n, tipoOp:u.tipo==='envase'?'Envase':'Granel', itemCode:o.itemCode, itemNome:o.itemNome, qtdOp:o.qtdPlanejada, linhas:linhasSel.length, datas:datas.length?(datas[0]===datas[datas.length-1]?fmtDate(datas[0]):fmtDate(datas[0])+' a '+fmtDate(datas[datas.length-1])):'', cod:c.cod, nome:c.nome, qtd:q});
+      } else if(c.tipo==='p'){
+        graneis.push({op:n, tipoOp:u.tipo==='envase'?'Envase':'Granel', itemCode:o.itemCode, itemNome:o.itemNome, cod:c.cod, nome:c.nome, qtd:q});
+      } else if(c.tipo==='s'){
+        pend('Código suspeito', `OP ${n} traz o componente ${c.cod}${c.nome?` (${c.nome})`:''}, que não é INS-…: não entrou na soma. Confira no ERP.`, n);
+      }
+    });
+    // divergência de quantidade e compartilhamento (olha o plano inteiro, não só o filtro)
+    const todas = (e.plano||e.linhas||[]).filter(L=>rinsNumerosOP(u.tipo==='envase'?L.opNumber:L.opGranelNumber).includes(n));
+    const fora = todas.filter(L=>!u.linhas.has(L.id)).length;
+    if(fora) pend('OP compartilhada', `OP ${n}: ${fora} linha(s) fora do filtro também usam esta OP. O consumo mostrado é o da OP inteira.`, n);
+    const multi = todas.some(L=>rinsNumerosOP(u.tipo==='envase'?L.opNumber:L.opGranelNumber).length>1);
+    if(multi && u.tipo==='granel') pend('Granel em mais de uma OP', `OP ${n}: há linhas com mais de uma OP de granel; a divergência de quantidade não foi calculada.`, n);
+    else if(o.qtdPlanejada>0){
+      const somaUn = todas.reduce((t,L)=>t+(L.batchUnits||0),0), somaL = todas.reduce((t,L)=>t+(L.batchLiters||0),0), lim = Math.max(0.5, tol*o.qtdPlanejada);
+      if(Math.abs(o.qtdPlanejada-somaUn)>lim && Math.abs(o.qtdPlanejada-somaL)>lim)
+        pend('Divergência de quantidade', `OP ${n} (${u.tipo==='envase'?'envase':'granel'}): o ERP planeja ${fmtL(o.qtdPlanejada)}; as linhas da Lista Mestre somam ${fmtL(somaUn)} un. / ${fmtL(somaL)} L. Vale a quantidade da OP do ERP.`, n);
+    }
+  });
+
+  // resumo por insumo
+  const cods = new Set([...erp.keys(), ...est.keys()]), foraCad = [];
+  const resumo = [...cods].map(cod=>{
+    const a = erp.get(cod), b = est.get(cod), it = itemDe(cod);
+    if(!it) foraCad.push(cod);
+    const qtdErp = a?a.qtd:0, qtdEst = b?b.qtd:0, total = qtdErp+qtdEst, estoque = it && it.stock!=null ? it.stock : null;
+    return {cod, nome:(a&&a.nome)||(it&&it.name)||'', um:(it&&it.uom)||'', classe:rinsClasseInsumo(cod), qtdErp, qtdEst, total, estoque, saldo: estoque==null?null:estoque-total,
+      nOps:a?a.ops.size:0, nLinhasEst:b?b.linhas.size:0, origem: a&&b?'ERP + estimado':(a?'ERP':'Estimado')};
+  }).sort((x,y)=>['formulacao','embalagem','outro'].indexOf(x.classe)-['formulacao','embalagem','outro'].indexOf(y.classe) || x.cod.localeCompare(y.cod));
+  if(foraCad.length) pend('Insumo fora do cadastro', `${foraCad.length} insumo(s) sem cadastro em Itens (sem unidade de medida nem estoque): ${foraCad.slice(0,8).join(', ')}${foraCad.length>8?'…':''}.`, '');
+  const envUsadas = [...usadas.values()].filter(u=>u.tipo==='envase').length, graUsadas = [...usadas.values()].filter(u=>u.tipo==='granel').length;
+  const todasEnv = new Set(), todasGra = new Set();
+  (e.linhas||[]).forEach(L=>{ rinsNumerosOP(L.opNumber).forEach(n=>todasEnv.add(n)); rinsNumerosOP(L.opGranelNumber).forEach(n=>todasGra.add(n)); });
+  return { resumo, detalhe, graneis, pendencias, detalheEst, linhasInfo,
+    kpis:{ linhas:(e.linhas||[]).length, opsEnvase:todasEnv.size, opsEnvaseAchadas:[...todasEnv].filter(n=>ordens.has(n)).length, opsGranel:todasGra.size, opsGranelAchadas:[...todasGra].filter(n=>ordens.has(n)).length,
+           linhasEstimadas, linhasParciais, linhasSemDados, insumos:resumo.length, faltas:resumo.filter(r=>r.saldo!=null && r.saldo<0).length },
+    base: base==='efet' ? 'efetuada' : 'planejada' };
+}
+
+/* =========================================================================
+   JANELA, REGISTRO, HISTÓRICO E SAÍDAS (Excel, PDF pela impressão, CSV)
+   Dados:  DB.relatoriosInsumos [{id, numero, ts, usuario, filtros, base, kpis, resumo[], pendencias[], totalLinhas, excluidas}]
+           (o detalhe por OP e o granel consumido ficam só na memória do relatório recém-gerado; o histórico guarda o resumo e as pendências)
+   ========================================================================= */
+let RINS_EXCL = new Set(), RINS_ABA = 'resumo', RINS_CTX = 'previa', RINS_PREVIA = null, RINS_ULTIMO = null;
+const RINS_ORIGEM_CLS = {'ERP':'ok', 'ERP + estimado':'warn', 'Estimado':'warn'};
+function rinsOverlay(){
+  let o = document.getElementById('rinsOverlay');
+  if(!o){ o = document.createElement('div'); o.id = 'rinsOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto';
+    o.innerHTML = '<div id="rinsCard" style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:1180px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)"></div>'; document.body.appendChild(o); }
+  return o;
+}
+function fecharRelatorioInsumos(){ const o = document.getElementById('rinsOverlay'); if(o) o.remove(); }
+function rinsLerFiltros(){
+  const v = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  return {de:v('rnDe'), ate:v('rnAte'), recurso:v('rnRecurso'), cliente:v('rnCliente'), item:v('rnItem'), grupo:v('rnGrupo'), pedido:v('rnPedido'), mostrar:v('rnMostrar')||'todas', base:v('rnBase')||'planejada'};
+}
+function rinsLinhasFiltro(f){ return solOpLinhas({...f, mostrar:'todas'}).filter(p=>f.mostrar!=='semprod' || !linhaTemProducao(p)); }
+function rinsEntrada(linhas, f){ return {linhas, plano:DB.plan||[], ordens:DB.ordensERP||[], receitas:DB.recipes||[], itemPorCodigo:itemByCode, base:f.base}; }
+const rinsN = v => (v===null||v===undefined||v==='') ? '—' : fmtL(Math.round(v*1000)/1000);
+
+function abrirRelatorioInsumos(){
+  const f = solOpPrefill(); RINS_EXCL = new Set(); RINS_ABA = 'resumo'; RINS_CTX = 'previa';
+  const opt = (lista, sel, todos) => `<option value="">${todos}</option>` + lista.map(x=>`<option value="${acessoEsc(x)}" ${x===sel?'selected':''}>${acessoEsc(x)}</option>`).join('');
+  const recursos = (DB.resources||[]).map(r=>r.name).sort(), clientes = [...new Set((DB.orders||[]).map(o=>o.customer).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), grupos = [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  rinsOverlay(); document.getElementById('rinsCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📊 Relatório de insumos</h3>
+      <div class="card-sub" style="margin:0">Consumo de cada insumo das linhas da Lista Mestre dentro dos filtros, pelas <strong>OPs do ERP</strong> (Nº OP e Nº OP Granel). Onde faltar OP, a <strong>receita</strong> estima e marca como <strong>estimado</strong>. Confira a prévia antes de gerar.</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="rinsMostrarHistorico()">📜 Relatórios anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharRelatorioInsumos()">✕ Fechar</button></div></div>
+    <div id="rinsCorpo">
+      <div class="filters" style="margin:14px 0 10px;position:static">
+        <div class="f"><label>De</label><input type="date" id="rnDe" value="${f.de}" onchange="rinsAtualizar()"></div>
+        <div class="f"><label>Até</label><input type="date" id="rnAte" value="${f.ate}" onchange="rinsAtualizar()"></div>
+        <div class="f"><label>Recurso</label><select id="rnRecurso" onchange="rinsAtualizar()">${opt(recursos,f.recurso,'Todos')}</select></div>
+        <div class="f"><label>Cliente</label><select id="rnCliente" onchange="rinsAtualizar()">${opt(clientes,f.cliente,'Todos')}</select></div>
+        <div class="f"><label>Item (código ou descrição)</label><input type="text" id="rnItem" value="${acessoEsc(f.item)}" placeholder="digite para filtrar" oninput="rinsAtualizar()"></div>
+        <div class="f"><label>Grupo</label><select id="rnGrupo" onchange="rinsAtualizar()">${opt(grupos,'','Todos')}</select></div>
+        <div class="f"><label>Pedido</label><input type="text" id="rnPedido" value="${acessoEsc(f.pedido)}" placeholder="nº do pedido" oninput="rinsAtualizar()"></div>
+        <div class="f"><label>Linhas</label><select id="rnMostrar" onchange="rinsAtualizar()"><option value="todas">Todas as linhas do filtro</option><option value="semprod">Só as sem produção apontada</option></select></div>
+        <div class="f"><label>Quantidade do ERP</label><select id="rnBase" onchange="rinsAtualizar()"><option value="planejada">Planejada (antes de produzir)</option><option value="efetuada">Efetuada</option></select></div>
+      </div>
+      <div id="rinsAviso"></div><div id="rinsKpis"></div>
+      <div id="rinsAbas" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px"></div><div id="rinsPreview"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap"><span id="rinsRodape" style="align-self:center;font-size:12px;color:var(--muted)"></span><button class="btn btn-primary" id="rinsGerar" onclick="gerarRelatorioInsumos()">✔ Gerar e registrar relatório</button></div>
+    </div>`;
+  rinsAtualizar();
+}
+function rinsKpisHtml(k){
+  const c = (rot, val, sub, cor) => `<div style="flex:1;min-width:150px;border:1px solid var(--line);border-left:4px solid ${cor||'var(--brand-yellow)'};border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">${rot}</div><div style="font-size:20px;font-weight:800">${val}</div><div style="font-size:11px;color:var(--muted)">${sub||''}</div></div>`;
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap">${c('Linhas', k.linhas, 'na Lista Mestre')}${c('OPs de envase', `${k.opsEnvaseAchadas}/${k.opsEnvase}`, 'achadas na importação do ERP', k.opsEnvase>k.opsEnvaseAchadas?'var(--warn,#d98200)':'var(--ok,#1a8f4c)')}${c('OPs de granel', `${k.opsGranelAchadas}/${k.opsGranel}`, 'achadas na importação do ERP', k.opsGranel>k.opsGranelAchadas?'var(--warn,#d98200)':'var(--ok,#1a8f4c)')}${c('Estimadas pela receita', k.linhasEstimadas+k.linhasParciais, `${k.linhasEstimadas} inteira(s) · ${k.linhasParciais} em parte`, (k.linhasEstimadas+k.linhasParciais)?'var(--warn,#d98200)':'var(--ok,#1a8f4c)')}${c('Insumos', k.insumos, k.faltas?`${k.faltas} com saldo negativo`:'sem falta de estoque', k.faltas?'var(--danger,#c10016)':'var(--ok,#1a8f4c)')}</div>`;
+}
+/* tabelas (servem para a prévia e para o resultado) */
+function rinsTabResumo(resumo, comEstoque){
+  return `<div class="tbl-wrap" style="max-height:380px"><table class="data"><thead><tr><th>Insumo</th><th>Classe</th><th>UM</th><th>Quantidade do ERP</th><th>Estimada (receita)</th><th>Total a consumir</th><th>Estoque atual</th><th>Saldo</th><th>Origem</th></tr></thead><tbody>${
+    resumo.length ? resumo.map(x=>`<tr><td><span class="mono"><strong>${acessoEsc(x.cod)}</strong></span><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:300px">${acessoEsc(x.nome)}</div></td><td>${acessoEsc(RINS_CLASSE_ROTULO[x.classe]||x.classe)}</td><td>${acessoEsc(x.um||'—')}</td><td class="mono">${x.qtdErp?rinsN(x.qtdErp):'—'}</td><td class="mono">${x.qtdEst?rinsN(x.qtdEst):'—'}</td><td class="mono" style="font-weight:700">${rinsN(x.total)}</td><td class="mono">${rinsN(x.estoque)}</td><td class="mono" style="${x.saldo!=null&&x.saldo<0?'color:var(--danger);font-weight:700':''}">${rinsN(x.saldo)}</td><td><span class="badge ${RINS_ORIGEM_CLS[x.origem]||''}">${acessoEsc(x.origem)}</span></td></tr>`).join('') : '<tr><td colspan="9"><div class="empty">Nenhum insumo calculado para estes filtros.</div></td></tr>'}</tbody></table></div>`;
+}
+function rinsTabDetalhe(r){
+  const est = (r.detalheEst||[]).map(d=>{ const it = itemByCode(d.cod); return {op:'—', tipoOp:'Estimado (receita)', itemCode:d.itemCode, itemNome:(itemByCode(d.itemCode)||{}).name||'', qtdOp:null, linhas:1, datas:fmtDate(d.data), cod:d.cod, nome:it?it.name:'', qtd:d.qtd}; });
+  const todas = [...r.detalhe, ...est];
+  return `<div class="tbl-wrap" style="max-height:380px"><table class="data"><thead><tr><th>OP</th><th>Tipo</th><th>Item</th><th>Qtd da OP</th><th>Linhas</th><th>Datas</th><th>Insumo</th><th>Quantidade</th></tr></thead><tbody>${
+    todas.length ? todas.map(d=>`<tr><td class="mono"><strong>${acessoEsc(d.op)}</strong></td><td><span class="badge ${d.tipoOp==='Estimado (receita)'?'warn':'ok'}">${acessoEsc(d.tipoOp)}</span></td><td><span class="mono">${acessoEsc(d.itemCode)}</span><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:240px">${acessoEsc(d.itemNome)}</div></td><td class="mono">${d.qtdOp==null?'—':rinsN(d.qtdOp)}</td><td class="mono">${d.linhas}</td><td class="mono">${acessoEsc(d.datas)}</td><td><span class="mono">${acessoEsc(d.cod)}</span><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:240px">${acessoEsc(d.nome)}</div></td><td class="mono" style="font-weight:700">${rinsN(d.qtd)}</td></tr>`).join('') : '<tr><td colspan="8"><div class="empty">Sem detalhe.</div></td></tr>'}</tbody></table></div>`;
+}
+function rinsTabGraneis(r){
+  return `<div class="card-sub" style="margin:4px 0">Granel (ou produto) que a OP de envase consome como componente. É <strong>informativo</strong>: não soma nos insumos, que vêm da OP de mistura do granel.</div><div class="tbl-wrap" style="max-height:340px"><table class="data"><thead><tr><th>OP</th><th>Tipo</th><th>Item da OP</th><th>Granel consumido</th><th>Quantidade</th></tr></thead><tbody>${
+    r.graneis.length ? r.graneis.map(g=>`<tr><td class="mono"><strong>${acessoEsc(g.op)}</strong></td><td>${acessoEsc(g.tipoOp)}</td><td><span class="mono">${acessoEsc(g.itemCode)}</span><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(g.itemNome)}</div></td><td><span class="mono">${acessoEsc(g.cod)}</span><div style="font-size:11px;color:var(--muted)">${acessoEsc(g.nome)}</div></td><td class="mono">${rinsN(g.qtd)}</td></tr>`).join('') : '<tr><td colspan="5"><div class="empty">Nenhum granel consumido nas OPs usadas.</div></td></tr>'}</tbody></table></div>`;
+}
+function rinsTabPendencias(pend){
+  const porTipo = {}; pend.forEach(p=>{ porTipo[p.tipo] = (porTipo[p.tipo]||0)+1; });
+  return `<div class="card-sub" style="margin:4px 0">${Object.keys(porTipo).length ? Object.entries(porTipo).map(([t,n])=>`<span class="badge warn" style="margin-right:4px">${acessoEsc(t)}: ${n}</span>`).join('') : 'Nenhuma pendência.'}</div><div class="tbl-wrap" style="max-height:340px"><table class="data"><thead><tr><th>Tipo</th><th>Mensagem</th></tr></thead><tbody>${
+    pend.length ? pend.map(p=>`<tr><td><span class="badge warn">${acessoEsc(p.tipo)}</span></td><td style="white-space:normal">${acessoEsc(p.msg)}</td></tr>`).join('') : '<tr><td colspan="2"><div class="empty">Tudo certo: nenhuma pendência.</div></td></tr>'}</tbody></table></div>`;
+}
+function rinsTabLinhas(cand, r){
+  return `<div class="card-sub" style="margin:4px 0">Desmarque a caixa para <strong>tirar a linha do relatório</strong> antes de gerar. ${RINS_EXCL.size?`<a href="javascript:void(0)" onclick="rinsRestaurar()">↺ restaurar (${RINS_EXCL.size} excluída(s))</a>`:''}</div><div class="tbl-wrap" style="max-height:340px"><table class="data"><thead><tr><th></th><th>Data</th><th>Recurso</th><th>Item</th><th>Qtd (un.)</th><th>Nº OP</th><th>Nº OP Granel</th><th>Situação</th></tr></thead><tbody>${
+    cand.length ? cand.map(p=>{ const ex = RINS_EXCL.has(p.id), inf = r.linhasInfo.get(p.id), it = itemByCode(p.itemCode);
+      const sit = ex ? '—' : ({erp:'ERP', parcial:'Parcial (receita completa o que falta)', estimado:'Estimado (receita)', 'sem dados':'Sem dados'}[inf&&inf.status]||'—');
+      const cls = ex ? '' : ({erp:'ok', parcial:'warn', estimado:'warn', 'sem dados':'danger'}[inf&&inf.status]||'');
+      return `<tr style="${ex?'opacity:.5;text-decoration:line-through':''}"><td><input type="checkbox" ${ex?'':'checked'} onchange="rinsToggleLinha('${acessoEsc(p.id)}')"></td><td class="mono">${fmtDate(p.date)}</td><td>${acessoEsc(p.resource)}</td><td><span class="mono"><strong>${acessoEsc(p.itemCode)}</strong></span><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:240px">${acessoEsc(it?it.name:'')}</div></td><td class="mono">${rinsN(p.batchUnits)}</td><td class="mono">${acessoEsc(p.opNumber||'—')}</td><td class="mono">${acessoEsc(p.opGranelNumber||'—')}</td><td><span class="badge ${cls}">${acessoEsc(sit)}</span></td></tr>`; }).join('') : '<tr><td colspan="8"><div class="empty">Nenhuma linha dentro dos filtros.</div></td></tr>'}</tbody></table></div>`;
+}
+function rinsAbasHtml(abas, atual, fn){ return abas.map(([id,rot])=>`<button class="btn btn-sm ${id===atual?'btn-primary':''}" onclick="${fn}('${id}')">${rot}</button>`).join(''); }
+function rinsAtualizar(){
+  const f = rinsLerFiltros(), cand = rinsLinhasFiltro(f), efet = cand.filter(p=>!RINS_EXCL.has(p.id)), r = rinsCalcular(rinsEntrada(efet, f));
+  RINS_PREVIA = {r, f, cand, efet};
+  const semOps = !(DB.ordensERP||[]).length;
+  document.getElementById('rinsAviso').innerHTML = semOps ? `<div class="note" style="border-color:var(--warn,#d98200);margin:6px 0">Nenhuma OP do ERP foi importada: <strong>tudo será estimado pela receita</strong>. Importe o relatório em <em>Importação de Dados → Ordens de Produção do ERP</em>.</div>` : '';
+  document.getElementById('rinsKpis').innerHTML = rinsKpisHtml(r.kpis);
+  const abas = [['resumo','Resumo por insumo'],['detalhe','Por OP e granel'],['graneis','Granel consumido'],['pend',`Pendências (${r.pendencias.length})`],['linhas',`Linhas (${efet.length}/${cand.length})`]];
+  document.getElementById('rinsAbas').innerHTML = rinsAbasHtml(abas, RINS_ABA, 'rinsAba');
+  document.getElementById('rinsPreview').innerHTML = RINS_ABA==='detalhe' ? rinsTabDetalhe(r) : RINS_ABA==='graneis' ? rinsTabGraneis(r) : RINS_ABA==='pend' ? rinsTabPendencias(r.pendencias) : RINS_ABA==='linhas' ? rinsTabLinhas(cand, r) : rinsTabResumo(r.resumo);
+  const b = document.getElementById('rinsGerar'); if(b) b.disabled = !efet.length;
+  const rod = document.getElementById('rinsRodape'); if(rod) rod.textContent = RINS_EXCL.size ? `${RINS_EXCL.size} linha(s) excluída(s) do relatório.` : (f.base==='efetuada' ? 'Usando a quantidade EFETUADA do ERP.' : '');
+}
+function rinsAba(id){ RINS_ABA = id; rinsAtualizar(); }
+function rinsToggleLinha(id){ if(RINS_EXCL.has(id)) RINS_EXCL.delete(id); else RINS_EXCL.add(id); rinsAtualizar(); }
+function rinsRestaurar(){ RINS_EXCL = new Set(); rinsAtualizar(); }
+
+/* ---------- registrar (guardada por permissão) ---------- */
+function gerarRelatorioInsumos(){
+  const f = rinsLerFiltros(), cand = rinsLinhasFiltro(f), efet = cand.filter(p=>!RINS_EXCL.has(p.id));
+  if(!efet.length){ alert('Nenhuma linha da Lista Mestre dentro destes filtros (ou todas foram excluídas).'); return; }
+  const r = rinsCalcular(rinsEntrada(efet, f)), excl = cand.length - efet.length;
+  customConfirm(`Gerar e registrar o relatório de insumos com <strong>${efet.length}</strong> linha(s) e <strong>${r.kpis.insumos}</strong> insumo(s)?<br><span style="font-size:12px">${r.kpis.linhasEstimadas+r.kpis.linhasParciais} linha(s) com estimativa pela receita · ${r.pendencias.length} pendência(s)${excl?` · ${excl} linha(s) excluída(s)`:''}.</span>`, ()=>{
+    DB.relatoriosInsumos = DB.relatoriosInsumos || [];
+    const maxN = DB.relatoriosInsumos.reduce((m,s)=>Math.max(m, parseInt(String(s.numero).replace(/\D/g,''),10)||0), 0);
+    const ts = new Date().toISOString(), id = 'rin_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    const numero = 'RINS-'+String(maxN+1).padStart(4,'0'), usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '';
+    DB.relatoriosInsumos.push({id, numero, ts, usuario, filtros:{...f}, base:r.base, kpis:{...r.kpis}, resumo:r.resumo.map(x=>({...x})), pendencias:r.pendencias.map(p=>({tipo:p.tipo, msg:p.msg})), totalLinhas:efet.length, excluidas:excl});
+    RINS_ULTIMO = {id, r};
+    persistDB(); showToast(`📊 Relatório ${numero} registrado: ${r.kpis.insumos} insumo(s), ${efet.length} linha(s).`);
+    rinsVer(id);
+  });
+}
+
+/* ---------- resultado e histórico ---------- */
+function rinsFiltrosTxt(f){ f = f||{}; return [f.de||f.ate?`Período: ${f.de?fmtDate(f.de):'…'} a ${f.ate?fmtDate(f.ate):'…'}`:'', f.recurso?`Recurso: ${f.recurso}`:'', f.item?`Item: ${f.item}`:'', f.grupo?`Grupo: ${f.grupo}`:'', f.pedido?`Pedido: ${f.pedido}`:'', f.mostrar==='semprod'?'Só linhas sem produção':'', `Quantidade ${f.base==='efetuada'?'efetuada':'planejada'} do ERP`].filter(Boolean).join(' · '); }
+function rinsDados(id){   // devolve {rec, r (completo, se ainda estiver na memória), resumo, pendencias}
+  const rec = (DB.relatoriosInsumos||[]).find(x=>x.id===id); if(!rec) return null;
+  const r = (RINS_ULTIMO && RINS_ULTIMO.id===id) ? RINS_ULTIMO.r : null;
+  return {rec, r, resumo:rec.resumo, pendencias:rec.pendencias};
+}
+function rinsVer(id, aba){
+  const d = rinsDados(id); if(!d) return; RINS_CTX = 'ver:'+id; if(aba) RINS_ABA = aba; else if(!['resumo','detalhe','graneis','pend'].includes(RINS_ABA)) RINS_ABA = 'resumo';
+  if(!d.r && ['detalhe','graneis'].includes(RINS_ABA)) RINS_ABA = 'resumo';
+  const s = d.rec; rinsOverlay();
+  const abas = [['resumo','Resumo por insumo'], ...(d.r?[['detalhe','Por OP e granel'],['graneis','Granel consumido']]:[]), ['pend',`Pendências (${d.pendencias.length})`]];
+  document.getElementById('rinsCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">📊 Relatório de insumos ${acessoEsc(s.numero)} <span class="badge ok">registrado</span></h3>
+      <div class="card-sub" style="margin:4px 0 0">${solOpDataHora(s.ts)} · por <strong>${acessoEsc(s.usuario||'—')}</strong> · ${s.totalLinhas} linha(s)${s.excluidas?` (${s.excluidas} excluída(s))`:''}<br>${acessoEsc(rinsFiltrosTxt({...s.filtros, base:s.base==='efetuada'?'efetuada':'planejada'}))}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="rinsExcel('${s.id}')">📗 Exportar Excel</button><button class="btn btn-sm" onclick="rinsImprimir('${s.id}')">🖨 PDF / Imprimir</button><button class="btn btn-sm" onclick="rinsCsv('${s.id}')">⬇ CSV</button><button class="btn btn-sm" onclick="rinsMostrarHistorico()">📜 Relatórios anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharRelatorioInsumos()">✕ Fechar</button></div></div>
+    <div style="margin-top:12px">${rinsKpisHtml(s.kpis)}</div>
+    ${d.r?'':'<div class="note" style="margin:10px 0 0">Este relatório foi aberto do histórico: ficam guardados o <strong>resumo por insumo</strong> e as <strong>pendências</strong>. O detalhe por OP e o granel consumido só aparecem logo depois de gerar.</div>'}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px">${rinsAbasHtml(abas, RINS_ABA, "rinsAbaVer")}</div>
+    <div id="rinsVerCorpo">${RINS_ABA==='detalhe'&&d.r ? rinsTabDetalhe(d.r) : RINS_ABA==='graneis'&&d.r ? rinsTabGraneis(d.r) : RINS_ABA==='pend' ? rinsTabPendencias(d.pendencias) : rinsTabResumo(d.resumo)}</div>`;
+}
+function rinsAbaVer(a){ const id = RINS_CTX.replace('ver:',''); rinsVer(id, a); }
+function rinsMostrarHistorico(){
+  const lista = [...(DB.relatoriosInsumos||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))); rinsOverlay(); RINS_CTX = 'historico';
+  document.getElementById('rinsCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📜 Relatórios de insumos</h3><div class="card-sub" style="margin:0">Todos os relatórios gerados, do mais recente ao mais antigo.</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="abrirRelatorioInsumos()">＋ Novo relatório</button><button class="btn btn-sm btn-ghost" onclick="fecharRelatorioInsumos()">✕ Fechar</button></div></div>
+    <div class="tbl-wrap" style="margin-top:12px;max-height:420px"><table class="data"><thead><tr><th>Relatório</th><th>Data e hora</th><th>Usuário</th><th>Período</th><th>Linhas</th><th>Insumos</th><th>Estimadas</th><th>Pendências</th><th></th></tr></thead><tbody>${
+      lista.length ? lista.map(s=>`<tr><td class="mono"><strong>${acessoEsc(s.numero)}</strong></td><td>${solOpDataHora(s.ts)}</td><td>${acessoEsc(s.usuario||'—')}</td><td class="mono">${s.filtros&&(s.filtros.de||s.filtros.ate)?`${s.filtros.de?fmtDate(s.filtros.de):'…'} a ${s.filtros.ate?fmtDate(s.filtros.ate):'…'}`:'—'}</td><td>${s.totalLinhas}</td><td>${s.kpis.insumos}</td><td>${s.kpis.linhasEstimadas+s.kpis.linhasParciais}</td><td>${s.pendencias.length}</td>
+        <td style="white-space:nowrap"><button class="btn btn-sm" onclick="rinsVer('${s.id}','resumo')">Ver</button> <button class="btn btn-sm" onclick="rinsExcel('${s.id}')">Excel</button> <button class="btn btn-sm" onclick="rinsCsv('${s.id}')">CSV</button> <button class="btn btn-sm" onclick="rinsImprimir('${s.id}')">🖨</button></td></tr>`).join('') : '<tr><td colspan="9"><div class="empty">Nenhum relatório gerado ainda.</div></td></tr>'}</tbody></table></div>`;
+}
+
+/* ---------- saídas: Excel, CSV e impressão (PDF) ---------- */
+function rinsAoa(id){   // as folhas do Excel como matrizes (também usadas nos testes)
+  const d = rinsDados(id); if(!d) return null; const s = d.rec;
+  const num = v => (v===null||v===undefined||v==='') ? '' : Math.round(v*1000)/1000;
+  const resumo = [['Código','Insumo','Classe','UM','Quantidade do ERP','Estimada (receita)','Total a consumir','Estoque atual','Saldo','Origem','Nº de OPs','Linhas estimadas'],
+    ...d.resumo.map(x=>[x.cod, x.nome, RINS_CLASSE_ROTULO[x.classe]||x.classe, x.um||'', num(x.qtdErp), num(x.qtdEst), num(x.total), num(x.estoque), num(x.saldo), x.origem, x.nOps, x.nLinhasEst])];
+  const pend = [['Tipo','Mensagem'], ...d.pendencias.map(p=>[p.tipo, p.msg])];
+  const par = [['Relatório', s.numero], ['Data e hora', solOpDataHora(s.ts)], ['Usuário', s.usuario||''], ['Filtros', rinsFiltrosTxt({...s.filtros, base:s.base==='efetuada'?'efetuada':'planejada'})], ['Linhas da Lista Mestre', s.totalLinhas], ['Linhas excluídas', s.excluidas||0],
+    ['OPs de envase (achadas/total)', `${s.kpis.opsEnvaseAchadas}/${s.kpis.opsEnvase}`], ['OPs de granel (achadas/total)', `${s.kpis.opsGranelAchadas}/${s.kpis.opsGranel}`], ['Linhas estimadas pela receita (inteiras)', s.kpis.linhasEstimadas], ['Linhas estimadas em parte', s.kpis.linhasParciais], ['Insumos', s.kpis.insumos], ['Insumos com saldo negativo', s.kpis.faltas]];
+  const out = {resumo, pendencias:pend, parametros:par};
+  if(d.r){
+    const est = (d.r.detalheEst||[]).map(x=>{ const it = itemByCode(x.cod); return ['—','Estimado (receita)', x.itemCode, (itemByCode(x.itemCode)||{}).name||'', '', 1, fmtDate(x.data), x.cod, it?it.name:'', num(x.qtd)]; });
+    out.detalhe = [['OP','Tipo','Item','Descrição do item','Qtd da OP','Linhas','Datas','Insumo','Nome do insumo','Quantidade'], ...d.r.detalhe.map(x=>[x.op, x.tipoOp, x.itemCode, x.itemNome, num(x.qtdOp), x.linhas, x.datas, x.cod, x.nome, num(x.qtd)]), ...est];
+    out.graneis = [['OP','Tipo','Item da OP','Descrição do item','Granel consumido','Nome','Quantidade'], ...d.r.graneis.map(x=>[x.op, x.tipoOp, x.itemCode, x.itemNome, x.cod, x.nome, num(x.qtd)])];
+  }
+  return out;
+}
+function rinsExcel(id){
+  const a = rinsAoa(id); if(!a) return null; const s = rinsDados(id).rec;
+  if(typeof XLSX === 'undefined'){ showToast('A biblioteca do Excel não carregou (sem internet?). Use o CSV.', 'error'); return null; }
+  const wb = XLSX.utils.book_new();
+  const add = (nome, aoa, larg)=>{ const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = larg.map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, nome); };
+  add('Resumo por insumo', a.resumo, [16,42,26,6,16,16,16,16,16,16,10,12]);
+  if(a.detalhe) add('Por OP e granel', a.detalhe, [10,18,16,40,12,8,22,16,40,14]);
+  if(a.graneis) add('Granel consumido', a.graneis, [10,10,16,40,16,40,14]);
+  add('Pendências', a.pendencias, [26,120]);
+  add('Parâmetros', a.parametros, [40,80]);
+  try{ XLSX.writeFile(wb, `${s.numero}.xlsx`); }catch(e){ console.warn('Download indisponível:', e); }
+  return wb;
+}
+function rinsCsvTexto(id){
+  const d = rinsDados(id); if(!d) return ''; const s = d.rec, n = v => (v===null||v===undefined) ? '' : String(Math.round(v*1000)/1000).replace('.',',');
+  const cab = ['Relatório','Data e hora','Usuário','Código','Insumo','Classe','UM','Quantidade do ERP','Estimada (receita)','Total a consumir','Estoque atual','Saldo','Origem'];
+  const lin = d.resumo.map(x=>[s.numero, solOpDataHora(s.ts), s.usuario||'', x.cod, x.nome, RINS_CLASSE_ROTULO[x.classe]||x.classe, x.um||'', n(x.qtdErp), n(x.qtdEst), n(x.total), n(x.estoque), n(x.saldo), x.origem]);
+  return '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+}
+function rinsCsv(id){
+  const d = rinsDados(id); if(!d) return ''; const csv = rinsCsvTexto(id);
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `${d.rec.numero}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível:', e); }
+  return csv;
+}
+function rinsHtmlImpressao(id){
+  const d = rinsDados(id); if(!d) return ''; const s = d.rec;
+  const tab = (cab, linhas) => `<table><thead><tr>${cab.map(c=>`<th>${acessoEsc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l=>`<tr>${l.map((c,i)=>`<td${typeof c==='number'?' class="n"':''}>${acessoEsc(c===''||c==null?'':(typeof c==='number'?fmtL(c):c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const a = rinsAoa(id);
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>${acessoEsc(s.numero)}</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#222}h1{font-size:20px;margin:0}h2{font-size:14px;margin:18px 0 6px}.sub{color:#555;font-size:12px;margin:4px 0 14px}table{border-collapse:collapse;width:100%;font-size:11px}th,td{border:1px solid #999;padding:4px 6px;text-align:left;vertical-align:top}th{background:#eee}td.n{text-align:right;white-space:nowrap}thead{display:table-header-group}tr{page-break-inside:avoid}.ass{display:flex;gap:30px;margin-top:40px;font-size:12px}.ass div{flex:1;border-top:1px solid #333;padding-top:4px;text-align:center}</style></head><body>
+    <h1>Relatório de insumos — ${acessoEsc(s.numero)}</h1>
+    <div class="sub">${solOpDataHora(s.ts)} · gerado por ${acessoEsc(s.usuario||'—')} · ${s.totalLinhas} linha(s) da Lista Mestre · ${s.kpis.insumos} insumo(s)<br>${acessoEsc(rinsFiltrosTxt({...s.filtros, base:s.base==='efetuada'?'efetuada':'planejada'}))}<br>OPs de envase ${s.kpis.opsEnvaseAchadas}/${s.kpis.opsEnvase} · OPs de granel ${s.kpis.opsGranelAchadas}/${s.kpis.opsGranel} · linhas estimadas pela receita: ${s.kpis.linhasEstimadas+s.kpis.linhasParciais}</div>
+    <h2>Resumo por insumo</h2>${tab(a.resumo[0], a.resumo.slice(1).map(l=>[l[0],l[1],l[3],l[4],l[5],l[6],l[7],l[8],l[9]])).replace('<th>Classe</th>','')}
+    ${d.pendencias.length?`<h2>Pendências (${d.pendencias.length})</h2>${tab(['Tipo','Mensagem'], a.pendencias.slice(1))}`:''}
+    ${a.detalhe?`<h2>Por OP e granel</h2>${tab(a.detalhe[0], a.detalhe.slice(1))}`:''}
+    <div class="ass"><div>Elaborado por</div><div>PCP</div><div>Produção</div><div>Almoxarifado</div></div></body></html>`;
+}
+function rinsImprimir(id){
+  const html = rinsHtmlImpressao(id); if(!html) return '';
+  try{ const w2 = window.open('', '_blank'); if(!w2){ showToast('Permita pop-ups para imprimir.', 'error'); return html; } w2.document.write(html); w2.document.close(); w2.focus(); setTimeout(()=>{ try{ w2.print(); }catch(e){} }, 300); }catch(e){ console.warn('Impressão indisponível:', e); }
+  return html;
+}
+
+/* =========================================================================
    COLUNAS CONGELADAS — nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista.
    A tabela continua a mesma: só as colunas escolhidas ganham "position: sticky" (classe .frz) com o deslocamento certo, e o cabeçalho também.
    Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho e quando a tabela passa a ser exibida.
@@ -8258,9 +8974,9 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-05.4';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-06.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP'];
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
