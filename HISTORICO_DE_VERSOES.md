@@ -3,6 +3,17 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-06.2
+- **Relatório de insumos — escolha das seções.** Antes de gerar, a janela tem **"Incluir no relatório"**: Resumo por insumo, Por OP e granel, Granel consumido e Pendências. Só o
+  que ficar marcado entra no **Excel** (uma aba por seção, mais os Parâmetros), no **PDF** e no **CSV** (que leva o resumo, então fica desabilitado sem ele). As abas das seções
+  desmarcadas ficam esmaecidas na prévia. A escolha é lembrada neste navegador, vale a regra de marcar ao menos uma seção, e o histórico mostra as seções de cada relatório.
+- **Relatório de reposição** (botão **📄 Relatório de reposição** no Plano de Reposição). Lista das reposições (compra emergencial, pedidos a emitir, reduzir/adiar entrega, não
+  comprar) pelos filtros da janela (**ação do plano, tipo, grupo, material, pedidos atrasados, horizonte e ciclo**), que partem dos da tela. A lista é **a mesma da tela** para os
+  mesmos filtros. Tem prévia com indicadores, **escolha das seções** (Lista de reposição, Grade de saldos por dia, Avisos), caixa para **excluir materiais** antes de gerar,
+  **registro** (RREP-0001, usuário, data, filtros), histórico e exportação em **Excel**, **PDF** (impressão em paisagem) e **CSV**. A grade de saldos por dia só fica disponível logo
+  depois de gerar; o histórico guarda a lista e os avisos.
+- Nova permissão **"Relatório de reposição"** (Plano de Reposição). **Coleção nova no servidor** (relatoriosReposicao): é preciso rodar o **supabase/schema.sql** de novo.
+
 ## 2026-11-06.1
 - **Relatório de insumos** (botão **📊 Relatório de insumos** na Lista Mestre). Resumo dos insumos a consumir nas linhas dentro dos filtros (data, recurso, cliente, item, grupo,
   pedido, "só sem produção apontada"), **antes de gerar**: janela com prévia, indicadores, abas (Resumo por insumo, Por OP e granel, Granel consumido, Pendências, Linhas) e caixa
