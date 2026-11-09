@@ -654,7 +654,8 @@ table.rp-grade td.rp-ref{color:var(--muted);}
         </div>
         <div class="lg-erro" id="backupMsg" style="color:var(--g700)"></div>
       </div>
-      <div id="importCards"></div>
+      <div id="importHistorico"></div>
+        <div id="importCards"></div>
     </section>
 
     <!-- ============ PLANO MESTRE ============ -->
@@ -981,6 +982,7 @@ table.rp-grade td.rp-ref{color:var(--muted);}
         <div class="card-sub">Arquivo CSV/Excel com colunas: Cliente, Item, Quantidade Priorizada e Data de Início (opcional). Só o que estiver planejado a partir da data de início abate a prioridade.</div>
         <div class="form-row">
           <div class="form-field" style="flex:2"><input type="file" id="file_prioridades" accept=".csv,.xlsx,.xls"></div>
+          <div class="import-ultima card-sub" id="ultima_prioridades" style="margin:8px 0 0"></div>
           <button class="btn btn-primary" onclick="runImport('prioridades','file_prioridades', null, 'report_prioridades')">↑ Importar</button>
           <button class="btn btn-ghost" onclick="downloadTemplate('prioridades')">Baixar modelo</button>
         </div>
@@ -1308,7 +1310,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-06","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-09","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -2005,6 +2007,7 @@ function garantirEstruturas(){
   DB.ordensERP = DB.ordensERP || [];                  // OPs importadas do ERP (componentes) — alimentam o relatório de insumos
   DB.relatoriosInsumos = DB.relatoriosInsumos || [];  // relatórios de insumos gerados (registro)
   DB.relatoriosReposicao = DB.relatoriosReposicao || [];  // relatórios de reposição gerados (registro)
+  DB.historicoImportacoes = DB.historicoImportacoes || [];  // registro das importações (data, hora, usuário)
   // reata as linhas do plano aos pedidos cujo id foi trocado por uma importação antiga (o que já foi planejado volta a abater o pedido)
   const reatados = reconciliarVinculosPedidos();
   if(reatados>0) setTimeout(()=>{ try{ persistDB(); showToast(`Vínculos reatados: ${reatados} linha(s) do plano voltaram a abater os pedidos (pelo número do pedido).`); }catch(e){} }, 1200);
@@ -2516,7 +2519,8 @@ async function runImport(kind, inputId, modeId, reportId){
   const def = IMPORT_DEFS[kind];
   let rawRows;
   try{ rawRows = await readSpreadsheet(file); }
-  catch(err){ document.getElementById(reportId).innerHTML = `<div class="note" style="border-color:var(--danger)">Erro ao ler o arquivo: ${err.message}</div>`; return; }
+  catch(err){ document.getElementById(reportId).innerHTML = `<div class="note" style="border-color:var(--danger)">Erro ao ler o arquivo: ${err.message}</div>`;
+    registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:0, added:0, updated:0, errors:1, resultado:'Falha ao ler o arquivo'}); atualizarUltimasImportacoes(); renderHistoricoImportacoes(); persistDB(); return; }
 
   const report = []; // {line, status:'ok'|'update'|'error', msg}
   let added=0, updated=0, errors=0;
@@ -2692,9 +2696,60 @@ async function runImport(kind, inputId, modeId, reportId){
   if(document.getElementById('page-prioridades')?.classList.contains('active')) renderPrioridades();
   if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
   if(document.getElementById('page-reposicao')?.classList.contains('active')) renderReposicao();
+  registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:rawRows.length, added, updated, errors, resultado:resultadoImportacao(added,updated,errors)});   // quem importou, quando e o que entrou
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes();
   persistDB();
 }
 
+/* ---- registro das importações: data, hora e usuário de cada importação (coleção sincronizada historicoImportacoes) ---- */
+const IMP_KINDS = ['itens','receitas','pedidos','estoque','compras','parametros','ordenserp','gruposrep','prioridades'];
+const IMP_TITULOS_EXTRA = {prioridades:'Prioridades de produção'};
+function tituloImportacao(kind){ const d = IMPORT_DEFS[kind]; return (d && d.label) || IMP_TITULOS_EXTRA[kind] || kind; }
+const dhImp = ts => { try{ return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(', ',' '); }catch(e){ return String(ts); } };
+function resultadoImportacao(added, updated, errors){ return (added+updated)===0 ? (errors?'Nada importado (com erros)':'Nada importado') : (errors?'Importado com erros':'Importado'); }
+function registrarImportacao(o){
+  DB.historicoImportacoes = DB.historicoImportacoes || [];
+  const u = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL : null;
+  DB.historicoImportacoes.push({id:'imp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:new Date().toISOString(), usuario:u?u.usuario:'', nome:u?(u.nome||''):'', kind:o.kind, titulo:tituloImportacao(o.kind),
+    modo:o.modo, arquivo:o.arquivo||'', lidas:o.lidas||0, adicionados:o.added||0, atualizados:o.updated||0, erros:o.errors||0, resultado:o.resultado});
+  if(DB.historicoImportacoes.length>1000) DB.historicoImportacoes.splice(0, DB.historicoImportacoes.length-1000);   // guarda as últimas 1000
+}
+function atualizarUltimasImportacoes(){
+  IMP_KINDS.forEach(k=>{
+    const el = document.getElementById('ultima_'+k); if(!el) return;
+    const u = [...(DB.historicoImportacoes||[])].filter(x=>x.kind===k).sort((a,b)=>String(b.ts).localeCompare(String(a.ts)))[0];
+    el.innerHTML = u ? `<strong>Última importação:</strong> ${dhImp(u.ts)} · por <strong>${acessoEsc(u.usuario||'(sem login)')}</strong>${u.modo&&u.modo!=='—'?' · '+acessoEsc(u.modo):''}${u.arquivo?' · '+acessoEsc(u.arquivo):''} · ${u.adicionados} adicionado(s), ${u.atualizados} atualizado(s), ${u.erros} erro(s)` : 'Nenhuma importação registrada ainda.';
+  });
+}
+let IH_ABERTO = false;
+function renderHistoricoImportacoes(){
+  const el = document.getElementById('importHistorico'); if(!el) return;
+  const kSel = (document.getElementById('ihKind')||{}).value || '', uSel = (document.getElementById('ihUsuario')||{}).value || '';
+  const todos = [...(DB.historicoImportacoes||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
+  const kinds = [...new Set(todos.map(x=>x.kind))], usuarios = [...new Set(todos.map(x=>x.usuario||''))].sort();
+  const vis = todos.filter(x=>(!kSel||x.kind===kSel) && (!uSel||(x.usuario||'')===uSel)), mostrar = vis.slice(0,200);
+  el.innerHTML = `<details class="card" id="impHistDet" ${IH_ABERTO?'open':''} ontoggle="IH_ABERTO=this.open">
+    <summary style="cursor:pointer;font-weight:700;font-size:15px">📜 Histórico de importações <span class="badge">${todos.length}</span></summary>
+    <div class="card-sub" style="margin:8px 0">Cada importação registra a <strong>data</strong>, a <strong>hora</strong> e o <strong>usuário</strong> que a executou. O registro não pode ser apagado e é compartilhado entre os usuários (guarda as últimas 1000).</div>
+    <div class="filters" style="position:static;margin:6px 0 10px">
+      <div class="f"><label>Importação</label><select id="ihKind" onchange="renderHistoricoImportacoes()"><option value="">Todas</option>${kinds.map(k=>`<option value="${acessoEsc(k)}" ${k===kSel?'selected':''}>${acessoEsc(tituloImportacao(k))}</option>`).join('')}</select></div>
+      <div class="f"><label>Usuário</label><select id="ihUsuario" onchange="renderHistoricoImportacoes()"><option value="">Todos</option>${usuarios.map(u=>`<option value="${acessoEsc(u)}" ${u===uSel?'selected':''}>${acessoEsc(u||'(sem login)')}</option>`).join('')}</select></div>
+      <button class="btn btn-sm" onclick="exportHistoricoImportacoes()">⬇ Exportar (.csv)</button>
+    </div>
+    <div class="tbl-wrap" style="max-height:320px"><table class="data" id="tblHistImp"><thead><tr><th>Data e hora</th><th>Usuário</th><th>Importação</th><th>Modo</th><th>Arquivo</th><th>Linhas lidas</th><th>Adicionados</th><th>Atualizados</th><th>Erros</th><th>Resultado</th></tr></thead><tbody>${
+      mostrar.length ? mostrar.map(x=>`<tr><td class="mono">${dhImp(x.ts)}</td><td>${acessoEsc(x.usuario||'(sem login)')}${x.nome?`<div style="font-size:11px;color:var(--muted)">${acessoEsc(x.nome)}</div>`:''}</td><td>${acessoEsc(x.titulo||tituloImportacao(x.kind))}</td><td>${acessoEsc(x.modo||'—')}</td><td style="white-space:normal;max-width:220px">${acessoEsc(x.arquivo||'—')}</td><td class="mono">${x.lidas}</td><td class="mono">${x.adicionados}</td><td class="mono">${x.atualizados}</td><td class="mono" style="${x.erros?'color:var(--danger);font-weight:700':''}">${x.erros}</td><td><span class="badge ${x.resultado==='Importado'?'ok':(/^Nada|^Falha/.test(x.resultado)?'danger':'warn')}">${acessoEsc(x.resultado||'')}</span></td></tr>`).join('') : '<tr><td colspan="10"><div class="empty">Nenhuma importação registrada.</div></td></tr>'}</tbody></table></div>
+    ${vis.length>200?`<div class="card-sub" style="margin-top:6px">Mostrando as 200 mais recentes de ${vis.length}. A exportação leva todas.</div>`:''}
+  </details>`;
+}
+function exportHistoricoImportacoes(){
+  const kSel = (document.getElementById('ihKind')||{}).value || '', uSel = (document.getElementById('ihUsuario')||{}).value || '';
+  const lin = [...(DB.historicoImportacoes||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).filter(x=>(!kSel||x.kind===kSel) && (!uSel||(x.usuario||'')===uSel));
+  const cab = ['Data e hora','Usuário','Nome','Importação','Modo','Arquivo','Linhas lidas','Adicionados','Atualizados','Erros','Resultado'];
+  const csv = '\uFEFF' + [cab, ...lin.map(x=>[dhImp(x.ts), x.usuario||'', x.nome||'', x.titulo||tituloImportacao(x.kind), x.modo||'', x.arquivo||'', x.lidas, x.adicionados, x.atualizados, x.erros, x.resultado||''])]
+    .map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = 'historico_importacoes.csv'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível:', e); }
+  return csv;
+}
 function renderImportacao(){
   const specs = [
     {kind:'itens', title:'Itens / Produtos', desc:'Cadastro completo de itens: código, descrição, unidade de medida, litros por unidade, aplicação, grupo, subgrupo, capacidade máxima do lote, recurso e estoque atual.', showMode:true},
@@ -2715,6 +2770,7 @@ function renderImportacao(){
         <button class="btn btn-sm" onclick="downloadTemplate('${s.kind}')">⬇ Baixar modelo (.csv)</button>
       </div>
       <div class="import-cols">Colunas reconhecidas: ${def.cols.map(c=>c.field+(c.required?' *':'')+' → '+c.aliases[0]).join(' · ')}</div>
+      <div class="import-ultima card-sub" id="ultima_${s.kind}" style="margin:8px 0 0"></div>
       <div class="dropzone">
         Selecione um arquivo .xlsx, .xls ou .csv
         <input type="file" id="${inputId}" accept=".xlsx,.xls,.csv">
@@ -2727,6 +2783,7 @@ function renderImportacao(){
       <div id="${repId}"></div>
     </div>`;
   }).join('');
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes();
 }
 
 /* =========================================================================
@@ -9221,9 +9278,9 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-06.2';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-08.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao'];
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio

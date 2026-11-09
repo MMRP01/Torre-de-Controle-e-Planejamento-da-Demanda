@@ -3,6 +3,14 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-08.1
+- **Registro das importações (data, hora e usuário).** Cada importação em *Importação de Dados* passa a gravar **quando** foi feita (data e hora), **quem** executou (usuário e nome),
+  qual importação, o modo (Atualizar ou Substituir), o **arquivo**, as linhas lidas, os adicionados, os atualizados, os erros e o resultado (Importado, Importado com erros, Nada
+  importado ou Falha ao ler o arquivo). Vale para as 9 importações (Itens, Receitas, Pedidos, Estoque, Pedidos de compra, Estoque de segurança e prazo, Ordens de Produção do ERP,
+  Grupos de reposição e Prioridades). Cada cartão mostra a **"Última importação"** (data, hora, usuário, arquivo e contagens), e há um **"Histórico de importações"** no alto da tela,
+  com filtros por importação e por usuário e exportação em CSV. O registro **não pode ser apagado pela tela**, é compartilhado entre os usuários e guarda as últimas 1000.
+- **Coleção nova no servidor** (historicoImportacoes): é preciso rodar o **supabase/schema.sql** de novo.
+
 ## 2026-11-06.2
 - **Relatório de insumos — escolha das seções.** Antes de gerar, a janela tem **"Incluir no relatório"**: Resumo por insumo, Por OP e granel, Granel consumido e Pendências. Só o
   que ficar marcado entra no **Excel** (uma aba por seção, mais os Parâmetros), no **PDF** e no **CSV** (que leva o resumo, então fica desabilitado sem ele). As abas das seções
