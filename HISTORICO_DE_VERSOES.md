@@ -3,6 +3,19 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-09.1
+- **Capacidade dos Recursos: resumo ao clicar na célula.** Clicar numa célula (recurso x dia) abre o resumo dos **itens e quantidades alocados** naquele dia: capacidade base, paradas descontadas,
+  capacidade do dia, alocado, ocupação e saldo; tabela por item (quantidade, litros, % da capacidade, linhas, Nº OP, Nº OP Granel, pedidos, clientes e situação); paradas do dia; e o botão
+  "Abrir na Lista Mestre" (filtra o dia e o recurso). Quem só consulta também abre.
+- **Lista Mestre: data de produção editável**, com a mesma regra do Plano Mestre (plano confirmado exige justificativa e grava o histórico da linha; linha com produção apontada só administrador altera).
+  Nova permissão **"Data de produção da linha"** na Lista Mestre.
+- **Histórico de importação: detalhe do Resultado.** O selo de Resultado abre o resumo dos erros e avisos com **item/referência, motivo e ação para correção**, e exporta em **Excel** (Resumo, Erros e avisos,
+  Por motivo) e CSV. Cada importação guarda até 300 erros; **só as 50 importações mais recentes mantêm o detalhe** (as antigas ficam só com as contagens).
+- **Todos os selos clicáveis.** Ao clicar em qualquer selo da ferramenta abre um resumo: o que é, números, itens, relatórios e registros ligados (com botão Abrir) e ação sugerida. As famílias conhecidas
+  (solicitação de OP, status, contaminação, paradas, usuários, grupos, materiais, reposição, insumos, importação, Lead Time e outras) têm explicação própria; os demais selos recebem uma explicação pela cor
+  e pelo contexto da linha. Selos que já têm ação própria e selos dentro de botões ou links mantêm o comportamento anterior.
+- Não há coleção nova no servidor: **não é preciso rodar o schema.sql de novo** por causa desta versão.
+
 ## 2026-11-08.1
 - **Registro das importações (data, hora e usuário).** Cada importação em *Importação de Dados* passa a gravar **quando** foi feita (data e hora), **quem** executou (usuário e nome),
   qual importação, o modo (Atualizar ou Substituir), o **arquivo**, as linhas lidas, os adicionados, os atualizados, os erros e o resultado (Importado, Importado com erros, Nada

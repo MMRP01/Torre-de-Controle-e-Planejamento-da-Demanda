@@ -150,6 +150,7 @@ table.data tr:last-child td{border-bottom:none;}
 @media print{.scroll-arrow{display:none !important;}}
 table.data tr:hover td{background:var(--g100);}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;}
+.badge:not([onclick]){cursor:pointer}   /* todo selo abre um resumo ao clicar (selos_info.js) */
 .badge.ok{background:var(--ok-dim);color:var(--ok);}
 .badge.warn{background:var(--tank-dim);color:#96650e;}
 .badge.danger{background:var(--danger-dim);color:var(--danger);}
@@ -2520,7 +2521,7 @@ async function runImport(kind, inputId, modeId, reportId){
   let rawRows;
   try{ rawRows = await readSpreadsheet(file); }
   catch(err){ document.getElementById(reportId).innerHTML = `<div class="note" style="border-color:var(--danger)">Erro ao ler o arquivo: ${err.message}</div>`;
-    registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:0, added:0, updated:0, errors:1, resultado:'Falha ao ler o arquivo'}); atualizarUltimasImportacoes(); renderHistoricoImportacoes(); persistDB(); return; }
+    registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:0, added:0, updated:0, errors:1, resultado:'Falha ao ler o arquivo', detalhes:[{l:'—', s:'e', m:'Erro ao ler o arquivo: '+err.message}]}); atualizarUltimasImportacoes(); renderHistoricoImportacoes(); persistDB(); return; }
 
   const report = []; // {line, status:'ok'|'update'|'error', msg}
   let added=0, updated=0, errors=0;
@@ -2696,7 +2697,7 @@ async function runImport(kind, inputId, modeId, reportId){
   if(document.getElementById('page-prioridades')?.classList.contains('active')) renderPrioridades();
   if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
   if(document.getElementById('page-reposicao')?.classList.contains('active')) renderReposicao();
-  registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:rawRows.length, added, updated, errors, resultado:resultadoImportacao(added,updated,errors)});   // quem importou, quando e o que entrou
+  registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:rawRows.length, added, updated, errors, resultado:resultadoImportacao(added,updated,errors), ...(d=>({detalhes:d.detalhes, maisDetalhes:d.maisDetalhes}))(detalhesDoRelatorio(report))});   // quem importou, quando e o que entrou
   atualizarUltimasImportacoes(); renderHistoricoImportacoes();
   persistDB();
 }
@@ -2711,14 +2712,93 @@ function registrarImportacao(o){
   DB.historicoImportacoes = DB.historicoImportacoes || [];
   const u = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL : null;
   DB.historicoImportacoes.push({id:'imp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ts:new Date().toISOString(), usuario:u?u.usuario:'', nome:u?(u.nome||''):'', kind:o.kind, titulo:tituloImportacao(o.kind),
-    modo:o.modo, arquivo:o.arquivo||'', lidas:o.lidas||0, adicionados:o.added||0, atualizados:o.updated||0, erros:o.errors||0, resultado:o.resultado});
+    modo:o.modo, arquivo:o.arquivo||'', lidas:o.lidas||0, adicionados:o.added||0, atualizados:o.updated||0, erros:o.errors||0, resultado:o.resultado, detalhes:o.detalhes||[], maisDetalhes:o.maisDetalhes||0});
   if(DB.historicoImportacoes.length>1000) DB.historicoImportacoes.splice(0, DB.historicoImportacoes.length-1000);   // guarda as últimas 1000
+  // o detalhe dos erros (até 300 linhas por importação) só é guardado nas 50 mais recentes: as antigas ficam só com as contagens
+  const ord = [...DB.historicoImportacoes].sort((x,y)=>String(y.ts).localeCompare(String(x.ts)));
+  ord.slice(50).forEach(x=>{ if(Array.isArray(x.detalhes) && x.detalhes.length){ x.detalhes = []; x.maisDetalhes = 0; x.detalhesDescartados = true; } });
+}
+// guarda, de cada importação, os erros e avisos (linha do arquivo + mensagem), no máximo 300
+function detalhesDoRelatorio(report){
+  const rel = (report||[]).filter(x=>x.status==='error' || (x.status==='update' && /^⚠/.test(String(x.msg||'')))), lim = 300;
+  return {detalhes:rel.slice(0,lim).map(x=>({l:x.line, s:x.status==='error'?'e':'a', m:String(x.msg||'')})), maisDetalhes:Math.max(0, rel.length-lim)};
+}
+// motivo → ação para correção (por família de mensagem)
+const IMP_ACOES = [
+  [/Campos obrigatórios ausentes ou inválidos/, 'Campos obrigatórios ausentes ou inválidos', 'Preencha ou corrija as colunas indicadas na linha do arquivo (veja o modelo da importação) e importe de novo.'],
+  [/(Item|Produto|Insumo) .{1,60} não encontrado/, 'Item não encontrado no cadastro', 'Cadastre o item em Cadastros → Itens (ou importe o cadastro de Itens antes) e confira se o código é igual ao do cadastro (letras, pontos e zeros); depois importe de novo.'],
+  [/Data prevista inválida/, 'Data inválida', 'Informe a data no formato dd/mm/aaaa e que ela exista (por exemplo, 31/02 não existe).'],
+  [/quantidade deve ser maior que zero/, 'Quantidade inválida', 'Informe uma quantidade maior que zero.'],
+  [/Informe o estoque de segurança/, 'Sem estoque de segurança, prazo ou máximo', 'Preencha ao menos uma das colunas: Estoque de Segurança, Prazo de Entrega ou Estoque Máximo.'],
+  [/grupo precisa de pelo menos um código/, 'Grupo sem itens', 'Informe, na coluna Itens, ao menos um código de item para o grupo.'],
+  [/Nenhuma linha válida: a lista atual/, 'Nenhuma linha válida', 'Corrija o arquivo e importe de novo. A lista atual de pedidos de compra foi mantida: nada mudou.'],
+  [/Linha sem Nº da OP/, 'Linha sem Nº da OP', 'Preencha a coluna Nº DA OP (a linha foi ignorada) e importe de novo.'],
+  [/Nenhuma OP válida/, 'Nenhuma OP válida', 'Confira se o arquivo é o relatório do ERP, com a coluna Nº DA OP. A base de OPs atual foi mantida.'],
+  [/Código suspeito/, 'Código suspeito', 'Confira o código no ERP: parece um INS- digitado errado (por exemplo, RNS-). O componente foi guardado, mas não soma nos insumos.'],
+  [/vieram em minúsculas/, 'Códigos em minúsculas', 'Nenhuma ação necessária: os códigos foram normalizados para maiúsculas. Se quiser, padronize no ERP.'],
+  [/Erro ao ler o arquivo/, 'Falha ao ler o arquivo', 'Confira o formato (.xlsx, .xls ou .csv), se o arquivo não está aberto em outro programa nem protegido por senha, e tente de novo.'],
+];
+function acaoParaErroImportacao(msg){ const m = String(msg||''); const r = IMP_ACOES.find(x=>x[0].test(m)); return r ? {familia:r[1], acao:r[2]} : {familia:'Outro erro', acao:'Corrija a linha indicada no arquivo, de acordo com a mensagem, e importe de novo.'}; }
+function referenciaDoErro(msg){
+  const m = String(msg||''), a = m.match(/(?:Item|Produto|Insumo) (.{1,60}?) não encontrado/), b = m.match(/Campos obrigatórios ausentes ou inválidos:\s*(.+?)\.?$/), c = m.match(/Código suspeito ([^\s(]+)/), d = m.match(/OP de (?:envase|granel) (\S+)/);
+  return a ? a[1] : (c ? c[1] : (b ? 'Colunas: '+b[1] : (d ? d[1] : '')));
+}
+function linhasDetalheImportacao(x){
+  return (x.detalhes||[]).map(d=>{ const r = acaoParaErroImportacao(d.m); return {tipo:d.s==='e'?'Erro':'Aviso', linha:d.l, ref:referenciaDoErro(d.m), motivo:d.m, familia:r.familia, acao:r.acao}; });
+}
+function fecharDetalhesImportacao(){ const o = document.getElementById('impDetOverlay'); if(o) o.remove(); }
+function abrirDetalhesImportacao(id){
+  const x = (DB.historicoImportacoes||[]).find(e=>e.id===id); if(!x) return;
+  const lin = linhasDetalheImportacao(x), porFam = {}; lin.forEach(l=>{ porFam[l.familia] = porFam[l.familia] || {n:0, acao:l.acao, tipo:l.tipo}; porFam[l.familia].n++; });
+  const refs = [...new Set(lin.map(l=>l.ref).filter(Boolean))];
+  const antigo = !Array.isArray(x.detalhes) || !!x.detalhesDescartados, explic = {'Importado':'Todas as linhas válidas entraram, sem erros.','Importado com erros':'As linhas válidas entraram; as linhas com erro ficaram de fora e estão listadas abaixo.','Nada importado':'Nenhuma linha entrou.','Nada importado (com erros)':'Nenhuma linha entrou: veja os erros abaixo.','Falha ao ler o arquivo':'O arquivo não pôde ser lido, então nada foi importado.'}[x.resultado] || '';
+  fecharDetalhesImportacao();
+  const o = document.createElement('div'); o.id = 'impDetOverlay';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto';
+  const k = (rot,val,cor) => `<div style="flex:1;min-width:120px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">${rot}</div><div style="font-size:18px;font-weight:800;${cor?'color:'+cor:''}">${val}</div></div>`;
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:1100px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📥 ${acessoEsc(x.titulo||tituloImportacao(x.kind))} <span class="badge ${x.resultado==='Importado'?'ok':(/^Nada|^Falha/.test(x.resultado)?'danger':'warn')}">${acessoEsc(x.resultado||'')}</span></h3>
+      <div class="card-sub" style="margin:0">${dhImp(x.ts)} · por <strong>${acessoEsc(x.usuario||'(sem login)')}</strong>${x.nome?' ('+acessoEsc(x.nome)+')':''} · ${acessoEsc(x.modo||'—')} · ${acessoEsc(x.arquivo||'—')}<br>${acessoEsc(explic)}</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="exportDetalhesImportacaoExcel('${x.id}')">📗 Exportar Excel</button><button class="btn btn-sm" onclick="exportDetalhesImportacaoCsv('${x.id}')">⬇ CSV</button><button class="btn btn-sm btn-ghost" onclick="fecharDetalhesImportacao()">✕ Fechar</button></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">${k('Linhas lidas',x.lidas)}${k('Adicionados',x.adicionados)}${k('Atualizados',x.atualizados)}${k('Erros',x.erros,x.erros?'var(--danger)':'')}${k('Avisos',lin.filter(l=>l.tipo==='Aviso').length)}</div>
+    ${antigo ? `<div class="note">${x.detalhesDescartados ? 'O detalhe desta importação foi descartado: a ferramenta guarda os erros apenas das 50 importações mais recentes. Só as contagens estão disponíveis.' : 'Esta importação foi registrada antes do detalhamento: só as contagens estão disponíveis.'}</div>` : (!lin.length ? '<div class="note" style="border-color:var(--ok,#1a8f4c)">Nenhum erro ou aviso nesta importação.</div>' : `
+    <h4 style="margin:6px 0">O que aconteceu e o que fazer</h4>
+    <div class="tbl-wrap" style="max-height:170px"><table class="data"><thead><tr><th>Motivo</th><th>Tipo</th><th>Ocorrências</th><th>Ação para correção</th></tr></thead><tbody>${Object.entries(porFam).map(([f,v])=>`<tr><td><strong>${acessoEsc(f)}</strong></td><td>${acessoEsc(v.tipo)}</td><td class="mono">${v.n}</td><td style="white-space:normal">${acessoEsc(v.acao)}</td></tr>`).join('')}</tbody></table></div>
+    ${refs.length?`<div class="card-sub" style="margin:10px 0 4px"><strong>Itens / referências com problema (${refs.length}):</strong> ${refs.slice(0,40).map(r=>`<span class="badge warn">${acessoEsc(r)}</span>`).join(' ')}${refs.length>40?' …':''}</div>`:''}
+    <h4 style="margin:12px 0 6px">Erros e avisos, linha a linha${x.maisDetalhes?` <span style="font-weight:400;font-size:12px;color:var(--muted)">(mostrando ${lin.length}; mais ${x.maisDetalhes} não foram guardados)</span>`:''}</h4>
+    <div class="tbl-wrap" style="max-height:320px"><table class="data" id="tblImpDet"><thead><tr><th>Tipo</th><th>Linha do arquivo</th><th>Item / referência</th><th>Motivo</th><th>Ação para correção</th></tr></thead><tbody>${lin.map(l=>`<tr><td><span class="badge ${l.tipo==='Erro'?'danger':'warn'}">${l.tipo}</span></td><td class="mono">${acessoEsc(l.linha)}</td><td class="mono">${acessoEsc(l.ref||'—')}</td><td style="white-space:normal;max-width:300px">${acessoEsc(l.motivo)}</td><td style="white-space:normal;max-width:340px">${acessoEsc(l.acao)}</td></tr>`).join('')}</tbody></table></div>`)}
+  </div>`;
+  document.body.appendChild(o); o.addEventListener('click', e=>{ if(e.target===o) fecharDetalhesImportacao(); });
+}
+function aoaDetalhesImportacao(id){
+  const x = (DB.historicoImportacoes||[]).find(e=>e.id===id); if(!x) return null; const lin = linhasDetalheImportacao(x), porFam = {};
+  lin.forEach(l=>{ porFam[l.familia] = porFam[l.familia] || {n:0, acao:l.acao, tipo:l.tipo}; porFam[l.familia].n++; });
+  return {
+    resumo:[['Importação',x.titulo||tituloImportacao(x.kind)],['Data e hora',dhImp(x.ts)],['Usuário',x.usuario||'(sem login)'],['Nome',x.nome||''],['Modo',x.modo||'—'],['Arquivo',x.arquivo||''],['Linhas lidas',x.lidas],['Adicionados',x.adicionados],['Atualizados',x.atualizados],['Erros',x.erros],['Avisos',lin.filter(l=>l.tipo==='Aviso').length],['Resultado',x.resultado||''],['Observação', x.maisDetalhes?`Foram guardados ${lin.length} erros/avisos; mais ${x.maisDetalhes} não couberam no registro.`:(x.detalhesDescartados?'Detalhe descartado: só as 50 importações mais recentes guardam os erros.':(Array.isArray(x.detalhes)?'':'Registrada antes do detalhamento: só as contagens estão disponíveis.'))]],
+    erros:[['Tipo','Linha do arquivo','Item / referência','Motivo','Ação para correção'], ...lin.map(l=>[l.tipo,l.linha,l.ref,l.motivo,l.acao])],
+    motivos:[['Motivo','Tipo','Ocorrências','Ação para correção'], ...Object.entries(porFam).map(([f,v])=>[f,v.tipo,v.n,v.acao])]
+  };
+}
+function exportDetalhesImportacaoExcel(id){
+  const a = aoaDetalhesImportacao(id); if(!a) return null; const x = (DB.historicoImportacoes||[]).find(e=>e.id===id);
+  if(typeof XLSX === 'undefined'){ showToast('A biblioteca do Excel não carregou (sem internet?). Use o CSV.', 'error'); return null; }
+  const wb = XLSX.utils.book_new(), add = (nome, aoa, larg)=>{ const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = larg.map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, nome); };
+  add('Resumo', a.resumo, [22,80]); add('Erros e avisos', a.erros, [10,16,26,70,80]); add('Por motivo', a.motivos, [40,10,12,90]);
+  const d = new Date(x.ts), pad = n=>String(n).padStart(2,'0'), nome = `importacao_${x.kind}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.xlsx`;
+  try{ XLSX.writeFile(wb, nome); }catch(e){ console.warn('Download indisponível:', e); }
+  return wb;
+}
+function exportDetalhesImportacaoCsv(id){
+  const a = aoaDetalhesImportacao(id); if(!a) return '';
+  const csv = '\uFEFF' + a.erros.map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); e.download = 'erros_importacao.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
 }
 function atualizarUltimasImportacoes(){
   IMP_KINDS.forEach(k=>{
     const el = document.getElementById('ultima_'+k); if(!el) return;
     const u = [...(DB.historicoImportacoes||[])].filter(x=>x.kind===k).sort((a,b)=>String(b.ts).localeCompare(String(a.ts)))[0];
-    el.innerHTML = u ? `<strong>Última importação:</strong> ${dhImp(u.ts)} · por <strong>${acessoEsc(u.usuario||'(sem login)')}</strong>${u.modo&&u.modo!=='—'?' · '+acessoEsc(u.modo):''}${u.arquivo?' · '+acessoEsc(u.arquivo):''} · ${u.adicionados} adicionado(s), ${u.atualizados} atualizado(s), ${u.erros} erro(s)` : 'Nenhuma importação registrada ainda.';
+    el.innerHTML = u ? `<strong>Última importação:</strong> ${dhImp(u.ts)} · por <strong>${acessoEsc(u.usuario||'(sem login)')}</strong>${u.modo&&u.modo!=='—'?' · '+acessoEsc(u.modo):''}${u.arquivo?' · '+acessoEsc(u.arquivo):''} · ${u.adicionados} adicionado(s), ${u.atualizados} atualizado(s), ${u.erros} erro(s) · <span class="badge ${u.resultado==='Importado'?'ok':(/^Nada|^Falha/.test(u.resultado)?'danger':'warn')}" style="cursor:pointer" title="Clique para ver os erros, os itens, o motivo e a ação para correção" onclick="abrirDetalhesImportacao('${u.id}')">${acessoEsc(u.resultado||'')} ▸</span>` : 'Nenhuma importação registrada ainda.';
   });
 }
 let IH_ABERTO = false;
@@ -2737,7 +2817,7 @@ function renderHistoricoImportacoes(){
       <button class="btn btn-sm" onclick="exportHistoricoImportacoes()">⬇ Exportar (.csv)</button>
     </div>
     <div class="tbl-wrap" style="max-height:320px"><table class="data" id="tblHistImp"><thead><tr><th>Data e hora</th><th>Usuário</th><th>Importação</th><th>Modo</th><th>Arquivo</th><th>Linhas lidas</th><th>Adicionados</th><th>Atualizados</th><th>Erros</th><th>Resultado</th></tr></thead><tbody>${
-      mostrar.length ? mostrar.map(x=>`<tr><td class="mono">${dhImp(x.ts)}</td><td>${acessoEsc(x.usuario||'(sem login)')}${x.nome?`<div style="font-size:11px;color:var(--muted)">${acessoEsc(x.nome)}</div>`:''}</td><td>${acessoEsc(x.titulo||tituloImportacao(x.kind))}</td><td>${acessoEsc(x.modo||'—')}</td><td style="white-space:normal;max-width:220px">${acessoEsc(x.arquivo||'—')}</td><td class="mono">${x.lidas}</td><td class="mono">${x.adicionados}</td><td class="mono">${x.atualizados}</td><td class="mono" style="${x.erros?'color:var(--danger);font-weight:700':''}">${x.erros}</td><td><span class="badge ${x.resultado==='Importado'?'ok':(/^Nada|^Falha/.test(x.resultado)?'danger':'warn')}">${acessoEsc(x.resultado||'')}</span></td></tr>`).join('') : '<tr><td colspan="10"><div class="empty">Nenhuma importação registrada.</div></td></tr>'}</tbody></table></div>
+      mostrar.length ? mostrar.map(x=>`<tr><td class="mono">${dhImp(x.ts)}</td><td>${acessoEsc(x.usuario||'(sem login)')}${x.nome?`<div style="font-size:11px;color:var(--muted)">${acessoEsc(x.nome)}</div>`:''}</td><td>${acessoEsc(x.titulo||tituloImportacao(x.kind))}</td><td>${acessoEsc(x.modo||'—')}</td><td style="white-space:normal;max-width:220px">${acessoEsc(x.arquivo||'—')}</td><td class="mono">${x.lidas}</td><td class="mono">${x.adicionados}</td><td class="mono">${x.atualizados}</td><td class="mono" style="${x.erros?'color:var(--danger);font-weight:700':''}">${x.erros}</td><td><span class="badge ${x.resultado==='Importado'?'ok':(/^Nada|^Falha/.test(x.resultado)?'danger':'warn')}" style="cursor:pointer" title="Clique para ver os erros, os itens, o motivo e a ação para correção" onclick="abrirDetalhesImportacao('${x.id}')">${acessoEsc(x.resultado||'')} ▸</span></td></tr>`).join('') : '<tr><td colspan="10"><div class="empty">Nenhuma importação registrada.</div></td></tr>'}</tbody></table></div>
     ${vis.length>200?`<div class="card-sub" style="margin-top:6px">Mostrando as 200 mais recentes de ${vis.length}. A exportação leva todas.</div>`:''}
   </details>`;
 }
@@ -4897,7 +4977,7 @@ function renderListaCore(){
       const it = itemByCode(p.itemCode);
       const lotesArrLM = lotesDaLinha(p), loteEditado = Array.isArray(p.loteManual);
       return __cab + `<tr${p.obs?' class="linha-obs"':''}>
-        <td>${fmtDate(p.date)}${p.originalDate && p.originalDate!==p.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-top:2px" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span>` : ''}</td>
+        <td><input type="date" value="${p.date}" style="min-width:128px"${attrTrava(p)} onchange="updateListaData('${p.id}', this.value)" title="Data de produção da linha">${p.originalDate && p.originalDate!==p.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-top:2px" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span>` : ''}</td>
         <td><select style="min-width:150px"${attrTrava(p)} onchange="updateListaRecurso('${p.id}', this.value)">${DB.resources.map(r=>`<option value="${r.name}" ${r.name===p.resource?'selected':''}>${r.name}</option>`).join('')}</select></td>
         <td class="mono">${p.itemCode}${seloSolicitacaoOP(p)}${(()=>{ const pr=getPrioridadeResumoItem(p.itemCode); return pr ? ' '+prioridadeSelo(pr,{compacto:true}) : ''; })()}${p.changeLog && p.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline;white-space:nowrap" title="Clique para ver o histórico completo de alterações" onclick="showChangeLogModal('${p.id}')">🔔 ${p.changeLog.length} ▸</span>` : ''}</td><td style="white-space:normal;min-width:230px;max-width:330px;font-size:12px;line-height:1.35">${it?it.name:''}${p.obs?`<div class="obs-prev" title="${acessoEsc(p.obs)}" onclick="abrirObsLinha('${p.id}')">📝 ${acessoEsc(p.obs.length>90?p.obs.slice(0,90)+'…':p.obs)}</div>`:''}</td><td class="mono">${p.orderNo}</td>
         <td style="min-width:150px;white-space:nowrap"><input class="mono" style="font-size:11px;width:118px${loteEditado?';border-color:#B8590A':''}" value="${acessoEsc(lotesArrLM.join(', '))}" onchange="updateLoteLinha('${p.id}',this.value)" placeholder="—" title="Lote(s) desta linha. Para vários, separe por vírgula. Apague para deixar a linha sem lote.">${loteEditado?` <button type="button" class="btn btn-sm" style="padding:0 6px" title="Lote editado manualmente. Clique para voltar ao lote do pedido" onclick="restaurarLoteLinha('${p.id}')">↺</button>`:''}</td>
@@ -5052,6 +5132,25 @@ function updateListaQtd(id, value){
     checkExcessoPlanejado(p.itemCode);
     persistDB();
   });
+}
+function updateListaData(id, value){
+  const p = DB.plan.find(x=>x.id===id); if(!p) return;
+  if(barrarLinhaTravada(p)){ renderLista(); return; }
+  if(!value){ alert('Informe uma data válida.'); renderLista(); return; }
+  if(value===p.date) return;
+  const antiga = p.date;
+  const aplicar = (just)=>{
+    if(p.originalDate===undefined) p.originalDate = p.date;
+    p.date = value; p.manual = true;
+    if(value!==p.originalDate) showToast(`📅 Data de produção alterada: ${p.itemCode} agora em ${fmtDate(value)} (originalmente ${fmtDate(p.originalDate)}).`);
+    logMudancaPlano(p, 'Data (Lista Mestre)', fmtDate(antiga), fmtDate(value), just);
+    renderPlano(); populateListFilters(); renderLista(); populateDashFilters(); renderDashboards(); renderVisaoDia();
+    if(planMode==='manual') renderManualClientList();
+    persistDB();
+  };
+  const desc = `Data de produção (Lista Mestre): ${fmtDate(antiga)} → ${fmtDate(value)}`;
+  if(linhaTemProducao(p)) comAutorizacaoLinhaProduzida(p, desc, aplicar);   // só administrador, com justificativa
+  else comJustificativaSeNecessario(desc, aplicar);                          // plano confirmado exige justificativa
 }
 function updateListaRecurso(id, value){
   const p = DB.plan.find(x=>x.id===id);
@@ -6352,6 +6451,49 @@ function getPrioridadeResumoItem(itemCode){
   __prioCache[itemCode] = r;
   return r;
 }
+/* ---- Capacidade: resumo dos itens e quantidades alocados em um recurso num dia (clique na célula da matriz) ---- */
+function fecharCapacidadeDetalhe(){ const o = document.getElementById('capDetOverlay'); if(o) o.remove(); }
+function capAbrirNaLista(rec, dia){
+  fecharCapacidadeDetalhe(); showPage('lista');
+  const de = document.getElementById('lstDe'), ate = document.getElementById('lstAte'); if(de) de.value = dia; if(ate) ate.value = dia;
+  const r = document.getElementById('lstRecurso'); if(r && r.__cbSetValores) r.__cbSetValores([rec]);
+  renderLista();
+}
+function abrirCapacidadeDetalhe(rec, dia){
+  const linhas = DB.plan.filter(p=>p.resource===rec && p.date===dia); if(!linhas.length) return;
+  const capBase = getCapacityBase(rec, dia), perdida = capacityLostByParadas(rec, dia), cap = getCapacity(rec, dia);
+  const usado = linhas.reduce((t,p)=>t+(p.batchLiters||0),0), pct = cap>0 ? usado/cap*100 : 0, saldo = cap-usado;
+  const porItem = new Map();
+  linhas.forEach(p=>{
+    const g = porItem.get(p.itemCode) || {cod:p.itemCode, un:0, litros:0, linhas:0, ops:new Set(), granel:new Set(), pedidos:new Set(), clientes:new Set(), status:new Set(), prod:0};
+    g.un += p.batchUnits||0; g.litros += p.batchLiters||0; g.linhas++;
+    if(p.opNumber) g.ops.add(String(p.opNumber)); if(p.opGranelNumber) g.granel.add(String(p.opGranelNumber));
+    (p.orders||[]).forEach(e=>{ if(e.orderNo) g.pedidos.add(String(e.orderNo)); const o = DB.orders.find(x=>x.id===e.orderId); if(o && o.customer) g.clientes.add(o.customer); });
+    if(!(p.orders||[]).length && p.orderNo) String(p.orderNo).split(',').forEach(x=>{ x = x.trim(); if(x) g.pedidos.add(x); });
+    g.status.add(p.status||'Planejado'); if(linhaTemProducao(p)) g.prod++;
+    porItem.set(p.itemCode, g);
+  });
+  const itens = [...porItem.values()].sort((a,b)=>b.litros-a.litros);
+  const paradas = (DB.paradas||[]).filter(x=>x.resource===rec && x.date===dia);
+  const corPct = pct>=100 ? 'var(--danger)' : pct>=80 ? '#8A5A00' : '#2F7D46';
+  fecharCapacidadeDetalhe();
+  const o = document.createElement('div'); o.id = 'capDetOverlay';
+  o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto';
+  const k = (rot, val, cor) => `<div style="flex:1;min-width:130px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">${rot}</div><div style="font-size:18px;font-weight:800;${cor?'color:'+cor:''}">${val}</div></div>`;
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:1180px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📊 ${acessoEsc(rec)} · ${fmtDate(dia)}</h3>
+      <div class="card-sub" style="margin:0">Itens e quantidades alocados neste recurso neste dia (${linhas.length} linha(s) do plano).</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" id="capDetLista">☰ Abrir na Lista Mestre</button><button class="btn btn-sm btn-ghost" onclick="fecharCapacidadeDetalhe()">✕ Fechar</button></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">${k('Capacidade base', fmtL(capBase)+' L')}${k('Paradas descontadas', perdida?'− '+fmtL(perdida)+' L':'—')}${k('Capacidade do dia', fmtL(cap)+' L')}${k('Alocado', fmtL(usado)+' L')}${k('Ocupação', fmtL(pct)+'%', corPct)}${k('Saldo', fmtL(saldo)+' L', saldo<0?'var(--danger)':'')}</div>
+    <div class="tbl-wrap" style="max-height:380px"><table class="data" id="tblCapDet"><thead><tr><th>Código</th><th>Descrição</th><th>UM</th><th>Quantidade</th><th>Litros</th><th>% da capacidade</th><th>Linhas</th><th>Nº OP</th><th>Nº OP Granel</th><th>Pedidos</th><th>Clientes</th><th>Situação</th></tr></thead><tbody>${
+      itens.map(g=>{ const it = itemByCode(g.cod); return `<tr><td class="mono"><strong>${acessoEsc(g.cod)}</strong></td><td style="white-space:normal;max-width:260px">${acessoEsc(it?it.name:'')}</td><td>${acessoEsc(it?it.uom:'')}</td><td class="mono" style="font-weight:700">${fmtL(g.un)}</td><td class="mono">${fmtL(g.litros)}</td><td class="mono">${cap>0?fmtL(g.litros/cap*100)+'%':'—'}</td><td class="mono">${g.linhas}</td><td class="mono" style="white-space:normal">${acessoEsc([...g.ops].join(', ')||'—')}</td><td class="mono" style="white-space:normal">${acessoEsc([...g.granel].join(', ')||'—')}</td><td class="mono" style="white-space:normal;max-width:160px">${acessoEsc([...g.pedidos].join(', ')||'—')}</td><td style="white-space:normal;max-width:180px">${acessoEsc([...g.clientes].join(', ')||'—')}</td><td style="white-space:normal">${acessoEsc([...g.status].join(', '))}${g.prod?` · 🔒 ${g.prod} com produção`:''}</td></tr>`; }).join('')}</tbody>
+      <tfoot><tr><td colspan="3"><strong>Total</strong></td><td class="mono"><strong>${fmtL(itens.reduce((t,g)=>t+g.un,0))}</strong></td><td class="mono"><strong>${fmtL(usado)}</strong></td><td class="mono"><strong>${cap>0?fmtL(pct)+'%':'—'}</strong></td><td class="mono"><strong>${linhas.length}</strong></td><td colspan="5"></td></tr></tfoot></table></div>
+    ${paradas.length?`<h4 style="margin:14px 0 6px">Paradas registradas neste dia</h4><div class="tbl-wrap" style="max-height:160px"><table class="data"><thead><tr><th>Motivo</th><th>Tipo</th><th>Início</th><th>Fim</th><th>Duração (min)</th><th>Desconta da capacidade?</th></tr></thead><tbody>${paradas.map(x=>{ const m=(DB.motivosParada||[]).find(y=>y.id===x.motivoId); return `<tr><td>${acessoEsc(m?m.nome:(x.motivo||'—'))}</td><td>${acessoEsc(x.tipo||'')}</td><td class="mono">${acessoEsc(x.horaInicio||'')}</td><td class="mono">${acessoEsc(x.horaFim||'')}</td><td class="mono">${x.duracaoMin||0}</td><td>${x.descontarCapacidade?'Sim':'Não'}</td></tr>`; }).join('')}</tbody></table></div>`:''}
+  </div>`;
+  document.body.appendChild(o);
+  o.addEventListener('click', e=>{ if(e.target===o) fecharCapacidadeDetalhe(); });
+  document.getElementById('capDetLista').onclick = ()=>capAbrirNaLista(rec, dia);
+}
 function renderCapacidade(){
   populateSelect(document.getElementById('capRecurso'), DB.resources.map(r=>r.name), true);
   const de = document.getElementById('capDe').value;
@@ -6419,7 +6561,7 @@ function renderCapacidade(){
         if(!item) return `<td style="color:var(--muted);text-align:center">—</td>`;
         const bg = item.pct>=100 ? 'rgba(214,0,28,.16)' : item.pct>=80 ? 'rgba(255,178,29,.28)' : 'rgba(47,125,70,.14)';
         const cor = item.pct>=100 ? 'var(--danger)' : item.pct>=80 ? '#8A5A00' : '#2F7D46';
-        return `<td style="background:${bg};text-align:center;padding:7px 5px" title="${fmtL(item.usado)} L de ${fmtL(item.cap)} L usados em ${fmtDate(d)}">
+        return `<td class="cap-cel" data-rec="${acessoEsc(rn)}" data-dia="${d}" onclick="abrirCapacidadeDetalhe(this.dataset.rec, this.dataset.dia)" style="background:${bg};text-align:center;padding:7px 5px;cursor:pointer" title="${fmtL(item.usado)} L de ${fmtL(item.cap)} L usados em ${fmtDate(d)} — clique para ver os itens e as quantidades">
           <div style="font-weight:800;color:${cor};font-size:12px">${fmtL(item.pct)}%</div>
           <div style="font-size:9px;color:var(--muted)">${fmtL(item.usado)}L</div>
         </td>`;
@@ -7029,6 +7171,7 @@ const CATALOGO_CAMPOS = {
     {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
     {id:'turnos',    label:'Quantidades, datas e horários dos turnos (apontamento)', acoes:['updateTurno','updateTurnoData','updateTurnoHora']},
     {id:'quantidade',label:'Quantidade da linha',                 acoes:['updateListaQtd']},
+    {id:'data',      label:'Data de produção da linha',           acoes:['updateListaData']},
     {id:'recurso',   label:'Recurso da linha',                    acoes:['updateListaRecurso']},
     {id:'op',        label:'Nº OP e OP Granel',                   acoes:[['updatePlanField',1,'opNumber'],['updatePlanField',1,'opGranelNumber']]},
     {id:'lote',      label:'Lote(s) da linha',                    acoes:['updateLoteLinha','restaurarLoteLinha']},
@@ -7118,7 +7261,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
@@ -9214,6 +9357,130 @@ function rrepImprimir(id){
 }
 
 /* =========================================================================
+   SELOS CLICÁVEIS — ao clicar em qualquer selo (badge) da ferramenta, abre um resumo: o que é, números, itens, relatórios/registros ligados e ação sugerida.
+   Um ouvinte global cobre todos os selos (também os de janelas e os criados depois). Selos que já têm ação própria (onclick) e selos dentro de botões/links são preservados.
+   Cada família conhecida tem explicação própria (SELO_REGRAS); os demais recebem uma explicação padrão pela cor do selo e pelo contexto da linha.
+   ========================================================================= */
+const SELO_CLS = {ok:['Situação regular','Está tudo certo: nada a fazer.'], warn:['Atenção','Pede conferência: veja o motivo e decida se precisa agir.'], danger:['Problema','Precisa de ação: corrija o que o selo aponta.'], info:['Informação','É apenas informativo.'], exc:['Excesso','Há mais material do que o necessário no período.']};
+function seloLinhaDoPlano(tr){
+  if(!tr) return null;
+  for(const e of tr.querySelectorAll('[onclick],[onchange]')){
+    const at = (e.getAttribute('onclick')||'')+' '+(e.getAttribute('onchange')||'');
+    for(const m of at.matchAll(/'([^']{2,60})'/g)){ const p = (DB.plan||[]).find(x=>x.id===m[1]); if(p) return p; }
+  }
+  return null;
+}
+function seloTabelaItens(linhas, max){
+  max = max || 12; const mapa = new Map();
+  linhas.forEach(p=>{ const g = mapa.get(p.itemCode) || {cod:p.itemCode, qtd:0, litros:0, n:0}; g.qtd += p.batchUnits||0; g.litros += p.batchLiters||0; g.n++; mapa.set(p.itemCode, g); });
+  const arr = [...mapa.values()].sort((a,b)=>b.litros-a.litros);
+  return {cab:['Código','Descrição','Quantidade','Litros','Linhas'], linhas:arr.slice(0,max).map(g=>{ const it = itemByCode(g.cod); return [g.cod, it?it.name:'', fmtL(g.qtd), fmtL(g.litros), g.n]; }), total:arr.length};
+}
+const seloRegistros = (arr, rotFn, fn) => (arr||[]).slice(-3).reverse().map(x=>({rot:rotFn(x), fn:`${fn}('${x.id}')`}));
+const seloRotRel = x => `${x.numero} · ${dhImp(x.ts)} · ${x.usuario||'—'}`;
+function seloUltRel(){ return {ins:seloRegistros(DB.relatoriosInsumos, seloRotRel, 'rinsVer'), rep:seloRegistros(DB.relatoriosReposicao, seloRotRel, 'rrepVer'), sol:seloRegistros(DB.solicitacoesOP, seloRotRel, 'solOpVerSolicitacao')}; }
+function seloMateriaisPorAcao(mapaAcoes, fonte){
+  const lista = (fonte && fonte.materiais) || [];
+  const f = lista.filter(m=>mapaAcoes(m));
+  return {cab:['Código','Material','UM','Estoque atual','Segurança'], linhas:f.slice(0,12).map(m=>[m.codigo, m.nome, m.uom, fmtL(m.estoqueAtual), fmtL(m.seguranca)]), total:f.length};
+}
+const SELO_REGRAS = [
+  [/OP solicitada\s*(SOLOP-\d+)/i, (m,c)=>{ const s = (DB.solicitacoesOP||[]).find(x=>x.numero===m[1]), p = seloLinhaDoPlano(c.tr);
+    return {oque:`Esta linha do plano está na solicitação de ordem de produção ${m[1]}${s?`, registrada em ${dhImp(s.ts)} por ${s.usuario||'—'}`:''}. O selo mostra que a OP desta linha já foi pedida e evita pedir duas vezes.`,
+      resumo: s ? [['Solicitação',s.numero+' ('+s.status+')'],['Itens na solicitação',s.itens.length],['Linhas marcadas',s.totalLinhas],['Litros',fmtL(s.totalLitros)]].concat(p?[['Solicitado nesta linha',fmtL(p.opSolicitadaQty||0)+' un.'],['Quantidade atual da linha',fmtL(p.batchUnits)+' un.']]:[]) : [],
+      itens: s ? {cab:['Código','Descrição','Quantidade','Litros'], linhas:s.itens.slice(0,12).map(i=>[i.itemCode,i.descricao,fmtL(i.qty),fmtL(i.litros)]), total:s.itens.length} : null,
+      relatorios: s ? [{rot:seloRotRel(s), fn:`solOpVerSolicitacao('${s.id}')`}] : [],
+      acao:'Envie a solicitação ao P&D / Laboratório e, quando a OP for criada no SAP, informe o Nº OP na linha. Para tirar o selo desta linha, use o ✕ ao lado (se tiver permissão).', it:'IT-PCP-018 e IT-PCP-021'}; }],
+  [/qtd\.? alterada/i, (m,c)=>{ const p = seloLinhaDoPlano(c.tr);
+    return {oque:'A quantidade desta linha mudou depois de a solicitação de OP ser registrada: a OP pedida não bate mais com o plano.', resumo:p?[['Solicitada',fmtL(p.opSolicitadaQty||0)+' un.'],['Quantidade atual',fmtL(p.batchUnits)+' un.'],['Diferença',fmtL((p.batchUnits||0)-(p.opSolicitadaQty||0))+' un.'],['Solicitação',p.opSolicitacaoNo||'—']]:[],
+      relatorios:p&&p.opSolicitacao?[{rot:'Solicitação '+(p.opSolicitacaoNo||''), fn:`solOpVerSolicitacao('${p.opSolicitacao}')`}]:[], acao:'Se a diferença importa, cancele a solicitação e gere uma nova, ou remova a marca da linha e solicite as linhas recalculadas.', it:'IT-PCP-018'}; }],
+  [/^(registrada|registrado|cancelada)$/i, (m,c)=>{ const n = (c.trTexto.match(/(SOLOP|RINS|RREP)-\d{4}/)||[])[0], st = m[1].toLowerCase();
+    const col = n && {SOLOP:['solicitacoesOP','solOpVerSolicitacao'], RINS:['relatoriosInsumos','rinsVer'], RREP:['relatoriosReposicao','rrepVer']}[n.slice(0,n.indexOf('-'))];
+    const r = col ? (DB[col[0]]||[]).find(x=>x.numero===n) : null;
+    return {oque: st==='cancelada' ? 'Solicitação cancelada: as linhas dela voltaram a ficar sem a marca de OP solicitada. O registro continua no histórico.' : 'Registro gravado no histórico: fica guardado, com data, hora e usuário, e pode ser reaberto e exportado.',
+      resumo: r ? [['Registro',r.numero],['Data e hora',dhImp(r.ts)],['Usuário',r.usuario||'—']].concat(r.itens?[['Itens',r.itens.length]]:[]) : [], relatorios: r ? [{rot:seloRotRel(r), fn:`${col[1]}('${r.id}')`}] : [],
+      acao: st==='cancelada' ? 'Gere uma nova solicitação se ainda precisar das OPs.' : 'Use o botão Ver para abrir o registro, ou exporte em Excel, PDF ou CSV.', it: n && n.startsWith('SOLOP') ? 'IT-PCP-018' : (n && n.startsWith('RINS') ? 'IT-PCP-019' : (n ? 'IT-PCP-020' : ''))}; }],
+  [/^(Planejado|Em produção|Concluído|Cancelado|Programado|Confirmado)$/i, (m,c)=>{ const p = seloLinhaDoPlano(c.tr); const n = (DB.plan||[]).filter(x=>(x.status||'Planejado').toLowerCase()===m[1].toLowerCase());
+    return {oque:`Status da linha do plano: "${m[1]}". Mostra em que ponto está a produção desta linha.`, resumo:[['Linhas do plano com este status',n.length]], itens:seloTabelaItens(n), acao:'Altere o status na Lista Mestre (campo Status) conforme a produção avançar.', it:'IT-PCP-009'}; }],
+  [/corante|enxofre/i, (m,c)=>{ const b = /corante e pacote|corante\+/i.test(c.texto)||(/corante/i.test(c.texto)&&/enxofre/i.test(c.texto)) ? 'corante+enxofre' : (/enxofre/i.test(c.texto)?'enxofre':'corante'); const n = (DB.plan||[]).filter(p=>p.bucket===b);
+    return {oque:`Classe de contaminação do item: "${bucketLabel(b)}". O plano isola essas classes: um recurso não mistura classes de contaminação no mesmo dia.`, resumo:[['Linhas do plano nesta classe',n.length]], itens:seloTabelaItens(n), acao:'Ao reprogramar, mantenha o isolamento (não coloque produtos de classes diferentes no mesmo recurso e dia) e preveja a limpeza de linha.', it:'IT-PCP-006'}; }],
+  [/^(Programada|Não Programada)$/i, (m)=>{ const tipo = /^Não/i.test(m[1]) ? 'Não Programada' : 'Programada', mot = (DB.motivosParada||[]).filter(x=>x.tipo===tipo), par = (DB.paradas||[]).filter(x=>x.tipo===tipo), min = par.reduce((s,x)=>s+(x.duracaoMin||0),0);
+    return {oque: tipo==='Programada' ? 'Parada planejada com antecedência (setup, manutenção preventiva, limpeza, refeição…). Conta como tempo parado, mas esperado.' : 'Parada que não estava prevista (quebra, falta de insumo ou de operador…). É a que mais pesa na disponibilidade da linha.',
+      resumo:[['Motivos cadastrados deste tipo',mot.length],['Paradas registradas',par.length],['Total parado',fmtL(min/60)+' h']], itens:{cab:['Motivo cadastrado','Paradas','Minutos'], linhas:mot.slice(0,12).map(x=>{ const ps = par.filter(y=>y.motivoId===x.id); return [x.nome, ps.length, ps.reduce((s,y)=>s+(y.duracaoMin||0),0)]; }), total:mot.length},
+      acao: tipo==='Programada' ? 'Confira se o tempo previsto foi respeitado e, se ocupar a linha, marque "Descontar da capacidade do dia".' : 'Investigue a causa das mais frequentes e registre o motivo certo de cada parada para a análise nos indicadores.', it:'IT-PCP-012'}; }],
+  [/^(Ativo|Desativado|Acesso total|Nenhuma tela|Aguardando liberação)$/i, (m)=>{ const us = (typeof ACESSO!=='undefined' && ACESSO.usuarios) || [], t = m[1].toLowerCase();
+    const f = us.filter(u=> t==='ativo' ? u.ativo!==false && !u.pendente : t==='desativado' ? u.ativo===false : t==='aguardando liberação' ? u.pendente : t==='acesso total' ? u.admin : (!u.admin && !Object.values(u.permissoes||{}).some(v=>v&&v!=='nenhum')));
+    return {oque:{'ativo':'Usuário com acesso liberado: pode entrar na ferramenta.','desativado':'Usuário bloqueado: não consegue entrar, mas o histórico dele fica preservado.','acesso total':'Administrador: vê todas as telas, edita tudo e gerencia usuários.','nenhuma tela':'Usuário sem permissão em nenhuma tela: entra, mas não vê nada.','aguardando liberação':'Conta criada que ainda espera a liberação do administrador.'}[t],
+      resumo:[['Usuários nesta situação',f.length]], itens:{cab:['Usuário','Nome'], linhas:f.slice(0,12).map(u=>[u.usuario, u.nome||'']), total:f.length}, acao:'Altere em Usuários e Permissões (somente administrador).', it:'IT-PCP-015'}; }],
+  [/^grupo\b|^Grupo ·/i, ()=>{ const g = DB.gruposReposicao||[];
+    return {oque:'Material de reposição que agrupa vários códigos de item (por exemplo, equivalentes) e é planejado como um só.', resumo:[['Grupos de reposição cadastrados',g.length]], itens:{cab:['Grupo','Itens do grupo'], linhas:g.slice(0,12).map(x=>[x.grupo||x.nome||x.id, (x.itens||x.membros||[]).length||'—']), total:g.length}, acao:'Para alterar os grupos, reimporte os Grupos de reposição em Importação de Dados.', it:'IT-PCP-002 e IT-PCP-017'}; }],
+  [/Baseado no Plano Mestre|Baseado nos pedidos em aberto/i, (m)=>{ const plano = /Plano Mestre/i.test(m[0]);
+    return {oque: plano ? 'A necessidade de insumos foi calculada sobre as linhas do Plano Mestre (o que está programado).' : 'Não há plano de produção: a necessidade foi calculada sobre os pedidos em aberto, sem data de produção.', resumo:[['Linhas no plano',(DB.plan||[]).length],['Pedidos em aberto',(DB.orders||[]).length]], acao: plano ? 'Nenhuma ação: a base é o plano atual.' : 'Gere o Plano Mestre para ver a necessidade por data.', it:'IT-PCP-003'}; }],
+  [/produção apontada/i, (m,c)=>{ const n = (DB.plan||[]).filter(p=>linhaTemProducao(p));
+    return {oque:'A linha já tem produção apontada. Por isso data, recurso, quantidade e exclusão ficam travados: só administrador altera, sempre com justificativa registrada no histórico da linha.', resumo:[['Linhas com produção apontada',n.length]], itens:seloTabelaItens(n), acao:'Para mudar a programação, peça a um administrador. Os apontamentos continuam editáveis.', it:'IT-PCP-007 e IT-PCP-010'}; }],
+  [/editado manualmente/i, ()=>{ const n = (DB.plan||[]).filter(p=>p.manual||p.qtdFixa);
+    return {oque:'A linha foi ajustada à mão (data, recurso ou quantidade). Ela é preservada e sinalizada para não se perder numa nova geração automática do plano.', resumo:[['Linhas ajustadas manualmente',n.length]], itens:seloTabelaItens(n), acao:'Confira se o ajuste ainda vale. Para devolver à geração automática, apague a linha e gere o plano de novo.', it:'IT-PCP-007'}; }],
+  [/data vencida/i, ()=>{ const hoje = todayISO(), v = (DB.comprasAbertas||[]).filter(x=>x.data && x.data<hoje);
+    return {oque:'A data prevista de chegada deste pedido de compra já passou. Pela regra escolhida, ele conta como chegando hoje.', resumo:[['Pedidos de compra com data vencida',v.length]], itens:{cab:['Pedido','Item','Quantidade','Data prevista'], linhas:v.slice(0,12).map(x=>[x.pedido,x.itemCode,fmtL(x.qty),fmtDate(x.data)]), total:v.length}, acao:'Confirme a nova data com o fornecedor e reimporte os pedidos de compra em aberto.', it:'IT-PCP-002 e IT-PCP-017'}; }],
+  [/Ruptura inevitável|Emitir pedido já|Emitir pedido até a data|Sem ação/i, (m)=>{ const ch = Object.keys(MAT_ACAO).find(k=>MAT_ACAO[k].rot.toLowerCase()===m[0].toLowerCase()), d = {ruptura_inevitavel:'O prazo de entrega não evita faltar material: mesmo pedindo hoje, a necessidade chega antes do material.', comprar_ja:'O pedido precisa ser emitido hoje para o material chegar a tempo.', comprar_ate:'O pedido pode esperar, mas precisa ser emitido até a data indicada.', ok:'O estoque e as entregas já programadas cobrem a necessidade do período.'};
+    return {oque:d[ch]||'Ação sugerida pelo planejamento de materiais.', resumo:[['Materiais com esta ação', ch&&MATERIAIS_ULTIMO ? seloMateriaisPorAcao(x=>x.acao===ch, MATERIAIS_ULTIMO).total : '—']], itens: ch&&MATERIAIS_ULTIMO ? seloMateriaisPorAcao(x=>x.acao===ch, MATERIAIS_ULTIMO) : null, relatorios:seloUltRel().rep, acao:{ruptura_inevitavel:'Compre em caráter de urgência ou antecipe uma entrega já programada, e avise o PCP e a produção.', comprar_ja:'Emita o pedido de compra hoje.', comprar_ate:'Programe a emissão do pedido até a data.', ok:'Nenhuma ação.'}[ch]||'', it:'IT-PCP-017'}; }],
+  [/Compra emergencial|Pedido a emitir|Reduzir \/ adiar|Não comprar|Emitir pedido hoje|Entrega gera excesso|Acima do máximo/i, (m)=>{ const ch = Object.keys(REPOS_ACAO).find(k=>REPOS_ACAO[k].rot.toLowerCase()===m[0].toLowerCase()) || ({'compra emergencial':'emergencial','pedido a emitir':'pedir_hoje','reduzir / adiar':'excesso_entrega','não comprar':'nao_comprar'})[m[0].toLowerCase().slice(0,18)], d = {emergencial:'O prazo de entrega não evita ficar abaixo do estoque de segurança: antecipe uma entrega já programada ou compre em caráter de urgência.', pedir_hoje:'O pedido precisa ser emitido hoje para chegar no dia em que o saldo cruzaria o estoque de segurança.', pedir_ate:'O pedido pode esperar até a data indicada.', excesso_entrega:'As entregas programadas deixam o saldo acima do estoque máximo: reduza ou adie a entrega.', nao_comprar:'O estoque fica acima do máximo no período analisado: não compre.'};
+    const mats = (REPOS_ULTIMO&&REPOS_ULTIMO.materiais)||[], f = mats.filter(x=>x.plano&&x.plano.acao===ch);
+    return {oque:d[ch]||'Ação sugerida pelo Plano de Reposição.', resumo:[['Materiais com esta ação',ch&&REPOS_ULTIMO?f.length:'—']], itens: ch&&REPOS_ULTIMO ? {cab:['Código','Material','UM','Estoque atual','Segurança'], linhas:f.slice(0,12).map(x=>[x.codigo,x.nome,x.uom,fmtL(x.estoqueAtual),fmtL(x.seguranca)]), total:f.length} : null, relatorios:seloUltRel().rep, acao:{emergencial:'Compre em urgência ou antecipe a entrega.', pedir_hoje:'Emita o pedido hoje.', pedir_ate:'Programe a emissão até a data.', excesso_entrega:'Negocie a redução ou o adiamento da entrega.', nao_comprar:'Não emita pedidos deste material por enquanto.'}[ch]||'Gere o relatório de reposição para levar a lista às compras.', it:'IT-PCP-020'}; }],
+  [/^(ERP|ERP \+ estimado|Estimado)$/i, (m)=>{ const t = m[1].toLowerCase();
+    return {oque:{'erp':'A quantidade vem das ordens de produção importadas do ERP (dado real).','erp + estimado':'Parte da quantidade vem do ERP e parte foi estimada pela receita (faltou a OP de granel ou de envase).','estimado':'Não havia OP importada: a quantidade foi estimada pela receita do item.'}[t], resumo:[['OPs do ERP importadas',(DB.ordensERP||[]).length]], relatorios:seloUltRel().ins, acao: t==='erp' ? 'Nenhuma ação.' : 'Informe o Nº OP e o Nº OP Granel na Lista Mestre e importe as OPs do ERP para trocar a estimativa por dado real.', it:'IT-PCP-019'}; }],
+  [/diverg|fora da importa|sem OP|sem receita|suspeito|granel em mais/i, (m,c)=>({oque:'Pendência do relatório de insumos: algo impediu usar o dado do ERP ou exige conferência (divergência de quantidade, OP fora da importação, componente sem receita, código suspeito…).', relatorios:seloUltRel().ins, acao:'Leia a mensagem da pendência, corrija o Nº OP na Lista Mestre ou reimporte as OPs do ERP, e gere o relatório de novo.', it:'IT-PCP-019'})],
+  [/^(Novo|Atualizado|Erro|Aviso)$/i, (m)=>({oque:{'novo':'Linha do arquivo que criou um registro novo.','atualizado':'Linha do arquivo que atualizou um registro que já existia.','erro':'Linha do arquivo que NÃO entrou por causa de um erro.','aviso':'Linha que entrou, mas pede conferência.'}[m[1].toLowerCase()], resumo:[['Importações registradas',(DB.historicoImportacoes||[]).length]], acao: /^(Erro|Aviso)$/i.test(m[1]) ? 'Abra o Histórico de importações e clique no selo de Resultado para ver o motivo e a ação de cada erro.' : 'Nenhuma ação.', it:'IT-PCP-002'})],
+  [/OTIF|Concluído com atraso|Vencido e incompleto|A vencer/i, (m,c)=>{ const t = c.texto.toLowerCase(); const k = /otif/.test(t) ? 'otif' : /concluído com atraso/.test(t) ? 'atraso' : /vencido/.test(t) ? 'venc' : /risco/.test(t) ? 'risco' : 'ok';
+    return {oque:{otif:'Pedido entregue no prazo e completo (OTIF: On Time In Full).', atraso:'Pedido concluído, mas depois da data de vencimento.', venc:'A data de vencimento já passou e o pedido ainda não foi concluído por completo.', risco:'O pedido ainda não venceu, mas o plano atual não fecha a tempo (ou ainda falta plano para ele).', ok:'O pedido ainda não venceu e o plano atual termina antes do vencimento.'}[k],
+      resumo:c.trTexto?[['Linha onde aparece',c.trTexto.slice(0,160)]]:[], acao:{otif:'Nenhuma ação.', atraso:'Entenda a causa do atraso (estoque, capacidade, prioridade) e registre o aprendizado.', venc:'Priorize a conclusão, reprograme o que faltar e confirme o novo prazo com o cliente.', risco:'Antecipe ou reprograme a produção para fechar antes do vencimento, ou avise o cliente.', ok:'Acompanhe: nenhuma ação por enquanto.'}[k], it:'IT-PCP-014'}; }],
+  [/^(Atrasado|Falta|OK)$/i, (m,c)=>({oque:{'atrasado':'Entrega ou prazo vencido em relação à data combinada.','falta':'Não há estoque ou produção suficiente para atender.','ok':'Atende: nada a fazer.'}[m[1].toLowerCase()], resumo:[['Contexto',c.trTexto.slice(0,120)||'—']], acao:{'atrasado':'Reprograme ou confirme a nova data com o cliente.','falta':'Veja a necessidade e decida entre produzir, comprar ou renegociar.','ok':'Nenhuma ação.'}[m[1].toLowerCase()], it:''})],
+  [/^(Sim|Não)$/i, (m,c)=>{ const sim = /^Sim$/i.test(m[1]), par = (document.querySelector('.page.active')||{}).id==='page-paradas';
+    return {oque: par ? (sim ? 'Esta parada DESCONTA da capacidade do recurso no dia (a capacidade é reduzida pelos minutos parados, em uma operação de 24h por dia).' : 'Esta parada NÃO desconta da capacidade do recurso: ela só entra nos indicadores de tempo parado.') : `Resposta "${m[1]}" do campo da coluna desta linha.`,
+      resumo:[['Paradas que descontam da capacidade',(DB.paradas||[]).filter(x=>x.descontarCapacidade).length],['Paradas registradas',(DB.paradas||[]).length]].concat(c.trTexto?[['Linha onde aparece',c.trTexto.slice(0,140)]]:[]), acao: par ? 'Para mudar, edite a parada (marque ou desmarque "Descontar da capacidade do dia").' : 'Para mudar, edite o registro na tela de origem.', it: par ? 'IT-PCP-012' : ''}; }],
+  [/^\d+$/, (m,c)=>({oque:'Quantidade de registros do bloco ao lado.', resumo:[['Valor',m[0]],['Bloco',c.paiTexto.slice(0,120)]], acao:'Abra o bloco para ver a lista.', it:''})],
+];
+function seloPedidoStatus(texto){ const o = (DB.orders||[]).filter(x=>x.status===texto); if(!o.length) return null;
+  return {oque:`Situação do pedido na carteira: "${texto}", informada na importação de pedidos.`, resumo:[['Pedidos com esta situação',o.length],['Quantidade total',fmtL(o.reduce((s,x)=>s+(x.qty||0),0))]], itens:{cab:['Pedido','Cliente','Item','Quantidade','Entrega'], linhas:o.slice(0,12).map(x=>[x.orderNo,x.customer,x.itemCode,fmtL(x.qty),x.dueDate?fmtDate(x.dueDate):'—']), total:o.length}, acao:'Para atualizar a situação, reimporte os pedidos (Importação de Dados) e confira a carteira.', it:'IT-PCP-002'}; }
+function seloInfo(b){
+  const texto = (b.textContent||'').replace(/\s+/g,' ').trim(), tr = b.closest('tr'), pai = b.parentElement;
+  const c = {el:b, texto:texto.replace(/\s*▸\s*$/,''), tr, trTexto:tr?tr.textContent.replace(/\s+/g,' ').trim():'', paiTexto:pai?pai.textContent.replace(/\s+/g,' ').trim():''};
+  const cls = [...b.classList].find(x=>SELO_CLS[x]) || 'info';
+  let info = null;
+  try{ for(const [rx,fn] of SELO_REGRAS){ const m = c.texto.match(rx); if(m){ info = fn(m,c); break; } } if(!info) info = seloPedidoStatus(c.texto); }catch(e){ console.warn('selo:', e); }
+  if(!info){ const g = SELO_CLS[cls];
+    info = {oque:`Selo "${c.texto}". ${g[1]}`, resumo:[['Tipo do selo',g[0]],...(c.trTexto?[['Linha onde aparece',c.trTexto.slice(0,160)]]:[])], acao:{ok:'Nenhuma ação necessária.', warn:'Confira o item ou o registro onde o selo aparece e decida se precisa agir.', danger:'Corrija o problema apontado pelo selo; se persistir, veja a IT correspondente.', info:'Nenhuma ação necessária.', exc:'Avalie reduzir ou adiar entregas.'}[cls], it:'', generico:true}; }
+  return {titulo:c.texto, cls, pagina:(document.querySelector('.page.active')||{}).id||'', ...info};
+}
+function fecharSeloInfo(){ const o = document.getElementById('seloInfoOverlay'); if(o) o.remove(); }
+function abrirSeloInfo(b){
+  const i = seloInfo(b); fecharSeloInfo();
+  const o = document.createElement('div'); o.id = 'seloInfoOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.5);z-index:99500;display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow:auto';
+  const sec = (t, h, k) => h ? `<div data-sec="${k||''}" style="margin-top:14px"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${t}</div>${h}</div>` : '';
+  const tab = it => it && it.linhas && it.linhas.length ? `<div class="tbl-wrap" style="max-height:240px"><table class="data"><thead><tr>${it.cab.map(x=>`<th>${acessoEsc(x)}</th>`).join('')}</tr></thead><tbody>${it.linhas.map(l=>`<tr>${l.map(x=>`<td style="white-space:normal">${acessoEsc(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${it.total>it.linhas.length?`<div class="card-sub" style="margin-top:4px">e mais ${it.total-it.linhas.length}…</div>`:''}` : '';
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:760px;width:100%;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Resumo do selo</div><h3 style="margin:2px 0 0"><span class="badge ${i.cls}" style="cursor:default">${acessoEsc(i.titulo)}</span></h3></div><button class="btn btn-sm btn-ghost" onclick="fecharSeloInfo()">✕ Fechar</button></div>
+    ${sec('O que é', `<div style="font-size:13.5px;line-height:1.55">${acessoEsc(i.oque)}</div>`,'oque')}
+    ${sec('Em números', i.resumo&&i.resumo.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap">${i.resumo.map(r=>`<div style="border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:120px"><div style="font-size:10.5px;color:var(--muted)">${acessoEsc(r[0])}</div><div style="font-weight:800">${acessoEsc(r[1])}</div></div>`).join('')}</div>` : '', 'numeros')}
+    ${sec('Itens', tab(i.itens), 'itens')}
+    ${sec('Relatórios e registros', i.relatorios&&i.relatorios.length ? i.relatorios.map(r=>`<div style="margin:3px 0"><button class="btn btn-sm" onclick="fecharSeloInfo();${r.fn}">Abrir</button> ${acessoEsc(r.rot)}</div>`).join('') : '', 'relatorios')}
+    ${sec('Ação sugerida', i.acao ? `<div style="font-size:13.5px;line-height:1.55;background:#FFF8DB;border-left:4px solid var(--brand-yellow);padding:8px 12px;border-radius:6px">${acessoEsc(i.acao)}</div>` : '', 'acao')}
+    ${i.it ? `<div class="card-sub" style="margin-top:12px">Saiba mais: ${acessoEsc(i.it)}.</div>` : ''}
+    ${i.generico ? '<div class="card-sub" style="margin-top:8px">Este selo não tem explicação própria cadastrada: a explicação vem da cor e do contexto da linha.</div>' : ''}
+  </div>`;
+  document.body.appendChild(o); o.addEventListener('click', e=>{ if(e.target===o) fecharSeloInfo(); });
+  return i;
+}
+// ouvinte global (fase de captura): qualquer selo sem ação própria abre o resumo
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('.badge'); if(!b) return;
+  if(b.getAttribute('onclick') || b.closest('button, a, label, summary, select, option, #seloInfoOverlay .btn')) return;   // preserva as ações próprias
+  if(b.closest('#seloInfoOverlay') && b.parentElement && b.parentElement.tagName==='H3') return;                              // o selo do título do próprio resumo
+  e.stopPropagation(); abrirSeloInfo(b);
+}, true);
+document.addEventListener('mouseover', e=>{ const b = e.target.closest && e.target.closest('.badge'); if(b && !b.title && !b.getAttribute('onclick')) b.title = 'Clique para ver o resumo deste selo'; }, true);
+
+/* =========================================================================
    COLUNAS CONGELADAS — nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista.
    A tabela continua a mesma: só as colunas escolhidas ganham "position: sticky" (classe .frz) com o deslocamento certo, e o cabeçalho também.
    Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho e quando a tabela passa a ser exibida.
@@ -9278,7 +9545,7 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-08.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-09.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
 const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax'];   // viram registros da coleção "config"
