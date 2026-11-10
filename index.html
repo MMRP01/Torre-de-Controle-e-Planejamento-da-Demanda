@@ -444,6 +444,21 @@ table.rp-grade td.rp-ref{color:var(--muted);}
 .badge.exc{background:#FCE4D6;color:#9A3B00;}
 #rpTip{position:fixed;z-index:9999;display:none;pointer-events:none;background:#fff;border:1px solid var(--line-strong);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:8px 10px;font-size:12px;line-height:1.5;max-width:330px;}
 #rpTip .l{display:flex;justify-content:space-between;gap:18px;} #rpTip .h{color:var(--muted);margin-bottom:2px;} #rpTip hr{border:0;border-top:1px solid #e3e5e8;margin:4px 0;}
+
+/* ---- tabelas em telas menores: chave das colunas fixas e menu recolhível ---- */
+.frz-bar{display:flex;justify-content:flex-end;margin:0 0 4px;font-size:11.5px;color:var(--muted);}
+.frz-bar select{font-size:11.5px;padding:1px 4px;margin-left:4px;}
+#btnRecolherMenu{margin:10px 16px 0;padding:7px 10px;background:transparent;border:1px solid #555;color:#D5D8DC;border-radius:8px;font-size:12px;cursor:pointer;text-align:left;}
+#btnRecolherMenu:hover{background:rgba(255,255,255,.08);}
+@media(max-width:900px){ #btnRecolherMenu{display:none;} }
+body.menu-recolhido{--bar-h:40px;}
+body.menu-recolhido #sidebar{position:fixed;left:0;top:0;bottom:0;height:100%;width:260px;max-width:82vw;z-index:200;transform:translateX(-105%);transition:transform .2s ease;}
+body.menu-recolhido.nav-open #sidebar{transform:none;box-shadow:6px 0 30px rgba(0,0,0,.5);}
+body.menu-recolhido.nav-open #navBackdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;}
+body.menu-recolhido #mobileBar{display:flex;position:sticky;top:0;z-index:90;height:40px;align-items:center;gap:12px;background:var(--ink);color:#fff;border-bottom:3px solid var(--accent);margin:-26px -32px 12px -32px;padding:0 16px;}
+body.menu-recolhido #mobileBar button{background:transparent;border:1px solid #555;color:#fff;border-radius:8px;font-size:18px;width:42px;height:30px;line-height:1;cursor:pointer;}
+body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@media print{ .frz-bar,#btnRecolherMenu,body.menu-recolhido #mobileBar{display:none !important;} }
 </style>
 </head>
 <body>
@@ -455,6 +470,7 @@ table.rp-grade td.rp-ref{color:var(--muted);}
       <span class="tag" style="display:flex;margin-top:10px"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAuCAMAAABZAGpeAAAKMWlDQ1BJQ0MgUHJvZmlsZQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErAkAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/Nm98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L42VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNTZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HPz03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqyvnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4knQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVbyBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99C8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPqQBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWgETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKFWJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6FXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgKP4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVFMVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZnYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGmsVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAncFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4S7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0gk8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFysmK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcULMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkVioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eaoeajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6ckjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQOVcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0Cfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJWMw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXmu82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1vnW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055qH2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sDD30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEPgs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGETURDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVHEtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2Td6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsytTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/MmNzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfrry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3NrhsqNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9WzFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNldZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgajhop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXyYMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+lXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3qID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnWk5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9mXpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+6TMXDkAAAA/UExURbgAGMcADcIAFb4AFb8AFb4AFcIAFgAAALUABf8AAMIAFcIAFcEAFX8AAMIAFcMAFAAAAAAAAAAAAAAAAAAAAFBNHI4AAAAQdFJOUx8PU2Hlnv0ABwGxy5ACby3uGeScAAABxUlEQVR42pVW65qEIAhFawK8vv/bLlpbIW7T8mO++YwDKIcL4E2I5Kf6FOImEkMqVQ4y3XXg+svyoZaue0lMgmGeAeSwhm0iwYtvCyCkqXqHAGbWAHFatgcpPYILkJHS9iiBDgQc+mH7IvFAQI8HjH4IE0Q+AITma0K2CEfcAYSLvSNlTBMrDUAIE/2WRoNYmrJkPhp92BNvEJQZyCQgHXmdIMQ1MKz68HPyQLI53ryF5If3ZDqpxjyGuwhgMEKcb3xHGswhOH3ikVWFjE/uwE8vfEN8tEHQD+Fy1oDMOqgE8dFBc6FMRp3lyjwCmKtSUYAVjX4rnPVPQLARGS6/AaQ/ARHz/zysMLsEqofUzzp5pazZEXXiyiwPi06cpoYzLkhH5AfyLegeHQj5BnqDRoz8FnqP/BXEVUAOpYJWxX7QJuRjbXNCyoh6F9IVt4JpAoJIZ1CuzJqAbTNbKBUq+GS7Ze6NbNleSu96jb/pnX5rfB1ALr7R37kMO11eIAJ0FsBeVN8RYR8Px8jiryMoHfrnUMRvQ5FZj11pkBAewiE72OXIzwd7xVsh3leHtgukcXVo6wZNV4fmpN2rlms58fV3ZTnlB4NXOgPvq0lWAAAAAElFTkSuQmCC" alt="" width="12" height="12"> capacidade em litros</span>
     </div>
     <nav id="navContainer"></nav>
+    <button id="btnRecolherMenu" type="button" title="Esconde o menu para dar mais espaço às tabelas. Ele volta pelo botão ☰ no alto da tela.">◀ Recolher o menu</button>
     <div class="side-foot">Base atualizada em<br><strong id="sideDate" style="color:#d9d9d6"></strong></div>
   </aside>
 
@@ -476,7 +492,8 @@ table.rp-grade td.rp-ref{color:var(--muted);}
         </div>
       </div>
 
-      <div class="grid grid-4" id="necKpis"></div>
+      <div class="opcao-processo-host"></div>
+    <div class="grid grid-4" id="necKpis"></div>
 
       <div class="filters">
         <div class="f"><label>Data de (plano ou vencimento)</label><input type="date" id="necDe" onchange="renderNecessidades()"></div>
@@ -513,10 +530,11 @@ table.rp-grade td.rp-ref{color:var(--muted);}
           <h2>Planejamento de Materiais</h2>
           <div class="desc">Projeção diária do estoque de cada insumo a partir do plano de produção (só o que ainda falta produzir), das entregas programadas e do estoque de segurança — com alerta de falta, data limite para comprar e reposição sugerida. Atualiza sozinha quando o plano muda.</div>
         </div>
-        <div class="head-actions"><button class="btn" onclick="renderMateriais()">↻ Recalcular</button><button class="btn" onclick="exportMateriaisCsv()">⬇ Exportar (.csv)</button></div>
+        <div class="head-actions"><button class="btn" onclick="renderMateriais()">↻ Recalcular</button><button class="btn" onclick="exportMateriaisCsv()">⬇ Exportar (.csv)</button><button class="btn btn-primary" onclick="abrirSugestaoSeguranca()">🛡 Sugestão de estoque de segurança</button></div>
       </div>
       <div class="note" id="matAviso" style="margin-bottom:14px"></div>
-      <div class="grid grid-4" id="matKpis"></div>
+      <div class="opcao-processo-host"></div>
+    <div class="grid grid-4" id="matKpis"></div>
       <div class="filters">
         <div class="f"><label>Situação</label><select id="matAcao" onchange="renderMateriais()">
           <option value="ruptura_inevitavel">Ruptura inevitável</option><option value="comprar_ja">Emitir pedido já</option><option value="comprar_ate">Emitir pedido até a data</option><option value="ok">Sem ação</option></select></div>
@@ -551,10 +569,12 @@ table.rp-grade td.rp-ref{color:var(--muted);}
         <div class="head-actions"><button class="btn" onclick="renderReposicao()">↻ Recalcular</button><button class="btn" onclick="exportReposicaoCsv()">⬇ Exportar lista (.csv)</button><button class="btn btn-primary" onclick="abrirRelatorioReposicao()">📄 Relatório de reposição</button></div>
       </div>
       <div class="note" id="rpAviso" style="margin-bottom:14px"></div>
-      <div class="grid grid-4" id="rpKpis"></div>
+      <div class="opcao-processo-host"></div>
+    <div class="grid grid-4" id="rpKpis"></div>
       <div class="filters">
         <div class="f"><label>Ação do plano</label><select id="rpAcao" onchange="renderReposicao()">
           <option value="emergencial">Compra emergencial / antecipar</option><option value="pedir_hoje">Emitir pedido hoje</option><option value="pedir_ate">Emitir pedido até a data</option><option value="excesso_entrega">Entrega gera excesso</option><option value="nao_comprar">Acima do máximo: não comprar</option><option value="ok">Sem ação</option></select></div>
+      <div class="f"><label>Legenda (cor da célula)</label><select id="rpLegenda" onchange="renderReposicao()"><option value="rp-falta">Não atende (falta)</option><option value="rp-abaixo">Atende, mas abaixo do estoque de segurança</option><option value="rp-ok">Atende</option><option value="rp-exc">Acima do estoque máximo (excesso)</option></select></div>
         <div class="f"><label>Tipo</label><select id="rpTipo" data-unico onchange="renderReposicao()"><option value="">Itens e grupos</option><option value="grupo">Só grupos de reposição</option><option value="item">Só itens</option></select></div>
         <div class="f"><label>Grupo do cadastro</label><select id="rpGrupo" onchange="renderReposicao()"></select></div>
         <div class="f"><label>Material (código ou descrição)</label><input type="text" id="rpBusca" placeholder="digite para buscar" autocomplete="off" oninput="renderReposicao()"></div>
@@ -600,7 +620,8 @@ table.rp-grade td.rp-ref{color:var(--muted);}
         <div class="head-actions"><button class="btn" onclick="renderNecessidadesGrupo()">↻ Recalcular</button></div>
       </div>
 
-      <div class="grid grid-4" id="ngKpis"></div>
+      <div class="opcao-processo-host"></div>
+    <div class="grid grid-4" id="ngKpis"></div>
 
       <div class="filters">
         <div class="f"><label>Grupo</label><select id="ngFiltroGrupo" onchange="renderNecessidadesGrupo()"></select></div>
@@ -780,7 +801,7 @@ table.rp-grade td.rp-ref{color:var(--muted);}
     <!-- ============ ITENS PLANEJADOS POR DIA ============ -->
     <section class="page" id="page-visaodia">
       <div class="page-head">
-        <div><h2>Itens Planejados por Dia</h2><div class="desc">Matriz por item: total em pedidos, quanto falta programar e a quantidade planejada em cada dia do período — Qtd. e Litros lado a lado, como uma planilha de programação.</div></div>
+        <div><h2>Itens Planejados por Dia</h2><div class="desc">Matriz por item: total em pedidos, quanto falta programar e a quantidade planejada em cada dia do período — Qtd. e Litros lado a lado, como uma planilha de programação.</div><div class="desc" id="vdAtualizacao" style="margin-top:4px"></div></div>
         <div class="head-actions"><button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button><button class="btn" onclick="exportVisaoDiaCsv()">⬇ Exportar (.csv)</button></div>
       </div>
 
@@ -1311,7 +1332,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-09","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-10","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -1682,6 +1703,7 @@ function clearNecFiltros(){
   renderNecessidades();
 }
 function renderNecessidades(){
+  renderOpcaoProcesso();
   const de = document.getElementById('necDe').value;
   const ate = document.getElementById('necAte').value;
   const need = explodeNeeds(de, ate);
@@ -1700,7 +1722,7 @@ function renderNecessidades(){
   const rows = Object.keys(need).map(code=>{
     const it = itemByCode(code);
     const req = need[code];
-    const falta = Math.max(0, req - (it?.stock||0));
+    const falta = Math.max(0, req - (it ? estoqueCalc(it) : 0));
     return {code, it, req, falta};
   }).filter(r=>r.it)
     .filter(r=> !fg.length || fg.includes(r.it.group))
@@ -1721,15 +1743,15 @@ function renderNecessidades(){
 
   const tbl = document.getElementById('tblNecessidades');
   tbl.innerHTML = `<thead><tr><th>Código</th><th>Insumo</th><th>Grupo</th><th>Subgrupo</th><th>UM</th>
-    <th>Necessário</th><th>Estoque</th><th>Falta</th><th>Litros necessários</th><th>Status</th></tr></thead>
+    <th>Necessário</th><th>Estoque</th><th>Em processo</th><th>Falta</th><th>Litros necessários</th><th>Status</th></tr></thead>
     <tbody>${rows.length? rows.map(r=>`
       <tr>
         <td class="mono">${r.it.code}</td><td>${r.it.name}</td><td>${r.it.group}</td><td>${r.it.subgroup}</td><td>${r.it.uom}</td>
-        <td class="mono">${fmtL(r.req)}</td><td class="mono">${fmtL(r.it.stock)}</td>
+        <td class="mono">${fmtL(r.req)}</td><td class="mono">${fmtL(r.it.stock)}</td><td class="mono">${estoqueProcesso(r.it)?fmtL(estoqueProcesso(r.it)):'—'}</td>
         <td class="mono">${r.falta>0?fmtL(r.falta):'—'}</td>
         <td class="mono">${fmtL(r.req*r.it.litersPerUnit)}</td>
         <td>${r.falta>0?'<span class="badge danger">Falta</span>':'<span class="badge ok">OK</span>'}</td>
-      </tr>`).join('') : `<tr><td colspan="10"><div class="empty">Nenhum insumo neste filtro.</div></td></tr>`}
+      </tr>`).join('') : `<tr><td colspan="11"><div class="empty">Nenhum insumo neste filtro.</div></td></tr>`}
     </tbody>`;
 
   // aditivos por subgrupo
@@ -1755,12 +1777,12 @@ function computeNeedsByGroup(){
     const it = itemByCode(code);
     if(!it) return;
     const reqLiters = need[code]*it.litersPerUnit;
-    const stockLiters = it.stock*it.litersPerUnit;
+    const stockLiters = estoqueCalc(it)*it.litersPerUnit, fisLiters = it.stock*it.litersPerUnit, procLiters = estoqueProcesso(it)*it.litersPerUnit;
     const faltaLiters = Math.max(0, reqLiters-stockLiters);
     const key = it.group+'||'+it.subgroup;
-    if(!map[key]) map[key] = {group:it.group, subgroup:it.subgroup, reqLiters:0, stockLiters:0, faltaLiters:0, itemCodes:new Set()};
+    if(!map[key]) map[key] = {group:it.group, subgroup:it.subgroup, reqLiters:0, stockLiters:0, fisLiters:0, procLiters:0, faltaLiters:0, itemCodes:new Set()};
     map[key].reqLiters += reqLiters;
-    map[key].stockLiters += stockLiters;
+    map[key].stockLiters += stockLiters; map[key].fisLiters += fisLiters; map[key].procLiters += procLiters;
     map[key].faltaLiters += faltaLiters; // soma da falta de cada item (não recalculada sobre o total agregado)
     map[key].itemCodes.add(code);
   });
@@ -1780,7 +1802,7 @@ function abrirRelatorioCompras(){
     const it = itemByCode(code);
     if(!it) return null;
     const req = need[code];
-    const falta = Math.max(0, req - it.stock);
+    const falta = Math.max(0, req - estoqueCalc(it));
     return {code, it, req, falta};
   }).filter(r=> r && r.falta>0.001)
     .filter(r=> !fg.length || fg.includes(r.it.group))
@@ -1791,7 +1813,7 @@ function abrirRelatorioCompras(){
 
   purchaseReportRows = rows.map(r=>({
     code: r.code, name: r.it.name, group: r.it.group, subgroup: r.it.subgroup, uom: r.it.uom,
-    necessario: r.req, estoque: r.it.stock, falta: r.falta,
+    necessario: r.req, estoque: r.it.stock, emProcesso: estoqueProcesso(r.it), falta: r.falta,
     qtdComprar: Math.ceil(r.falta*100)/100, observacao: '',
   }));
   openPurchaseReportModal(de, ate);
@@ -1823,10 +1845,10 @@ function renderPurchaseReportBody(){
   const body = document.getElementById('purchaseReportBody');
   if(!body) return;
   body.innerHTML = `<div class="tbl-wrap"><table class="data">
-    <thead><tr><th>Código</th><th>Descrição</th><th>Subgrupo</th><th>UM</th><th>Necessário</th><th>Estoque</th><th>Falta</th><th>Qtd. a Comprar</th><th>Observação</th></tr></thead>
+    <thead><tr><th>Código</th><th>Descrição</th><th>Subgrupo</th><th>UM</th><th>Necessário</th><th>Estoque</th><th>Em processo</th><th>Falta</th><th>Qtd. a Comprar</th><th>Observação</th></tr></thead>
     <tbody>${purchaseReportRows.map((r,i)=>`<tr>
       <td class="mono">${r.code}</td><td>${r.name}</td><td>${r.subgroup}</td><td>${r.uom}</td>
-      <td class="mono">${fmtL(r.necessario)}</td><td class="mono">${fmtL(r.estoque)}</td>
+      <td class="mono">${fmtL(r.necessario)}</td><td class="mono">${fmtL(r.estoque)}</td><td class="mono">${r.emProcesso?fmtL(r.emProcesso):'—'}</td>
       <td class="mono" style="color:var(--danger);font-weight:700">${fmtL(r.falta)}</td>
       <td><input type="number" step="any" value="${r.qtdComprar}" style="width:95px" onchange="purchaseReportRows[${i}].qtdComprar=parseFloat(this.value)||0"></td>
       <td><input type="text" value="${r.observacao}" placeholder="opcional..." style="width:150px" onchange="purchaseReportRows[${i}].observacao=this.value"></td>
@@ -1866,11 +1888,11 @@ function imprimirRelatorioCompras(){
     Emitido em ${fmtDate(todayISO())}
   </div>
   <table>
-    <thead><tr><th>Código</th><th>Descrição</th><th>Subgrupo</th><th>UM</th><th>Necessário</th><th>Estoque</th><th>Falta</th><th>Qtd. a Comprar</th><th>Observação</th></tr></thead>
+    <thead><tr><th>Código</th><th>Descrição</th><th>Subgrupo</th><th>UM</th><th>Necessário</th><th>Estoque</th><th>Em processo</th><th>Falta</th><th>Qtd. a Comprar</th><th>Observação</th></tr></thead>
     <tbody>
       ${purchaseReportRows.map(r=>`<tr>
         <td>${r.code}</td><td>${r.name}</td><td>${r.subgroup}</td><td>${r.uom}</td>
-        <td>${fmtL(r.necessario)}</td><td>${fmtL(r.estoque)}</td><td>${fmtL(r.falta)}</td>
+        <td>${fmtL(r.necessario)}</td><td>${fmtL(r.estoque)}</td><td>${r.emProcesso?fmtL(r.emProcesso):'—'}</td><td>${fmtL(r.falta)}</td>
         <td><strong>${fmtL(r.qtdComprar)}</strong></td><td>${r.observacao||''}</td>
       </tr>`).join('')}
     </tbody>
@@ -1899,6 +1921,7 @@ function imprimirRelatorioCompras(){
 }
 
 function renderNecessidadesGrupo(){
+  renderOpcaoProcesso();
   const all = computeNeedsByGroup();
   const groups = [...new Set(DB.items.map(i=>i.group))];
   populateSelect(document.getElementById('ngFiltroGrupo'), groups, true);
@@ -1928,14 +1951,14 @@ function renderNecessidadesGrupo(){
   `;
 
   document.getElementById('tblNecGrupo').innerHTML = `<thead><tr>
-    <th>Grupo</th><th>Subgrupo</th><th>Itens no subgrupo</th><th>Necessário (L)</th><th>Estoque (L)</th><th>Falta (L)</th><th>Status</th></tr></thead>
+    <th>Grupo</th><th>Subgrupo</th><th>Itens no subgrupo</th><th>Necessário (L)</th><th>Estoque (L)</th><th>Em processo (L)</th><th>Falta (L)</th><th>Status</th></tr></thead>
     <tbody>${rows.length? rows.map(r=>`
       <tr>
         <td>${r.group}</td><td>${r.subgroup}</td><td class="mono">${r.itemCodes.size}</td>
-        <td class="mono">${fmtL(r.reqLiters)}</td><td class="mono">${fmtL(r.stockLiters)}</td>
+        <td class="mono">${fmtL(r.reqLiters)}</td><td class="mono">${fmtL(r.fisLiters)}</td><td class="mono">${r.procLiters?fmtL(r.procLiters):'—'}</td>
         <td class="mono">${r.faltaLiters>0?fmtL(r.faltaLiters):'—'}</td>
         <td>${r.faltaLiters>0?'<span class="badge danger">Falta</span>':'<span class="badge ok">OK</span>'}</td>
-      </tr>`).join('') : `<tr><td colspan="7"><div class="empty">Nenhuma combinação de grupo/subgrupo neste filtro.</div></td></tr>`}
+      </tr>`).join('') : `<tr><td colspan="8"><div class="empty">Nenhuma combinação de grupo/subgrupo neste filtro.</div></td></tr>`}
     </tbody>`;
 
   drawDonut('chartNecGrupo', rows.map(r=>r.subgroup), rows.map(r=>r.faltaLiters), ['#D6001C','#FFD200','#2F7D46','#101010','#8a8a86','#B8001A','#7a5814','#4a4a48']);
@@ -2009,6 +2032,7 @@ function garantirEstruturas(){
   DB.relatoriosInsumos = DB.relatoriosInsumos || [];  // relatórios de insumos gerados (registro)
   DB.relatoriosReposicao = DB.relatoriosReposicao || [];  // relatórios de reposição gerados (registro)
   DB.historicoImportacoes = DB.historicoImportacoes || [];  // registro das importações (data, hora, usuário)
+  DB.aplicacoesSeguranca = DB.aplicacoesSeguranca || [];  // aplicações do estoque de segurança sugerido
   // reata as linhas do plano aos pedidos cujo id foi trocado por uma importação antiga (o que já foi planejado volta a abater o pedido)
   const reatados = reconciliarVinculosPedidos();
   if(reatados>0) setTimeout(()=>{ try{ persistDB(); showToast(`Vínculos reatados: ${reatados} linha(s) do plano voltaram a abater os pedidos (pelo número do pedido).`); }catch(e){} }, 1200);
@@ -2028,7 +2052,7 @@ function renderLocais(){
     </div>
     <div class="card">
       <h3>Localizações cadastradas <span class="pill">${DB.locaisGranel.length}</span></h3>
-      <div class="tbl-wrap"><table class="data"><thead><tr><th>Localização</th><th>Linhas da Lista Mestre que usam</th><th></th></tr></thead><tbody>${
+      <div class="tbl-wrap"><table class="data" id="tblLocalizacoes"><thead><tr><th>Localização</th><th>Linhas da Lista Mestre que usam</th><th></th></tr></thead><tbody>${
         DB.locaisGranel.length ? [...DB.locaisGranel].sort((a,b)=>a.nome.localeCompare(b.nome,undefined,{numeric:true})).map(l=>`<tr><td><strong>${acessoEsc(l.nome)}</strong></td><td class="mono">${uso(l.id)}</td><td><button class="icon-btn" title="Remover" onclick="deleteLocalGranel('${l.id}')">✕</button></td></tr>`).join('')
         : '<tr><td colspan="3"><div class="empty">Nenhuma localização cadastrada ainda.</div></td></tr>'}</tbody></table></div>
     </div>`;
@@ -2097,7 +2121,7 @@ function renderItens(){
     </div>`;
   document.getElementById('tblItens').innerHTML = `<thead><tr>
     <th>Código</th><th>Descrição</th><th>UM</th><th>L/unid.</th><th>Aplicação</th><th>Grupo</th><th>Subgrupo</th>
-    <th>Cap. máx. lote (L)</th><th>Recurso</th><th>Estoque</th><th></th></tr></thead>
+    <th>Cap. máx. lote (L)</th><th>Recurso</th><th>Estoque</th><th>Em processo</th><th></th></tr></thead>
     <tbody>${DB.items.map(i=>`<tr class="${!i.maxBatchLiters?'row-warn':''}">
       <td class="mono">${i.code}</td><td>${i.name}</td><td>${i.uom}</td><td class="mono">${i.litersPerUnit}</td>
       <td>${i.application}</td><td>${i.group}</td><td>${i.subgroup}</td>
@@ -2105,7 +2129,7 @@ function renderItens(){
         <input type="number" min="0" step="any" value="${i.maxBatchLiters||''}" placeholder="⚠ vazio" style="max-width:110px;${!i.maxBatchLiters?'border-color:var(--tank);background:#FFF9DC':''}"
           onchange="updateItemMaxBatch('${i.code.replace(/'/g,"\\'")}', this.value)">
       </td>
-      <td>${i.resource||'—'}</td><td class="mono">${i.stock}</td>
+      <td>${i.resource||'—'}</td><td class="mono">${i.stock}</td><td class="mono">${i.stockProc?i.stockProc:'—'}</td>
       <td><button class="icon-btn" onclick="deleteItem('${i.code}')">✕</button></td>
     </tr>`).join('')}</tbody>`;
 }
@@ -2390,9 +2414,10 @@ const IMPORT_DEFS = {
     cols:[
       {field:'itemCode', required:true, aliases:['codigo do item','codigo','item']},
       {field:'stock', required:false, type:'number', aliases:['estoque atual','estoque','saldo','quantidade em estoque']},
+      {field:'stockProc', required:false, type:'number', aliases:['em processo','estoque em processo']},
     ],
-    template:['Código do Item','Estoque Atual'],
-    example:['PA-1001','150'],
+    template:['Código do Item','Estoque Atual','Em Processo'],
+    example:['PA-1001','150','20'],
   },
 };
 
@@ -2635,14 +2660,16 @@ async function runImport(kind, inputId, modeId, reportId){
     if(vinculosMantidos || religados) report.unshift({line:'—', status:'ok', msg:`O que já estava planejado continua abatendo os pedidos: ${vinculosMantidos} pedido(s) mantiveram as linhas do plano${religados?` e ${religados} vínculo(s) foram reatados pelo número do pedido`:''}.`});
   }
 
-  if(kind==='estoque'){
+  if(kind==='estoque' && estoqueLayoutDepositos(rawRows)){
+    updated += importarEstoqueDepositos(rawRows, estoqueLayoutDepositos(rawRows), report);   // relatório do ERP com uma coluna por depósito
+  } else if(kind==='estoque'){
     rawRows.forEach((raw,idx)=>{
       const {out, missing} = mapRow(raw, def);
       if(missing.length){ report.push({line:idx+2, status:'error', msg:`Campos obrigatórios ausentes ou inválidos: ${missing.join(', ')}`}); errors++; return; }
       const existing = itemByCode(out.itemCode);
       if(!existing){ report.push({line:idx+2, status:'error', msg:`Item ${out.itemCode} não encontrado — cadastre-o antes de importar o estoque.`}); errors++; return; }
       const stockVal = out.stock ?? 0; // planilha em branco = sem estoque (0), não é erro
-      existing.stock = stockVal;
+      existing.stock = stockVal; delete existing.stockDep; if(out.stockProc!==undefined) existing.stockProc = out.stockProc;   // layout simples: o saldo vale como veio
       report.push({line:idx+2, status:'update', msg:`Estoque de ${out.itemCode} atualizado para ${stockVal}.`}); updated++;
     });
   }
@@ -2698,7 +2725,7 @@ async function runImport(kind, inputId, modeId, reportId){
   if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
   if(document.getElementById('page-reposicao')?.classList.contains('active')) renderReposicao();
   registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:rawRows.length, added, updated, errors, resultado:resultadoImportacao(added,updated,errors), ...(d=>({detalhes:d.detalhes, maisDetalhes:d.maisDetalhes}))(detalhesDoRelatorio(report))});   // quem importou, quando e o que entrou
-  atualizarUltimasImportacoes(); renderHistoricoImportacoes();
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos();
   persistDB();
 }
 
@@ -2736,6 +2763,8 @@ const IMP_ACOES = [
   [/Nenhuma OP válida/, 'Nenhuma OP válida', 'Confira se o arquivo é o relatório do ERP, com a coluna Nº DA OP. A base de OPs atual foi mantida.'],
   [/Código suspeito/, 'Código suspeito', 'Confira o código no ERP: parece um INS- digitado errado (por exemplo, RNS-). O componente foi guardado, mas não soma nos insumos.'],
   [/vieram em minúsculas/, 'Códigos em minúsculas', 'Nenhuma ação necessária: os códigos foram normalizados para maiúsculas. Se quiser, padronize no ERP.'],
+  [/não estão no cadastro de Itens e foram ignorados/, 'Itens fora do cadastro (ignorados)', 'Se esses itens devem entrar no planejamento, cadastre-os em Cadastros → Itens (ou importe o cadastro de Itens) e importe o estoque de novo. Se não, nada a fazer.'],
+  [/Depósito\(s\) novo\(s\) com saldo/, 'Depósito novo sem classificação', 'Em Importação de Dados → Estoque Atual → Depósitos, classifique cada depósito novo como Estoque, Em processo ou Ignorar.'],
   [/Erro ao ler o arquivo/, 'Falha ao ler o arquivo', 'Confira o formato (.xlsx, .xls ou .csv), se o arquivo não está aberto em outro programa nem protegido por senha, e tente de novo.'],
 ];
 function acaoParaErroImportacao(msg){ const m = String(msg||''); const r = IMP_ACOES.find(x=>x[0].test(m)); return r ? {familia:r[1], acao:r[2]} : {familia:'Outro erro', acao:'Corrija a linha indicada no arquivo, de acordo com a mensagem, e importe de novo.'}; }
@@ -2825,7 +2854,8 @@ function exportHistoricoImportacoes(){
   const kSel = (document.getElementById('ihKind')||{}).value || '', uSel = (document.getElementById('ihUsuario')||{}).value || '';
   const lin = [...(DB.historicoImportacoes||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).filter(x=>(!kSel||x.kind===kSel) && (!uSel||(x.usuario||'')===uSel));
   const cab = ['Data e hora','Usuário','Nome','Importação','Modo','Arquivo','Linhas lidas','Adicionados','Atualizados','Erros','Resultado'];
-  const csv = '\uFEFF' + [cab, ...lin.map(x=>[dhImp(x.ts), x.usuario||'', x.nome||'', x.titulo||tituloImportacao(x.kind), x.modo||'', x.arquivo||'', x.lidas, x.adicionados, x.atualizados, x.erros, x.resultado||''])]
+  const __f = visaoFiltrarMatriz('tblHistImp', cab, lin.map(x=>[dhImp(x.ts), x.usuario||'', x.nome||'', x.titulo||tituloImportacao(x.kind), x.modo||'', x.arquivo||'', x.lidas, x.adicionados, x.atualizados, x.erros, x.resultado||'']));
+  const csv = '\uFEFF' + [__f.cab, ...__f.linhas]
     .map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
   try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = 'historico_importacoes.csv'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível:', e); }
   return csv;
@@ -2835,7 +2865,7 @@ function renderImportacao(){
     {kind:'itens', title:'Itens / Produtos', desc:'Cadastro completo de itens: código, descrição, unidade de medida, litros por unidade, aplicação, grupo, subgrupo, capacidade máxima do lote, recurso e estoque atual.', showMode:true},
     {kind:'receitas', title:'Receitas', desc:'Consumo de cada insumo por unidade do produto acabado. Produto e Insumo precisam existir no cadastro de Itens.', showMode:true},
     {kind:'pedidos', title:'Carteira de Pedidos em Aberto', desc:'Pedidos a atender. O Item precisa existir no cadastro de Itens. Para um pedido com vários itens, repita o mesmo "Número do Pedido" em uma linha para cada item.', showMode:true},
-    {kind:'estoque', title:'Estoque Atual', desc:'Atualiza somente o saldo de estoque dos itens já cadastrados, pelo código do item.', showMode:false},
+    {kind:'estoque', title:'Estoque Atual', desc:'Atualiza somente o saldo de estoque dos itens já cadastrados, pelo código do item. Aceita a planilha simples (Código, Estoque Atual e, se quiser, Em Processo) ou o relatório do ERP com uma coluna por depósito, que usa a classificação de depósitos abaixo.', showMode:false},
     {kind:'compras', title:'Pedidos de Compra em Aberto', desc:'Entregas de insumos programadas: pedido, item, quantidade e data prevista de chegada. A cada importação a lista é SUBSTITUÍDA (os pedidos já recebidos saem do ERP). Data anterior a hoje conta como chegando hoje. Alimenta o Planejamento de Materiais.', showMode:false},
     {kind:'parametros', title:'Estoque de Segurança e Prazo de Entrega', desc:'Por item: estoque de segurança e prazo de entrega em dias corridos. Célula em branco não apaga o valor que já existe. Alimenta o Planejamento de Materiais.', showMode:true},
     {kind:'ordenserp', title:'Ordens de Produção do ERP (componentes)', desc:'Relatório do ERP com o Nº da OP, o item, a quantidade e os componentes de cada OP (envase e granel). Alimenta o Relatório de insumos da Lista Mestre. Atualizar substitui os dados das OPs que vierem no arquivo e mantém as demais; só entram como insumo os componentes INS-…; recursos e mão de obra são ignorados.', showMode:true},
@@ -2863,7 +2893,7 @@ function renderImportacao(){
       <div id="${repId}"></div>
     </div>`;
   }).join('');
-  atualizarUltimasImportacoes(); renderHistoricoImportacoes();
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos();
 }
 
 /* =========================================================================
@@ -3999,7 +4029,7 @@ function exportEfetuadoCsv(){
 }
 
 function renderVisaoDia(){
-  limparCachePrioridades();
+  limparCachePrioridades(); vdAtualizarCarimbo();
   populateSelect(document.getElementById('vdRecurso'), DB.resources.map(r=>r.name), true);
   populateSelect(document.getElementById('vdCliente'), [...new Set(DB.orders.map(o=>o.customer))].sort(), true);
   document.getElementById('vdDe').value = document.getElementById('vdDe').value || DB.updatedAt;
@@ -4930,7 +4960,7 @@ function renderListaResumo(rows){
   const resumo = resumoPorRecurso(rows);
   const totalPlanejado = resumo.reduce((s,r)=>s+r.planejado,0);
   const totalEfetivo = resumo.reduce((s,r)=>s+r.efetivo,0);
-  el.innerHTML = resumo.length ? `<table class="data"><thead><tr><th>Recurso</th><th>Planejado (L)</th><th>Efetivo (L)</th></tr></thead>
+  el.innerHTML = resumo.length ? `<table class="data" id="tblListaResumo"><thead><tr><th>Recurso</th><th>Planejado (L)</th><th>Efetivo (L)</th></tr></thead>
     <tbody>${resumo.map(r=>`<tr><td>${r.resource}</td><td class="mono">${fmtL(r.planejado)}</td><td class="mono">${r.efetivo?fmtL(r.efetivo):'—'}</td></tr>`).join('')}
     <tr style="font-weight:700"><td>Total</td><td class="mono">${fmtL(totalPlanejado)}</td><td class="mono">${totalEfetivo?fmtL(totalEfetivo):'—'}</td></tr>
     </tbody></table>` : `<div class="empty">Nenhuma linha planejada neste filtro.</div>`;
@@ -4977,7 +5007,7 @@ function renderListaCore(){
       const it = itemByCode(p.itemCode);
       const lotesArrLM = lotesDaLinha(p), loteEditado = Array.isArray(p.loteManual);
       return __cab + `<tr${p.obs?' class="linha-obs"':''}>
-        <td><input type="date" value="${p.date}" style="min-width:128px"${attrTrava(p)} onchange="updateListaData('${p.id}', this.value)" title="Data de produção da linha">${p.originalDate && p.originalDate!==p.date ? ` <span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-top:2px" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span>` : ''}</td>
+        <td><input type="date" value="${p.date}" style="min-width:128px"${attrTrava(p)} onchange="updateListaData('${p.id}', this.value)" title="Data de produção da linha">${p.originalDate && p.originalDate!==p.date ? `<div style="margin-top:3px"><span class="badge warn" style="cursor:pointer;text-decoration:underline;display:inline-block;white-space:nowrap" title="Clique para ver o histórico" onclick="showChangeLogModal('${p.id}')">📅 alterada ▸</span></div>` : ''}</td>
         <td><select style="min-width:150px"${attrTrava(p)} onchange="updateListaRecurso('${p.id}', this.value)">${DB.resources.map(r=>`<option value="${r.name}" ${r.name===p.resource?'selected':''}>${r.name}</option>`).join('')}</select></td>
         <td class="mono">${p.itemCode}${seloSolicitacaoOP(p)}${(()=>{ const pr=getPrioridadeResumoItem(p.itemCode); return pr ? ' '+prioridadeSelo(pr,{compacto:true}) : ''; })()}${p.changeLog && p.changeLog.length ? ` <span class="badge info" style="cursor:pointer;text-decoration:underline;white-space:nowrap" title="Clique para ver o histórico completo de alterações" onclick="showChangeLogModal('${p.id}')">🔔 ${p.changeLog.length} ▸</span>` : ''}</td><td style="white-space:normal;min-width:230px;max-width:330px;font-size:12px;line-height:1.35">${it?it.name:''}${p.obs?`<div class="obs-prev" title="${acessoEsc(p.obs)}" onclick="abrirObsLinha('${p.id}')">📝 ${acessoEsc(p.obs.length>90?p.obs.slice(0,90)+'…':p.obs)}</div>`:''}</td><td class="mono">${p.orderNo}</td>
         <td style="min-width:150px;white-space:nowrap"><input class="mono" style="font-size:11px;width:118px${loteEditado?';border-color:#B8590A':''}" value="${acessoEsc(lotesArrLM.join(', '))}" onchange="updateLoteLinha('${p.id}',this.value)" placeholder="—" title="Lote(s) desta linha. Para vários, separe por vírgula. Apague para deixar a linha sem lote.">${loteEditado?` <button type="button" class="btn btn-sm" style="padding:0 6px" title="Lote editado manualmente. Clique para voltar ao lote do pedido" onclick="restaurarLoteLinha('${p.id}')">↺</button>`:''}</td>
@@ -5644,8 +5674,8 @@ function exportLeadtimeCsv(tipo){
 function exportRefugosCsv(){
   const regs = refugosFiltrados().sort((a,b)=>a.r.date.localeCompare(b.r.date)||a.r.turno-b.r.turno);
   const q = v => '"'+String(v==null?'':v).replace(/"/g,'""')+'"', n = v => String(Math.round(v*100)/100).replace('.',',');
-  const L = [['Data','Turno','Item refugado','Descrição','Quantidade','UM','Litros equivalentes','Recurso','Nº OP','Nº OP Granel','Item da linha','Observação'].join(';')];
-  regs.forEach(x=>L.push([fmtDate(x.r.date), x.r.turno, q(x.r.itemCode), q(x.it?x.it.name:''), n(x.r.qty), q(x.uom), n(x.litros), q(x.resource), q(x.op), q(x.granel), q(x.itemLinha), q(x.r.obs)].join(';')));
+  const __f = visaoFiltrarMatriz('tblRefugos', ['Data','Turno','Item refugado','Descrição','Quantidade','UM','Litros equivalentes','Recurso','Nº OP','Nº OP Granel','Item da linha','Observação'], regs.map(x=>[fmtDate(x.r.date), x.r.turno, q(x.r.itemCode), q(x.it?x.it.name:''), n(x.r.qty), q(x.uom), n(x.litros), q(x.resource), q(x.op), q(x.granel), q(x.itemLinha), q(x.r.obs)]));
+  const L = [__f.cab.join(';'), ...__f.linhas.map(l=>l.join(';'))];
   const blob = new Blob(['\uFEFF'+L.join('\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'refugo_perdas.csv'; a.click();
 }
@@ -5754,7 +5784,7 @@ function doPrint(){
   const gmapP = mapaGranel(), grpContP = {};
   rows.forEach(p=>{ const k = normaTxt(String(p.opGranelNumber||'').trim()); grpContP[k] = (grpContP[k]||0)+1; });
   const haGranelP = rows.some(p=>String(p.opGranelNumber||'').trim());
-  const NCOLP = 12; let ultP = null;
+  const __ph = visaoPrintOcultas(); const NCOLP = 12 - __ph.length; let ultP = null;
   const faixaP = p => {
     const gTxt = String(p.opGranelNumber||'').trim(), gKey = normaTxt(gTxt);
     if(!haGranelP || gKey===ultP) return '';
@@ -5767,13 +5797,13 @@ function doPrint(){
     const it = itemByCode(p.itemCode);
     const lotesArrPrint = lotesDaLinha(p);
     const lotesTxt = lotesArrPrint.length ? lotesArrPrint.join(', ') : '—';
-    const contaminante = p.bucket && p.bucket!=='limpo' ? `<div class="tag-contam">⚠ ${bucketLabel(p.bucket)}</div>` : '';
-    const dataAlterada = p.originalDate && p.originalDate!==p.date ? `<div class="tag-data-alt">📅 data alterada (era ${fmtDate(p.originalDate)})</div>` : '';
+    const contaminante = p.bucket && p.bucket!=='limpo' && !visaoSeloOculto('contaminacao') && !visaoColunaOculta('tblLista','Contaminante') ? `<div class="tag-contam">⚠ ${bucketLabel(p.bucket)}</div>` : '';
+    const dataAlterada = p.originalDate && p.originalDate!==p.date && !visaoSeloOculto('alteracoes') ? `<div class="tag-data-alt">📅 data alterada (era ${fmtDate(p.originalDate)})</div>` : '';
     return faixaP(p) + `<tr>
       <td class="checkbox-cell">☐</td>
       <td class="mono-cell">${fmtDate(p.date)}</td>
       <td>${acessoEsc(p.resource)}</td>
-      <td><strong>${p.itemCode}</strong><span class="desc-item">${it?it.name:''}</span>${contaminante}${dataAlterada}${p.obs?`<div class="obs-print">📝 Obs.: ${acessoEsc(p.obs)}</div>`:''}</td>
+      <td><strong>${p.itemCode}</strong><span class="desc-item">${it?it.name:''}</span>${contaminante}${dataAlterada}${p.obs && !visaoComentariosOcultos()?`<div class="obs-print">📝 Obs.: ${acessoEsc(p.obs)}</div>`:''}</td>
       <td class="mono-cell" style="font-size:10px">${lotesTxt}</td>
       <td class="qtd-grande">${fmtL(p.batchLiters)}</td>
       <td>${fmtL(p.batchUnits)} ${it?it.uom:''}</td>
@@ -5788,7 +5818,7 @@ function doPrint(){
 
   const docHtml = `<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"><title>Lista Mestre de Produção</title>
-<style>
+<style> ${__ph.map(i=>`.tabela-producao tr:not(.grp-granel) > *:nth-child(${i+1}){display:none}`).join('')}
   @page{ margin:14mm; }
   body{font-family:'Inter',Arial,sans-serif;padding:24px;color:#161616;}
   h1{font-size:20px;margin-bottom:2px;}
@@ -6778,7 +6808,7 @@ function renderDashboards(){
         <td class="mono">${x.capPropria?fmtL(x.capP):'—'}</td>${celPct(razaoPct(x.efL,x.capP),'cap')}<td class="mono">${x.minutos?fmtL(x.minutos/60):'—'}</td><td class="mono">${hp(x.paradasMin)}</td><td class="mono">${x.prodMin?fmtL(x.prodLitros/(x.prodMin/60)):'—'}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(x.E)}</td></tr>`;
     });
     const rodape = `<tr><td>Total</td><td class="mono">${fmtL(T.planL)}</td><td class="mono">${fmtL(T.efL)}</td>${tcel(T.efT)}<td class="mono">${planOk?fmtL(T.efL-T.planL):'—'}</td>${planOk?celPct(execPct):'<td class="mono">—</td>'}<td class="mono">${fmtL(T.capP)}</td>${celPct(aderCap,'cap')}<td class="mono">${T.minutos?fmtL(T.minutos/60):'—'}</td><td class="mono">${hp(T.paradasMin)}</td><td class="mono">${produtiv==null?'—':fmtL(produtiv)}</td><td class="mono" style="font-size:11px;white-space:normal">${qtdPorUm(B.efet)}</td></tr>`;
-    return `<div><div class="dash-3-t">Por ${c.rotulo.toLowerCase()}</div><div class="tbl-wrap"><table class="data">${dashTabela([c.rotulo,'Planejado (L)','Efetuado (L)',...(comT?['1º turno (L)','2º turno (L)','3º turno (L)']:[]),'Dif. (L)','Execução','Capacidade (L)',c.agr==='uom'?'Contribuição':'Utilização','Horas','Horas paradas','L/h','Qtd. efetuada'], linhas, rodape)}</table></div></div>`;
+    return `<div><div class="dash-3-t">Por ${c.rotulo.toLowerCase()}</div><div class="tbl-wrap"><table class="data" id="tblDash_${c.agr}">${dashTabela([c.rotulo,'Planejado (L)','Efetuado (L)',...(comT?['1º turno (L)','2º turno (L)','3º turno (L)']:[]),'Dif. (L)','Execução','Capacidade (L)',c.agr==='uom'?'Contribuição':'Utilização','Horas','Horas paradas','L/h','Qtd. efetuada'], linhas, rodape)}</table></div></div>`;
   }).join('');
 
   // ---------- Planejado x Efetuado ----------
@@ -6887,9 +6917,10 @@ function exportReport(){
   const headers = ['Data','Recurso','Item','Grupo','Pedido','Qtd Planejada (L)','1º Turno (unid.)','2º Turno (unid.)','3º Turno (unid.)','Qtd Efetiva Total (unid.)','OP','OP Granel','Status','Data 1º Turno','Data 2º Turno','Data 3º Turno'];
   const lines = DB.plan.map(p=>{
     const it = itemByCode(p.itemCode);
-    return [p.date,p.resource,p.itemCode,it?.group||'',p.orderNo,p.batchLiters,p.turno1??'',p.turno2??'',p.turno3??'',p.actualQtyUnits??'',p.opNumber||'',p.opGranelNumber||'',p.status,p.turno1>0?dataEfetivaDoTurno(p,1):'',p.turno2>0?dataEfetivaDoTurno(p,2):'',p.turno3>0?dataEfetivaDoTurno(p,3):''].join(';');
+    return [p.date,p.resource,p.itemCode,it?.group||'',p.orderNo,p.batchLiters,p.turno1??'',p.turno2??'',p.turno3??'',p.actualQtyUnits??'',p.opNumber||'',p.opGranelNumber||'',p.status,p.turno1>0?dataEfetivaDoTurno(p,1):'',p.turno2>0?dataEfetivaDoTurno(p,2):'',p.turno3>0?dataEfetivaDoTurno(p,3):''];
   });
-  const csv = [headers.join(';'), ...lines].join('\n');
+  const __f = visaoFiltrarMatriz('tblLista', headers, lines);
+  const csv = [__f.cab.join(';'), ...__f.linhas.map(l=>l.join(';'))].join('\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href=url; a.download='relatorio_producao.csv'; a.click();
@@ -6923,7 +6954,26 @@ function falhaAoGravar(e){
   if(!__avisouCheio){ __avisouCheio = true; showToast('⚠ Não foi possível salvar neste navegador (armazenamento cheio ou bloqueado). Exporte um backup em Importação de Dados.', 'error'); }
 }
 // imediato=true grava na hora; sem isso, no navegador, várias alterações seguidas viram uma gravação só (300 ms)
+/* ---- última atualização dos dados: data, hora e usuário, carimbados só quando o plano, os pedidos ou os itens realmente mudam ---- */
+function dadosAssinatura(){
+  const t = JSON.stringify([DB.plan||[], DB.orders||[], (DB.items||[]).map(i=>[i.code,i.name,i.uom,i.stock,i.stockProc,i.litersPerUnit,i.group,i.maxBatchLiters])]); let h = 5381;
+  for(let k=0;k<t.length;k++) h = ((h*33) ^ t.charCodeAt(k)) >>> 0;
+  return h.toString(16)+':'+t.length;
+}
+function carimbarAtualizacaoDados(){
+  if(typeof ONLINE!=='undefined' && ONLINE) return;   // online: a data e hora vêm do servidor (Sync.ultima), não de um carimbo do cliente
+  const h = dadosAssinatura(), u = DB.ultimaAtualizacao;
+  if(!u){ DB.ultimaAtualizacao = {ts:null, usuario:'', hash:h}; return; }   // base de comparação (bancos antigos ainda sem registro)
+  if(u.hash!==h) DB.ultimaAtualizacao = {ts:new Date().toISOString(), usuario:(typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '', hash:h};
+}
+function vdAtualizarCarimbo(){
+  const el = document.getElementById('vdAtualizacao'); if(!el) return;
+  const u = (typeof ONLINE!=='undefined' && ONLINE) ? (typeof Sync!=='undefined' ? Sync.ultima : null) : DB.ultimaAtualizacao, ped = [...(DB.historicoImportacoes||[])].filter(x=>x.kind==='pedidos' && x.resultado!=='Falha ao ler o arquivo').sort((a,b)=>String(b.ts).localeCompare(String(a.ts)))[0];
+  const a = u && u.ts ? `🕒 Última atualização dos dados: <strong>${dhImp(u.ts)}</strong>${u.usuario?` · por ${acessoEsc(u.usuario)}`:''}` : '🕒 Última atualização dos dados: <span style="font-weight:400">ainda sem registro (aparece a partir da próxima alteração)</span>';
+  el.innerHTML = a + (ped ? ` &nbsp;·&nbsp; Pedidos importados em <strong>${dhImp(ped.ts)}</strong>${ped.usuario?` · por ${acessoEsc(ped.usuario)}`:''}` : '');
+}
 async function persistDB(imediato){
+  try{ carimbarAtualizacaoDados(); }catch(e){ console.warn('carimbo:', e); }
   limparCachePrioridades();
   if(ONLINE){ syncAgendar(imediato===true); return; }   // modo online: o motor de sincronização envia as diferenças ao servidor
   if(!storageDisponivel) return;
@@ -7108,7 +7158,7 @@ function validarSenha(s){ return (s||'').length>=6 ? '' : 'A senha precisa ter p
 function novoUsuarioObj(o){
   const salt = gerarSalt();
   return {id:'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), usuario:o.usuario, nome:o.nome||o.usuario,
-    admin:!!o.admin, ativo:true, salt, hash:hashSenha(o.senha,salt), permissoes:o.admin?{}:(o.permissoes||{}), campos:o.admin?{}:(o.campos||{}), travas:o.admin?{}:(o.travas||{}),
+    admin:!!o.admin, ativo:true, salt, hash:hashSenha(o.senha,salt), permissoes:o.admin?{}:(o.permissoes||{}), campos:o.admin?{}:(o.campos||{}), travas:o.admin?{}:(o.travas||{}), visao:o.admin?{}:(o.visao||{}),
     trocarSenha:!!o.trocarSenha, criadoEm:Date.now(), ultimoAcesso:null};
 }
 const adminsAtivos = () => ACESSO.usuarios.filter(u=>u.admin && u.ativo);
@@ -7208,14 +7258,20 @@ const CATALOGO_CAMPOS = {
   refugos: [
     {id:'excluir',   label:'Excluir apontamentos de refugo',      acoes:['deleteRefugo']},
   ],
+  materiais: [
+    {id:'segsugerida', label:'Sugestão de estoque de segurança (abrir e aplicar)', acoes:['abrirSugestaoSeguranca','esegAplicar']},
+    {id:'considerarprocesso', label:'Considerar o estoque em processo nos cálculos (opção)', acoes:['setConsiderarProcesso']},
+  ],
   reposicao: [
     {id:'relatorioreposicao', label:'Relatório de reposição (abrir, gerar e registrar)', acoes:['abrirRelatorioReposicao','gerarRelatorioReposicao']},
+    {id:'considerarprocesso', label:'Considerar o estoque em processo nos cálculos (opção)', acoes:['setConsiderarProcesso']},
   ],
   importacao: [
     {id:'itens',     label:'Importar itens',                      acoes:[['runImport',0,'itens']]},
     {id:'receitas',  label:'Importar receitas',                   acoes:[['runImport',0,'receitas']]},
     {id:'pedidos',   label:'Importar pedidos',                    acoes:[['runImport',0,'pedidos']]},
     {id:'estoque',   label:'Importar estoque',                    acoes:[['runImport',0,'estoque']]},
+    {id:'depositos',  label:'Classificar depósitos (Estoque / Em processo / Ignorar)', acoes:['salvarDepositos']},
     {id:'compras',   label:'Importar pedidos de compra em aberto', acoes:[['runImport',0,'compras']]},
     {id:'parametros',label:'Importar estoque de segurança e prazos', acoes:[['runImport',0,'parametros']]},
     {id:'gruposrep', label:'Importar grupos de reposição',         acoes:[['runImport',0,'gruposrep']]},
@@ -7261,7 +7317,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData','salvarDepositos','setConsiderarProcesso','abrirSugestaoSeguranca','esegAplicar'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
@@ -7326,7 +7382,7 @@ function aplicarModoLeitura(){
   }
   destravarTudo();
   if(!ro && !parcial) return;
-  const alvos = [...page.querySelectorAll('button, input, select, textarea, [onclick]')].filter(el=>!el.closest('.filters, .tabbar') && !el.classList.contains('cb-input'));
+  const alvos = [...page.querySelectorAll('button, input, select, textarea, [onclick]')].filter(el=>!el.closest('.filters, .tabbar, .frz-bar') && !el.classList.contains('cb-input'));
   if(ro){
     alvos.forEach(el=>{ const h = handlerDe(el); const ehCampo = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName); if(REGEX_ALTERA.test(h) || (ehCampo && !h.trim())) travarElemento(el); });
     return;
@@ -7673,6 +7729,7 @@ function abrirPermissoes(id){
       <button class="btn btn-sm btn-ghost" onclick="aplicarPresetPermissoes('nenhum')">Limpar</button></div>
     <div class="am-scroll"><table class="data am-matrix" id="pmMatriz"><thead><tr><th>Tela</th><th class="am-c">Sem acesso</th><th class="am-c">Somente leitura</th><th class="am-c">Edição</th></tr></thead><tbody>${linhas}</tbody></table></div>
     <label class="am-admin" style="margin-top:10px"><input type="checkbox" id="pmExcesso" ${(u.campos||{})['*excederPedido']===true?'checked':''}> <strong>Pode planejar quantidade acima do pedido em aberto</strong> — por padrão só administradores; marque para liberar este usuário</label>
+    ${visaoPermissoesHtml(u)}
     <div class="am-travas" id="pmTravas">
       <h4>🔒 Travar filtros (opcional)</h4>
       <div class="card-sub">Fixe um filtro nos valores escolhidos: em <b>todas as telas que têm esse filtro</b>, a pessoa passa a ver só esses valores e <b>não consegue mudá-los</b>. Deixe em branco para o filtro ficar livre. Ex.: travar <b>Cliente</b> em “Cliente X”, ou <b>Recurso</b> em duas linhas.</div>
@@ -7690,6 +7747,7 @@ function alternarMatrizAdmin(){
   m.querySelectorAll('input').forEach(i=>i.disabled = adm);
   const tv = document.getElementById('pmTravas');   // administrador não é travado: a seção fica desligada
   if(tv){ tv.classList.toggle('am-off', adm); tv.querySelectorAll('.cb-input').forEach(i=>i.disabled = adm); }
+  const vs = document.getElementById('pmVisao'); if(vs){ vs.classList.toggle('am-off', adm); vs.querySelectorAll('input').forEach(i=>i.disabled = adm); }   // administrador vê tudo
 }
 function aplicarPresetPermissoes(nome){
   const {perm, campos} = PRESETS_PERMISSAO[nome]();
@@ -7724,9 +7782,9 @@ function salvarPermissoes(id){
   const exc = document.getElementById('pmExcesso'); if(!virarAdmin && exc && exc.checked) campos['*excederPedido'] = true;   // permissão extra: planejar acima do pedido em aberto
   const travas = {};
   DIMENSOES_TRAVA.forEach(d=>{ const sl = document.getElementById('pmTrava_'+d.id); const v = sl && sl.__cbGet ? sl.__cbGet() : []; if(v.length) travas[d.id] = v; });
-  u.admin = virarAdmin; u.permissoes = virarAdmin ? {} : perm; u.campos = virarAdmin ? {} : campos; u.travas = virarAdmin ? {} : travas;
+  u.admin = virarAdmin; u.permissoes = virarAdmin ? {} : perm; u.campos = virarAdmin ? {} : campos; u.travas = virarAdmin ? {} : travas; u.visao = virarAdmin ? {} : visaoLerPermissoes(); const resVisao = visaoResumoTexto(u.visao);
   const resTravas = Object.entries(u.travas).map(([k,v])=>`${(DIMENSOES_TRAVA.find(d=>d.id===k)||{label:k}).label}: ${v.join(', ')}`).join('; ');
-  registrarAcesso('permissoes', USUARIO_ATUAL.usuario, `alterou permissões de ${u.usuario}${resTravas?` (filtros travados — ${resTravas})`:''}`);
+  registrarAcesso('permissoes', USUARIO_ATUAL.usuario, `alterou permissões de ${u.usuario}${resTravas?` (filtros travados — ${resTravas})`:''}${resVisao?` (visão: escondeu ${resVisao})`:''}`);
   gravarAcesso(); fecharModalAcesso(); renderUsuarios(); showToast('Permissões salvas.');
 }
 function abrirRedefinirSenha(id){
@@ -7951,6 +8009,7 @@ function init(){
   function projetarMateriais(entrada){
     const E = entrada || {};
     const hoje = E.hoje, opc = E.opcoes || {};
+  const comProc = !!opc.considerarProcesso, stk = i => num(i.stock) + (comProc ? num(i.stockProc) : 0);   // estoque que conta nos cálculos (com ou sem o "em processo")
     if(!hoje) throw new Error('projetarMateriais: informe "hoje" (AAAA-MM-DD).');
     const plano = E.plano || [], receitas = E.receitas || [], itens = E.itens || [], compras = E.compras || [];
     const avisos = [];
@@ -8012,11 +8071,12 @@ function init(){
 
     // 4) materiais a analisar: os que têm consumo, mais os que já estão abaixo do estoque de segurança
     const codigos = new Set(consumo.keys());
-    const estoqueGrupo = g => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? num(i.stock) : 0); }, 0);
-    itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && num(i.stock) < s.valor) codigos.add('I:'+K(i.code)); });
+    const estoqueGrupo = g => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? stk(i) : 0); }, 0);
+  const somaGrupo = (g, f) => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? num(f(i)) : 0); }, 0);
+    itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && stk(i) < s.valor) codigos.add('I:'+K(i.code)); });
     grupos.forEach(g=>{ if(num(g.seguranca) > 0 && estoqueGrupo(g) < num(g.seguranca)) codigos.add('G:'+g.chave); });
     if(opc.incluirExcesso){          // tela de reposição: também analisa quem está acima do estoque máximo (mesmo sem consumo no plano)
-      itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const m = maxDe(i.code, i.group); if(m && m.valor > 0 && num(i.stock) > m.valor) codigos.add('I:'+K(i.code)); });
+      itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const m = maxDe(i.code, i.group); if(m && m.valor > 0 && stk(i) > m.valor) codigos.add('I:'+K(i.code)); });
       grupos.forEach(g=>{ if(num(g.maximo) > 0 && estoqueGrupo(g) > num(g.maximo)) codigos.add('G:'+g.chave); });
     }
 
@@ -8025,7 +8085,8 @@ function init(){
       const ehGrupo = chaveInterna.startsWith('G:'), cod = chaveInterna.slice(2);
       const grp = ehGrupo ? grupoPor.get(cod) : null, it = ehGrupo ? null : itemPor.get(cod);
       const membros = ehGrupo ? grp.itens.map(c=>{ const i = itemPor.get(K(c)); return i ? i.code : String(c).trim(); }) : null;
-      const estoque = ehGrupo ? estoqueGrupo(grp) : (it ? num(it.stock) : 0);
+      const estoque = ehGrupo ? estoqueGrupo(grp) : (it ? stk(it) : 0);
+      const estFisico = ehGrupo ? somaGrupo(grp, i=>i.stock) : (it ? num(it.stock) : 0), emProc = ehGrupo ? somaGrupo(grp, i=>i.stockProc) : (it ? num(it.stockProc) : 0);
       const seg = ehGrupo ? { valor:num(grp.seguranca), origem:'grupo de reposição' } : segDe(cod, it && it.group);
       const prz = ehGrupo ? (grp.prazo === undefined || grp.prazo === null || grp.prazo === '' ? null : { valor:num(grp.prazo), origem:'grupo de reposição' }) : prazoDe(cod, it && it.group);
       const seguranca = seg ? seg.valor : 0, prazo = prz ? prz.valor : null;
@@ -8062,7 +8123,7 @@ function init(){
       materiais.push({
         id: ehGrupo ? chaveInterna : 'I:'+codExibe, tipo: ehGrupo ? 'grupo' : 'item', membros: membros,
         codigo:codExibe, nome: ehGrupo ? ('Grupo '+cod) : (it ? it.name : '(item sem cadastro)'), grupo: it ? (it.group||'') : '', uom: ehGrupo ? umGrupo : (it ? (it.uom||'') : ''), cadastrado: ehGrupo ? true : !!it,
-        estoqueAtual:arred(estoque), seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
+        estoqueAtual:arred(estoque), estoqueFisico:arred(estFisico), emProcesso:arred(emProc), consideraProcesso:comProc, seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
         prazoDias:prazo, prazoOrigem: prz ? prz.origem : null, semPrazo: prazo === null,
         consumoTotal:arred(consTot), entradasTotal:arred(entTot), saldoFinal:arred(saldo), minSaldo:arred(minSaldo), dataMinSaldo:dataMin,
         primeiraFalta, dataGatilho:gatilho, situacao, acao, dataLimitePedido:dataLimite, atrasoDias, chegadaMaisCedo, rupturaDias,
@@ -8223,7 +8284,7 @@ function materiaisEntrada(opcExtra){
     seguranca:par.filter(p=>p.seguranca!==undefined && p.seguranca!==null && p.seguranca!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.seguranca})),
     maximos:par.filter(p=>p.maximo!==undefined && p.maximo!==null && p.maximo!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.maximo})),
     gruposReposicao:(DB.gruposReposicao||[]).map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo, maximo:g.maximo})),
-    opcoes:Object.assign({ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje' }, opcExtra||{}) };
+    opcoes:Object.assign({ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje', considerarProcesso: !!DB.considerarEmProcesso }, opcExtra||{}) };
 }
 const MAT_ACAO = {
   ruptura_inevitavel:{rot:'Ruptura inevitável', cls:'danger'},
@@ -8238,6 +8299,7 @@ function filtrarMateriais(lista){
     (!busca || normaTxt(m.codigo+' '+m.nome+' '+(m.membros||[]).join(' ')).includes(busca)));
 }
 function renderMateriais(){
+  renderOpcaoProcesso();
   const pg = document.getElementById('page-materiais'); if(!pg || !pg.classList.contains('active')) return;
   const entrada = materiaisEntrada(), r = MateriaisMotor.projetarMateriais(entrada); MATERIAIS_ULTIMO = r;
   populateSelectSeguro(document.getElementById('matGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
@@ -8257,13 +8319,13 @@ function renderMateriais(){
   const f = filtrarMateriais(r.materiais);
   document.getElementById('matCount').textContent = `— ${f.length} de ${r.materiais.length}`;
   const t = document.getElementById('tblMateriais');
-  t.innerHTML = `<thead><tr><th>Material</th><th>Tipo</th><th>UM</th><th>Estoque</th><th>Segurança</th><th>Prazo (d)</th><th>Consumo (plano)</th><th>Entradas</th><th>Menor saldo</th><th>1ª falta (saldo &lt; 0)</th><th title="Data em que o saldo projetado cruza o estoque de segurança: o material precisa estar no estoque até aqui">Precisa chegar até</th><th title="Precisa chegar até, menos o prazo de entrega: data limite para EMITIR o pedido de compra">Emitir pedido até</th><th title="Hoje mais o prazo de entrega: quando o material chega se o pedido for feito hoje">Chega em (se pedir hoje)</th><th>Situação</th><th>Sugerido</th></tr></thead><tbody>${
+  t.innerHTML = `<thead><tr><th>Material</th><th>Tipo</th><th>UM</th><th>Estoque</th><th>Em processo</th><th>Segurança</th><th>Prazo (d)</th><th>Consumo (plano)</th><th>Entradas</th><th>Menor saldo</th><th>1ª falta (saldo &lt; 0)</th><th title="Data em que o saldo projetado cruza o estoque de segurança: o material precisa estar no estoque até aqui">Precisa chegar até</th><th title="Precisa chegar até, menos o prazo de entrega: data limite para EMITIR o pedido de compra">Emitir pedido até</th><th title="Hoje mais o prazo de entrega: quando o material chega se o pedido for feito hoje">Chega em (se pedir hoje)</th><th>Situação</th><th>Sugerido</th></tr></thead><tbody>${
     f.length ? f.map(m=>{ const a = MAT_ACAO[m.acao];
       const sit = m.acao==='ok' ? (m.situacao==='ok' ? '' : '') : '';
       return `<tr style="cursor:pointer" data-id="${acessoEsc(m.id)}" onclick="abrirDetalheMaterial(this.dataset.id)" title="Clique para ver a projeção dia a dia">
         <td><strong class="mono">${acessoEsc(m.codigo)}</strong><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(m.nome)}</div></td>
         <td>${m.tipo==='grupo' ? `<span class="badge info">Grupo · ${m.membros.length}</span>` : 'Item'}</td><td>${acessoEsc(m.uom)}</td>
-        <td class="mono">${fmtL(m.estoqueAtual)}</td><td class="mono">${fmtL(m.seguranca)}</td>
+        <td class="mono" title="${m.consideraProcesso?'Estoque físico (o em processo soma nos cálculos)':'Estoque físico'}">${fmtL(m.estoqueFisico!==undefined?m.estoqueFisico:m.estoqueAtual)}</td><td class="mono">${m.emProcesso?fmtL(m.emProcesso):'—'}</td><td class="mono">${fmtL(m.seguranca)}</td>
         <td class="mono">${m.semPrazo ? '<span class="badge warn" title="Sem prazo de entrega cadastrado">—</span>' : m.prazoDias}</td>
         <td class="mono">${fmtL(m.consumoTotal)}</td><td class="mono">${m.entradasTotal ? fmtL(m.entradasTotal) : '—'}</td>
         <td class="mono" style="${m.minSaldo<0?'color:var(--danger);font-weight:700':m.minSaldo<m.seguranca?'color:#B8590A;font-weight:700':''}">${fmtL(m.minSaldo)}<div style="font-size:10px;color:var(--muted)">${m.acao==='ok'?'':fmtDate(m.dataMinSaldo)}</div></td>
@@ -8334,10 +8396,12 @@ function reposEntrada(){
   const ciclo = Number(String(val('rpCiclo')).replace(',','.'));
   return materiaisEntrada({ fim: val('rpFim') || undefined, pedidoAtrasado: val('rpAtrasados') || 'hoje', ciclo: ciclo > 0 ? ciclo : 20, incluirExcesso: true });
 }
+/* o material entra se ALGUMA célula dele (estoque atual ou qualquer dia do horizonte) tiver uma das cores escolhidas; usa o mesmo saldo que a grade mostra (com ou sem o plano) */
+function reposTemLegenda(m, leg, comPlano){ if(!leg || !leg.length) return true; if(leg.includes(reposCat(m.estoqueAtual, m.seguranca, m.maximo))) return true; const campo = comPlano ? 'saldoPlano' : 'saldo'; return (m.serie||[]).some(s=>leg.includes(reposCat(s[campo], m.seguranca, m.maximo))); }
 function filtrarRepos(lista){
-  const acao = filtroValores('rpAcao'), grp = filtroValores('rpGrupo');
+  const acao = filtroValores('rpAcao'), grp = filtroValores('rpGrupo'), leg = filtroValores('rpLegenda'), comPlano = !!(document.getElementById('rpComPlano')||{}).checked;
   const tipo = (document.getElementById('rpTipo')||{}).value || '', busca = normaTxt(((document.getElementById('rpBusca')||{}).value||'').trim());
-  return lista.filter(m=> (!acao.length || acao.includes(m.plano.acao)) && (!grp.length || grp.includes(m.grupo)) && (!tipo || m.tipo===tipo) &&
+  return lista.filter(m=> (!acao.length || acao.includes(m.plano.acao)) && reposTemLegenda(m, leg, comPlano) && (!grp.length || grp.includes(m.grupo)) && (!tipo || m.tipo===tipo) &&
     (!busca || normaTxt(m.codigo+' '+m.nome+' '+(m.membros||[]).join(' ')).includes(busca)));
 }
 function reposOrdenar(lista){
@@ -8353,12 +8417,13 @@ function rpAplicarAba(){
 }
 function rpMostrar(v){ REPOS_VIEW = v; rpAplicarAba(); renderReposicao(); }
 function clearReposFiltros(){
-  ['rpAcao','rpGrupo'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value=''; });
+  ['rpAcao','rpLegenda','rpGrupo'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value=''; });
   document.getElementById('rpTipo').value=''; document.getElementById('rpBusca').value=''; document.getElementById('rpFim').value=''; document.getElementById('rpAtrasados').value='hoje'; document.getElementById('rpCiclo').value='20';
   renderReposicao();
 }
 
 function renderReposicao(){
+  renderOpcaoProcesso();
   const pg = document.getElementById('page-reposicao'); if(!pg || !pg.classList.contains('active')) return;
   const r = MateriaisMotor.projetarMateriais(reposEntrada()); REPOS_ULTIMO = r;
   populateSelectSeguro(document.getElementById('rpGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
@@ -8389,10 +8454,10 @@ function renderReposGrade(f, r){
   const dias = r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [];
   document.getElementById('rpCountGrade').textContent = `— ${f.length} de ${r.materiais.length}` + (f.length>LIM ? ` (mostrando os ${LIM} primeiros: refine os filtros)` : '');
   const campo = com ? 'saldoPlano' : 'saldo';
-  const head = `<thead><tr><th class="rp-fix">Material</th><th>UM</th><th>Estoque</th><th>Segurança</th><th>Máximo</th>${dias.map(d=>`<th>${dmCurto(d)}<div style="font-weight:400">${dSemana(d)}</div></th>`).join('')}</tr></thead>`;
+  const head = `<thead><tr><th class="rp-fix">Material</th><th>UM</th><th>Estoque</th><th>Em processo</th><th>Segurança</th><th>Máximo</th>${dias.map(d=>`<th>${dmCurto(d)}<div style="font-weight:400">${dSemana(d)}</div></th>`).join('')}</tr></thead>`;
   const corpo = vis.length ? vis.map((m,i)=>{ const a = REPOS_ACAO[m.plano.acao];
     return `<tr data-id="${acessoEsc(m.id)}"><td class="rp-fix"><strong class="mono">${acessoEsc(m.codigo)}</strong> <span class="badge ${a.cls}">${a.rot}</span><div style="font-size:11px;color:var(--muted)">${acessoEsc(m.nome)}${m.tipo==='grupo'?` · grupo de ${m.membros.length}`:''}</div></td>
-      <td class="rp-ref">${acessoEsc(m.uom)}</td><td class="${reposCat(m.estoqueAtual, m.seguranca, m.maximo)}">${fmtL(m.estoqueAtual)}</td><td class="rp-ref">${fmtL(m.seguranca)}</td><td class="rp-ref">${m.maximo>0?fmtL(m.maximo):'—'}</td>
+      <td class="rp-ref">${acessoEsc(m.uom)}</td><td class="${reposCat(m.estoqueAtual, m.seguranca, m.maximo)}" title="${m.consideraProcesso?'Estoque físico; a cor considera o em processo':'Estoque físico'}">${fmtL(m.estoqueFisico!==undefined?m.estoqueFisico:m.estoqueAtual)}</td><td class="rp-ref">${m.emProcesso?fmtL(m.emProcesso):'—'}</td><td class="rp-ref">${fmtL(m.seguranca)}</td><td class="rp-ref">${m.maximo>0?fmtL(m.maximo):'—'}</td>
       ${m.serie.map((s,j)=>`<td data-i="${i}" data-j="${j}" class="${reposCat(s[campo], m.seguranca, m.maximo)}${com && (s.recEmergencial>0 || s.recPedido>0) ? ' rp-rec' : (s.entradas>0 ? ' rp-ent' : '')}">${fmtL(s[campo])}</td>`).join('')}</tr>`; }).join('')
     : `<tr><td colspan="${5+dias.length}"><div class="empty">Nenhum material para este filtro.</div></td></tr>`;
   t.innerHTML = head + '<tbody>' + corpo + '</tbody>';
@@ -9138,6 +9203,7 @@ const RREP_SECOES_DEF = [['lista','Lista de reposição'], ['grade','Grade de sa
 let RREP_SECOES = (()=>{ try{ const v = JSON.parse(localStorage.getItem('menzoil_rrepSecoes')||'null'); if(Array.isArray(v)) return v.filter(x=>RREP_SECOES_DEF.some(d=>d[0]===x)); }catch(e){} return ['lista','avisos']; })();
 let RREP_EXCL = new Set(), RREP_ABA = 'lista', RREP_CTX = 'previa', RREP_PREVIA = null, RREP_ULTIMO = null;
 const RREP_ACOES = [['emergencial','Compra emergencial / antecipar'], ['pedir_hoje','Emitir pedido hoje'], ['pedir_ate','Emitir pedido até a data'], ['excesso_entrega','Entrega gera excesso'], ['nao_comprar','Acima do máximo: não comprar']];
+const RREP_LEGENDAS = [['rp-falta','Não atende (falta)'], ['rp-abaixo','Atende, mas abaixo do estoque de segurança'], ['rp-ok','Atende'], ['rp-exc','Acima do estoque máximo (excesso)']];
 const RREP_SECAO_CURTA = {lista:'Lista', grade:'Grade', avisos:'Avisos'};
 function rrepSecoesLer(){ const el = document.getElementById('rrSecoes'); return el ? [...el.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : RREP_SECOES.slice(); }
 function rrepSecoesSalvar(){ RREP_SECOES = rrepSecoesLer(); try{ localStorage.setItem('menzoil_rrepSecoes', JSON.stringify(RREP_SECOES)); }catch(e){} rrepAtualizar(); }
@@ -9146,15 +9212,15 @@ const rrepN = v => (v===null||v===undefined||v==='') ? '—' : fmtL(Math.round(v
 /* ---------- cálculo (usa a mesma base da tela) ---------- */
 function rrepPrefill(){
   const v = id => { const e = document.getElementById(id); return e ? e.value : ''; };
-  let acoes = [], grp = [];
-  try{ acoes = filtroValores('rpAcao'); grp = filtroValores('rpGrupo'); }catch(e){}
+  let acoes = [], grp = [], legs = [];
+  try{ acoes = filtroValores('rpAcao'); grp = filtroValores('rpGrupo'); legs = filtroValores('rpLegenda'); }catch(e){}
   acoes = acoes.filter(a=>RREP_ACOES.some(x=>x[0]===a));
-  return {acoes: acoes.length ? acoes : RREP_ACOES.map(x=>x[0]), tipo:v('rpTipo'), grupo:grp.length===1?String(grp[0]):'', busca:v('rpBusca'), atrasados:v('rpAtrasados')||'hoje', fim:v('rpFim'), ciclo:v('rpCiclo')||'20'};
+  return {acoes: acoes.length ? acoes : RREP_ACOES.map(x=>x[0]), legendas: legs.filter(x=>RREP_LEGENDAS.some(l=>l[0]===x)), tipo:v('rpTipo'), grupo:grp.length===1?String(grp[0]):'', busca:v('rpBusca'), atrasados:v('rpAtrasados')||'hoje', fim:v('rpFim'), ciclo:v('rpCiclo')||'20'};
 }
 function rrepEntrada(f){ const c = Number(String(f.ciclo).replace(',','.')); return materiaisEntrada({ fim:f.fim||undefined, pedidoAtrasado:f.atrasados||'hoje', ciclo:c>0?c:20, incluirExcesso:true }); }
 function rrepFiltrar(lista, f){
   const busca = normaTxt(String(f.busca||'').trim());
-  return lista.filter(m=> (!f.acoes || !f.acoes.length || f.acoes.includes(m.plano.acao)) && (!f.grupo || m.grupo===f.grupo) && (!f.tipo || m.tipo===f.tipo) &&
+  return lista.filter(m=> (!f.acoes || !f.acoes.length || f.acoes.includes(m.plano.acao)) && reposTemLegenda(m, f.legendas, false) && (!f.grupo || m.grupo===f.grupo) && (!f.tipo || m.tipo===f.tipo) &&
     (!busca || normaTxt(m.codigo+' '+m.nome+' '+(m.membros||[]).join(' ')).includes(busca)));
 }
 function rrepAvisos(r){
@@ -9209,7 +9275,8 @@ function fecharRelatorioReposicao(){ const o = document.getElementById('rrepOver
 function rrepLerFiltros(){
   const v = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const el = document.getElementById('rrAcoes');
-  return {acoes: el ? [...el.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : RREP_ACOES.map(x=>x[0]), tipo:v('rrTipo'), grupo:v('rrGrupo'), busca:v('rrBusca'), atrasados:v('rrAtrasados')||'hoje', fim:v('rrFim'), ciclo:v('rrCiclo')||'20'};
+  const lg = document.getElementById('rrLegendas');
+  return {acoes: el ? [...el.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : RREP_ACOES.map(x=>x[0]), legendas: lg ? [...lg.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : [], tipo:v('rrTipo'), grupo:v('rrGrupo'), busca:v('rrBusca'), atrasados:v('rrAtrasados')||'hoje', fim:v('rrFim'), ciclo:v('rrCiclo')||'20'};
 }
 function abrirRelatorioReposicao(){
   const f = rrepPrefill(); RREP_EXCL = new Set(); RREP_ABA = 'lista'; RREP_CTX = 'previa';
@@ -9221,6 +9288,7 @@ function abrirRelatorioReposicao(){
     <div id="rrCorpo">
       <div class="filters" style="margin:14px 0 6px;position:static">
         <div class="f" style="flex:3"><label>Ação do plano</label><div id="rrAcoes" style="display:flex;gap:10px;flex-wrap:wrap;padding-top:4px">${RREP_ACOES.map(([id,rot])=>`<label style="font-size:12.5px;cursor:pointer"><input type="checkbox" value="${id}" ${f.acoes.includes(id)?'checked':''} onchange="rrepAtualizar()"> ${rot}</label>`).join('')}</div></div>
+        <div class="f" style="flex:3"><label>Legenda (cor da célula) — nenhuma marcada = todas</label><div id="rrLegendas" style="display:flex;gap:10px;flex-wrap:wrap;padding-top:4px">${RREP_LEGENDAS.map(([id,rot])=>`<label style="font-size:12.5px;cursor:pointer"><input type="checkbox" value="${id}" ${(f.legendas||[]).includes(id)?'checked':''} onchange="rrepAtualizar()"> ${rot}</label>`).join('')}</div></div>
         <div class="f"><label>Tipo</label><select id="rrTipo" onchange="rrepAtualizar()"><option value="" ${f.tipo===''?'selected':''}>Itens e grupos</option><option value="grupo" ${f.tipo==='grupo'?'selected':''}>Só grupos de reposição</option><option value="item" ${f.tipo==='item'?'selected':''}>Só itens</option></select></div>
         <div class="f"><label>Grupo do cadastro</label><select id="rrGrupo" onchange="rrepAtualizar()"><option value="">Todos</option>${grupos.map(g=>`<option value="${acessoEsc(g)}" ${g===f.grupo?'selected':''}>${acessoEsc(g)}</option>`).join('')}</select></div>
         <div class="f"><label>Material (código ou descrição)</label><input type="text" id="rrBusca" value="${acessoEsc(f.busca)}" placeholder="digite para buscar" autocomplete="off" oninput="rrepAtualizar()"></div>
@@ -9252,7 +9320,7 @@ function rrepToggleMaterial(id){ if(RREP_EXCL.has(id)) RREP_EXCL.delete(id); els
 function rrepRestaurar(){ RREP_EXCL = new Set(); rrepAtualizar(); }
 
 /* ---------- registrar (guardada por permissão) ---------- */
-function rrepFiltrosTxt(f){ f = f||{}; const a = (f.acoes||[]); return [a.length && a.length<RREP_ACOES.length ? 'Ações: '+a.map(x=>(RREP_ACOES.find(y=>y[0]===x)||[0,x])[1]).join(', ') : 'Todas as ações', f.tipo==='grupo'?'Só grupos':(f.tipo==='item'?'Só itens':''), f.grupo?`Grupo: ${f.grupo}`:'', f.busca?`Material: ${f.busca}`:'', f.fim?`Horizonte até ${fmtDate(f.fim)}`:'', `Pedidos atrasados: ${f.atrasados==='ignorar'?'ignorar':'chegando hoje'}`, `Ciclo ${f.ciclo} dia(s)`].filter(Boolean).join(' · '); }
+function rrepFiltrosTxt(f){ f = f||{}; const a = (f.acoes||[]); return [a.length && a.length<RREP_ACOES.length ? 'Ações: '+a.map(x=>(RREP_ACOES.find(y=>y[0]===x)||[0,x])[1]).join(', ') : 'Todas as ações', (f.legendas&&f.legendas.length?'Legenda: '+f.legendas.map(x=>(RREP_LEGENDAS.find(l=>l[0]===x)||[0,x])[1]).join(', '):''), f.tipo==='grupo'?'Só grupos':(f.tipo==='item'?'Só itens':''), f.grupo?`Grupo: ${f.grupo}`:'', f.busca?`Material: ${f.busca}`:'', f.fim?`Horizonte até ${fmtDate(f.fim)}`:'', `Pedidos atrasados: ${f.atrasados==='ignorar'?'ignorar':'chegando hoje'}`, `Ciclo ${f.ciclo} dia(s)`].filter(Boolean).join(' · '); }
 function gerarRelatorioReposicao(){
   const f = rrepLerFiltros(), secs = rrepSecoesLer(); if(!secs.length){ alert('Marque ao menos uma seção para incluir no relatório.'); return; }
   const c = rrepCalcular(f, RREP_EXCL); if(!c.mats.length){ alert('Nenhum material dentro destes filtros (ou todos foram excluídos).'); return; }
@@ -9481,46 +9549,1056 @@ document.addEventListener('click', e=>{
 document.addEventListener('mouseover', e=>{ const b = e.target.closest && e.target.closest('.badge'); if(b && !b.title && !b.getAttribute('onclick')) b.title = 'Clique para ver o resumo deste selo'; }, true);
 
 /* =========================================================================
+   VISÃO POR USUÁRIO — o administrador escolhe, para cada usuário, o que ele enxerga: colunas de todas as tabelas, selos, comentários das linhas e botões de ação.
+   Tudo vem visível por padrão; só o que for desmarcado fica escondido. Administradores veem tudo. Guardado em u.visao = {colunas:{tabela:[rótulos]}, selos:[ids], comentarios:false, botoes:[ids]}.
+   ATENÇÃO: é uma restrição VISUAL (a ferramenta aplica as permissões no navegador): serve para organizar a tela de cada perfil, não para proteger informação sigilosa.
+   ========================================================================= */
+const VISAO_TABELAS = [
+ {
+  "key": "tblNecessidades",
+  "tela": "Necessidades",
+  "titulo": "Insumos necessários",
+  "colunas": [
+   "Código",
+   "Insumo",
+   "Grupo",
+   "Subgrupo",
+   "UM",
+   "Necessário",
+   "Estoque",
+   "Em processo",
+   "Falta",
+   "Litros necessários",
+   "Status"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblAditivos",
+  "tela": "Necessidades",
+  "titulo": "Litros por subgrupo",
+  "colunas": [
+   "Subgrupo",
+   "Litros necessários"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblNecGrupo",
+  "tela": "Necessidades por Grupo",
+  "titulo": "Necessidades por grupo",
+  "colunas": [
+   "Grupo",
+   "Subgrupo",
+   "Itens no subgrupo",
+   "Necessário (L)",
+   "Estoque (L)",
+   "Em processo (L)",
+   "Falta (L)",
+   "Status"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblMateriais",
+  "tela": "Planejamento de Materiais",
+  "titulo": "Planejamento de materiais",
+  "colunas": [
+   "Material",
+   "Tipo",
+   "UM",
+   "Estoque",
+   "Em processo",
+   "Segurança",
+   "Prazo (d)",
+   "Consumo (plano)",
+   "Entradas",
+   "Menor saldo",
+   "1ª falta (saldo < 0)",
+   "Precisa chegar até",
+   "Emitir pedido até",
+   "Chega em (se pedir hoje)",
+   "Situação",
+   "Sugerido"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblReposGrade",
+  "tela": "Plano de Reposição",
+  "titulo": "Grade de saldos por dia",
+  "colunas": [
+   "Material",
+   "UM",
+   "Estoque",
+   "Em processo",
+   "Segurança",
+   "Máximo",
+   "Colunas de dias"
+  ],
+  "dias": true
+ },
+ {
+  "key": "tblClientesLote",
+  "tela": "Cadastros",
+  "titulo": "Clientes que dividem pelo lote máximo",
+  "colunas": [
+   "Divide pelo lote",
+   "Cliente",
+   "Pedidos em aberto",
+   "Itens sem Capacidade Máxima"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblItens",
+  "tela": "Cadastros",
+  "titulo": "Cadastro de itens",
+  "colunas": [
+   "Código",
+   "Descrição",
+   "UM",
+   "L/unid.",
+   "Aplicação",
+   "Grupo",
+   "Subgrupo",
+   "Cap. máx. lote (L)",
+   "Recurso",
+   "Estoque",
+   "Em processo"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblReceitas",
+  "tela": "Cadastros",
+  "titulo": "Receitas",
+  "colunas": [
+   "Produto",
+   "Insumo",
+   "Qtd./unidade",
+   "UM insumo"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblRecursos",
+  "tela": "Cadastros",
+  "titulo": "Recursos e capacidade base",
+  "colunas": [
+   "Recurso",
+   "Capacidade base (L/dia)",
+   "Ajustes pontuais"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblOverrides",
+  "tela": "Cadastros",
+  "titulo": "Ajustes pontuais de capacidade",
+  "colunas": [
+   "Recurso",
+   "Data",
+   "Capacidade (L)"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblPedidos",
+  "tela": "Cadastros",
+  "titulo": "Carteira de pedidos",
+  "colunas": [
+   "Pedido",
+   "Item",
+   "Qtd.",
+   "Data do pedido",
+   "Entrega",
+   "Cliente",
+   "Status"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblLocalizacoes",
+  "tela": "Cadastros",
+  "titulo": "Localizações de granel",
+  "colunas": [
+   "Localização",
+   "Linhas da Lista Mestre que usam"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblHistImp",
+  "tela": "Importação de Dados",
+  "titulo": "Histórico de importações",
+  "colunas": [
+   "Data e hora",
+   "Usuário",
+   "Importação",
+   "Modo",
+   "Arquivo",
+   "Linhas lidas",
+   "Adicionados",
+   "Atualizados",
+   "Erros",
+   "Resultado"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblVisaoDiaMatrix",
+  "tela": "Itens por Dia",
+  "titulo": "Itens por dia",
+  "colunas": [
+   "Nº do item",
+   "Descrição",
+   "Total em Pedidos",
+   "Falta / Excesso (Qtd.)",
+   "Colunas de dias"
+  ],
+  "dias": true
+ },
+ {
+  "key": "tblEfetuadoMatrix",
+  "tela": "Planejado x Efetuado",
+  "titulo": "Planejado x Efetuado",
+  "colunas": [
+   "Nº do item",
+   "Descrição",
+   "UM",
+   "Total do período",
+   "Colunas de dias"
+  ],
+  "dias": true
+ },
+ {
+  "key": "tblLcGrupo",
+  "tela": "Pedidos & Lead Time",
+  "titulo": "Lead time por cliente",
+  "colunas": [
+   "Cliente",
+   "Pedidos",
+   "OTIF",
+   "Concl. c/ atraso",
+   "Vencidos incompl.",
+   "Lead time prod.",
+   "Lead time atend.",
+   "Atraso médio",
+   "Atendimento",
+   "Carteira aberta (L)"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblLcPedidos",
+  "tela": "Pedidos & Lead Time",
+  "titulo": "Pedidos e lead time",
+  "colunas": [
+   "Pedido",
+   "Cliente",
+   "Itens",
+   "Lotes",
+   "Volume (L)",
+   "Entrega",
+   "Plano",
+   "Efetuado",
+   "1ª produção",
+   "Conclusão",
+   "Lead time prod.",
+   "Data do pedido",
+   "Lead time atend.",
+   "Folga / atraso",
+   "Situação",
+   "Plano até"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblRefugoGrupo",
+  "tela": "Refugo / Perdas",
+  "titulo": "Refugo agrupado",
+  "colunas": [
+   "Dia",
+   "Apontamentos",
+   "Quantidade",
+   "Litros equiv.",
+   "% do total"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblRefugos",
+  "tela": "Refugo / Perdas",
+  "titulo": "Apontamentos de refugo",
+  "colunas": [
+   "Data",
+   "Turno",
+   "Item refugado",
+   "Quantidade",
+   "Recurso",
+   "Nº OP",
+   "Nº OP Granel",
+   "Item da linha",
+   "Observação"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblListaResumo",
+  "tela": "Lista Mestre",
+  "titulo": "Resumo por recurso",
+  "colunas": [
+   "Recurso",
+   "Planejado (L)",
+   "Efetivo (L)"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblLista",
+  "tela": "Lista Mestre",
+  "titulo": "Lista Mestre",
+  "colunas": [
+   "Data",
+   "Recurso",
+   "Item",
+   "Descrição",
+   "Pedido",
+   "Lote(s)",
+   "Qtd. (L)",
+   "Qtd. (unid.)",
+   "Contaminante",
+   "Nº OP",
+   "Nº OP Granel",
+   "Localização do Granel",
+   "1º turno",
+   "2º turno",
+   "3º turno",
+   "Tempo total",
+   "Qtd. efetiva total",
+   "Última data efetiva",
+   "Status"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblPrioridades",
+  "tela": "Prioridades de Produção",
+  "titulo": "Prioridades",
+  "colunas": [
+   "Prioridade",
+   "Cliente",
+   "Item",
+   "Início",
+   "Qtd. Priorizada",
+   "Programado",
+   "Falta programar",
+   "Finalizado",
+   "Falta finalizar",
+   "Situação"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblCapacidade",
+  "tela": "Capacidade dos Recursos",
+  "titulo": "Matriz de capacidade",
+  "colunas": [
+   "Recurso",
+   "Colunas de dias"
+  ],
+  "dias": true
+ },
+ {
+  "key": "tblParadas",
+  "tela": "Paradas de Produção",
+  "titulo": "Paradas registradas",
+  "colunas": [
+   "Data",
+   "Recurso",
+   "Motivo",
+   "Tipo",
+   "Início",
+   "Fim",
+   "Duração",
+   "Pedido",
+   "Nº OP",
+   "Desconta capac.",
+   "Observação"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblMotivosParada",
+  "tela": "Paradas de Produção",
+  "titulo": "Motivos de parada",
+  "colunas": [
+   "Motivo",
+   "Tipo"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblDash_recurso",
+  "tela": "Dashboards",
+  "titulo": "Por recurso",
+  "colunas": [
+   "Recurso",
+   "Planejado (L)",
+   "Efetuado (L)",
+   "1º turno (L)",
+   "2º turno (L)",
+   "3º turno (L)",
+   "Dif. (L)",
+   "Execução",
+   "Capacidade (L)",
+   "Utilização",
+   "Horas",
+   "Horas paradas",
+   "L/h",
+   "Qtd. efetuada"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblDash_uom",
+  "tela": "Dashboards",
+  "titulo": "Por unidade de medida",
+  "colunas": [
+   "Unidade de medida",
+   "Planejado (L)",
+   "Efetuado (L)",
+   "1º turno (L)",
+   "2º turno (L)",
+   "3º turno (L)",
+   "Dif. (L)",
+   "Execução",
+   "Capacidade (L)",
+   "Contribuição",
+   "Horas",
+   "Horas paradas",
+   "L/h",
+   "Qtd. efetuada"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblDash_turno",
+  "tela": "Dashboards",
+  "titulo": "Por turno",
+  "colunas": [
+   "Turno",
+   "Planejado (L)",
+   "Efetuado (L)",
+   "Dif. (L)",
+   "Execução",
+   "Capacidade (L)",
+   "Utilização",
+   "Horas",
+   "Horas paradas",
+   "L/h",
+   "Qtd. efetuada"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblPE",
+  "tela": "Dashboards",
+  "titulo": "Planejado x Efetuado por recurso",
+  "colunas": [
+   "Recurso",
+   "Planejado (L)",
+   "Efetuado (L)",
+   "Diferença (L)",
+   "Execução"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblProdDia",
+  "tela": "Dashboards",
+  "titulo": "Produção por dia",
+  "colunas": [
+   "Recurso",
+   "Total (L)",
+   "Colunas de dias"
+  ],
+  "dias": true
+ },
+ {
+  "key": "tblMedias",
+  "tela": "Dashboards",
+  "titulo": "Médias de produção",
+  "colunas": [
+   "Recurso",
+   "Total (L)",
+   "Dias c/ prod.",
+   "Média diária",
+   "Semanas c/ prod.",
+   "Média semanal",
+   "Média mensal",
+   "Média anual"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblAderCap",
+  "tela": "Dashboards",
+  "titulo": "Aderência à capacidade",
+  "colunas": [
+   "Recurso",
+   "Efetuado (L)",
+   "Capacidade (L)",
+   "Aderência"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblMediaCap",
+  "tela": "Dashboards",
+  "titulo": "Média x capacidade",
+  "colunas": [
+   "Recurso",
+   "Média diária (L)",
+   "Capacidade média/dia (L)",
+   "Média ÷ capacidade"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblTempo",
+  "tela": "Dashboards",
+  "titulo": "Utilização do tempo",
+  "colunas": [
+   "Recurso",
+   "Horas utilizadas",
+   "Turnos c/ horário",
+   "Produtividade (L/h)",
+   "Horas disponíveis",
+   "Utilização do tempo",
+   "Paradas (h)"
+  ],
+  "dias": false
+ }
+];
+
+// botões de ação: [id, rótulo, funções chamadas pelo botão] — um botão escondido também fica bloqueado
+const VISAO_BOTOES = [
+ {tela:'Plano Mestre', itens:[['gerar_plano','Gerar plano automaticamente',['generatePlan']],['confirmar_plano','Salvar / Confirmar plano',['confirmarPlano']],['reabrir_plano','Reabrir plano como rascunho',['reabrirPlanoComoRascunho']],['alterar_prog','Alterar programação (painel e aplicar)',['toggleAlterPanel','executeAlterarProgramacao']],['limpar_plano','Limpar plano (painel e executar)',['toggleClearPanel','executeClearPlan']],['mover_dia','Alterar a data de um dia inteiro',['toggleMovePanel','moveEntireDay']],['planejar_pedido','Planejar pedido na montagem manual',['planejarPedidoLinha']],['reprogramar','Reprogramar pendência',['reprogramarPendencia']]]},
+ {tela:'Lista Mestre', itens:[['solicitar_op','Solicitar ordem de produção (abrir, gerar e cancelar)',['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']],['sol_saidas','Solicitação de OP: imprimir e exportar CSV',['solOpImprimir','solOpCsv']],['rel_insumos','Relatório de insumos (abrir e gerar)',['abrirRelatorioInsumos','gerarRelatorioInsumos']],['rel_insumos_saidas','Relatório de insumos: Excel, PDF e CSV',['rinsExcel','rinsImprimir','rinsCsv']],['add_linha','Adicionar linha direto na Lista',['adicionarLinhaListaMestre']],['excluir_linha','Excluir linha da Lista',['deleteListaLine']],['parada_rapida','Registrar parada pela Lista',['abrirParadaRapida']],['imprimir_lista','Abrir lista para impressão',['doPrint']],['exportar_linhas','Exportar relatório de linhas (.csv)',['exportReport']]]},
+ {tela:'Materiais e Reposição', itens:[['rel_reposicao','Relatório de reposição (abrir e gerar)',['abrirRelatorioReposicao','gerarRelatorioReposicao']],['rel_reposicao_saidas','Relatório de reposição: Excel, PDF e CSV',['rrepExcel','rrepImprimir','rrepCsv']],['rel_compras','Relatório de compras',['abrirRelatorioCompras','imprimirRelatorioCompras']],['sugestao_seg','Sugestão de estoque de segurança (abrir e aplicar)',['abrirSugestaoSeguranca','esegAplicar']],['sugestao_seg_saidas','Sugestão de estoque de segurança: Excel e CSV',['esegExcel','esegCsv']]]},
+ {tela:'Importação e backup', itens:[['importar','Importar dados (todas as importações)',['runImport']],['modelos','Baixar modelos de importação (.csv)',['downloadTemplate']],['depositos','Classificar depósitos (Estoque / Em processo)',['salvarDepositos']],['considerar_processo','Opção: considerar o estoque em processo nos cálculos',['setConsiderarProcesso']],['hist_imp_saidas','Histórico de importações: exportar CSV e Excel dos erros',['exportHistoricoImportacoes','exportDetalhesImportacaoExcel','exportDetalhesImportacaoCsv']],['backup_exp','Exportar backup (.json)',['exportarBackup']],['backup_rest','Restaurar backup',['restaurarBackup']],['limpar_dados','Limpar dados salvos',['limparDadosSalvos']]]},
+ {tela:'Cadastros e capacidade', itens:[['salvar_cap','Salvar capacidades e configurações',['salvarCapacidadesManualmente']],['recursos','Adicionar recurso e ajuste do dia',['addResource','addOverride','removeOverride']],['itens_cad','Adicionar e excluir itens',['addItem','deleteItem']],['receitas','Adicionar e excluir receitas',['addRecipe','deleteRecipe']],['pedidos_cad','Adicionar e excluir pedidos',['addOrder','deleteOrder']],['locais','Locais de granel',['addLocalGranel','deleteLocalGranel']],['prioridades_cad','Adicionar e excluir prioridades',['addPrioridade','deletePrioridade']]]},
+ {tela:'Apontamentos', itens:[['paradas_reg','Registrar e excluir paradas',['addParada','deleteParada']],['motivos','Motivos de parada (adicionar e excluir)',['addMotivoParada','deleteMotivoParada']],['refugo_reg','Registrar e excluir refugo',['addRefugo','deleteRefugo']]]},
+ {tela:'Exportações CSV das telas', itens:[['csv_efetuado','Planejado x Efetuado',['exportEfetuadoCsv']],['csv_materiais','Planejamento de Materiais',['exportMateriaisCsv']],['csv_refugos','Refugo / Perdas',['exportRefugosCsv']],['csv_reposicao','Plano de Reposição',['exportReposicaoCsv']],['csv_visaodia','Itens por Dia',['exportVisaoDiaCsv']],['csv_dash','Dashboards (indicadores)',['exportDashCsv']],['csv_leadtime','Pedidos & Lead Time',['exportLeadtimeCsv']]]},
+];
+const VISAO_FN_ID = new Map(); VISAO_BOTOES.forEach(g=>g.itens.forEach(i=>i[2].forEach(f=>VISAO_FN_ID.set(f, i[0]))));
+// famílias de selo (as mesmas do resumo do selo); o que não casar com nenhuma é "demais selos"
+const VISAO_SELOS = [
+ {id:'solicitacao', rot:'Solicitação de OP (OP solicitada, qtd. alterada)', rx:/OP solicitada|qtd\.? alterada|SOLOP/i},
+ {id:'registros', rot:'Registros (registrada, cancelada)', rx:/^(registrada|registrado|cancelada)$/i},
+ {id:'status_linha', rot:'Situação da linha (Planejado, Em produção, Concluído…)', rx:/^(Planejado|Em produção|Concluído|Cancelado|Programado|Confirmado)$/i},
+ {id:'contaminacao', rot:'Contaminação (corante, enxofre)', rx:/corante|enxofre/i},
+ {id:'paradas_tipo', rot:'Tipo de parada (Programada, Não Programada)', rx:/^(Programada|Não Programada)$/i},
+ {id:'usuarios', rot:'Situação do usuário (Ativo, Desativado, Acesso total…)', rx:/^(Ativo|Desativado|Acesso total|Nenhuma tela|Aguardando liberação)$/i},
+ {id:'grupos', rot:'Grupos de reposição', rx:/^grupo\b|^Grupo ·/i},
+ {id:'base_nec', rot:'Base das necessidades (Plano Mestre ou pedidos)', rx:/Baseado no Plano Mestre|Baseado nos pedidos em aberto/i},
+ {id:'producao_apontada', rot:'Produção apontada (🔒)', rx:/produção apontada/i},
+ {id:'manual', rot:'Editado manualmente', rx:/editado manualmente/i},
+ {id:'data_vencida', rot:'Data vencida (pedidos de compra)', rx:/data vencida/i},
+ {id:'materiais_acao', rot:'Ações de materiais (Ruptura inevitável, Emitir pedido…)', rx:/Ruptura inevitável|Emitir pedido já|Emitir pedido até a data|Sem ação/i},
+ {id:'reposicao_acao', rot:'Ações de reposição (Compra emergencial, Não comprar…)', rx:/Compra emergencial|Pedido a emitir|Reduzir \/ adiar|Não comprar|Emitir pedido hoje|Entrega gera excesso|Acima do máximo/i},
+ {id:'origem_insumos', rot:'Origem dos insumos (ERP, estimado)', rx:/^(ERP|ERP \+ estimado|Estimado)$/i},
+ {id:'importacao', rot:'Importações (Novo, Atualizado, Erro, Importado…)', rx:/^(Novo|Atualizado|Erro|Aviso|Importado|Importado com erros|Nada importado.*|Falha ao ler o arquivo)(\s*▸)?$/i},
+ {id:'leadtime', rot:'Lead time (OTIF, Vencido e incompleto, A vencer…)', rx:/OTIF|Concluído com atraso|Vencido e incompleto|A vencer/i},
+ {id:'alteracoes', rot:'Alterações da linha (data alterada, 🔔 alterações)', rx:/alterada|alteração|alterações/i},
+ {id:'estoque', rot:'Estoque (insuficiente, falta, OK)', rx:/estoque insuf|^(Atrasado|Falta|OK)$/i},
+ {id:'numeros', rot:'Contadores e respostas Sim/Não', rx:/^(\d+|Sim|Não)$/i},
+];
+function visaoSeloFamilia(texto){ const t = String(texto||'').replace(/\s+/g,' ').trim(); const f = VISAO_SELOS.find(x=>x.rx.test(t)); return f ? f.id : 'outros'; }
+const VISAO_DIA = /^\d{2}\/\d{2}(\/\d{4})?[A-Za-zçáéíóúâêô]{0,4}$/;
+function visaoDoUsuario(){ const u = (typeof USUARIO_ATUAL!=='undefined') ? USUARIO_ATUAL : null; if(!u || u.admin) return null; const v = u.visao; if(!v) return null; return (v.botoes&&v.botoes.length)||(v.selos&&v.selos.length)||v.comentarios===false||(v.colunas&&Object.keys(v.colunas).length) ? v : null; }
+function visaoBotaoOculto(fn){ const v = visaoDoUsuario(); if(!v || !v.botoes || !v.botoes.length) return false; const id = VISAO_FN_ID.get(fn); return !!id && v.botoes.includes(id); }
+function visaoColunaOculta(tabelaKey, rotulo){ const v = visaoDoUsuario(); if(!v || !v.colunas) return false; const o = v.colunas[tabelaKey]; if(!o) return false; const t = VISAO_TABELAS.find(x=>x.key===tabelaKey); return o.includes(rotulo) || !!(t && t.dias && o.includes('Colunas de dias') && VISAO_DIA.test(String(rotulo))); }
+// filtra um cabeçalho + linhas (exportações e impressão) pelas colunas escondidas do usuário
+function visaoFiltrarMatriz(tabelaKey, cab, linhas){
+  const idx = cab.map((c,i)=>visaoColunaOculta(tabelaKey, String(c).replace(/\s+/g,' ').trim()) ? -1 : i).filter(i=>i>=0);
+  return idx.length===cab.length ? {cab, linhas} : {cab:idx.map(i=>cab[i]), linhas:linhas.map(l=>idx.map(i=>l[i]))};
+}
+// envolve as funções dos botões do catálogo: botão escondido = ação bloqueada (também por atalho ou pelo console)
+(function(){ VISAO_FN_ID.forEach((id, fn)=>{ const orig = window[fn]; if(typeof orig!=='function' || orig.__visao) return; const w = function(...a){ if(visaoBotaoOculto(fn)){ showToast('Esta ação foi desativada no seu perfil.', 'error'); return; } return orig.apply(this, a); }; if(orig.__guardada) w.__guardada = true; w.__visao = true; window[fn] = w; }); })();
+function visaoSeloOculto(id){ const v = visaoDoUsuario(); return !!(v && v.selos && v.selos.includes(id)); }
+function visaoComentariosOcultos(){ const v = visaoDoUsuario(); return !!(v && v.comentarios===false); }
+// colunas do layout de impressão da Lista Mestre (posição → rótulo equivalente na tela)
+function visaoPrintOcultas(){ const cols = ['✓','Data','Recurso','Item','Lote(s)','Qtd (L)','Qtd (unid.)','Nº OP','Nº OP Granel','Local. granel','Qtd. Real','Assinatura / Hora'], alias = {'Qtd (L)':'Qtd. (L)','Qtd (unid.)':'Qtd. (unid.)','Local. granel':'Localização do Granel'}; const out = []; cols.forEach((c,i)=>{ if(visaoColunaOculta('tblLista', alias[c]||c)) out.push(i); }); return out; }
+// comentários desligados: não abre, não grava e não apaga observação
+['abrirObsLinha','salvarObsLinha','limparObsLinha'].forEach(fn=>{ const orig = window[fn]; if(typeof orig!=='function' || orig.__visao) return; const w = function(...a){ if(visaoComentariosOcultos()){ showToast('Os comentários estão desativados no seu perfil.', 'error'); return; } return orig.apply(this, a); }; if(orig.__guardada) w.__guardada = true; w.__visao = true; window[fn] = w; });
+let __visaoMarcados = false;
+function visaoRestaurar(){
+  document.querySelectorAll('[data-vo]').forEach(e=>{ e.style.display = ''; if(e.dataset.cs0){ e.colSpan = Number(e.dataset.cs0); delete e.dataset.cs0; } delete e.dataset.vo; });
+  document.body.classList.remove('visao-sem-obs');
+}
+function visaoAplicarColunas(tab, ocultas, dias){
+  const cab = tab.tHead && tab.tHead.rows[0] ? tab.tHead.rows[0] : tab.rows[0]; if(!cab) return false;
+  const rot = []; [...cab.cells].forEach(c=>{ const l = c.textContent.replace(/\s+/g,' ').trim(); for(let k=0;k<(c.colSpan||1);k++) rot.push(l); });
+  const oc = rot.map(l=> !!l && (ocultas.includes(l) || (dias && ocultas.includes('Colunas de dias') && VISAO_DIA.test(l))));
+  if(!oc.some(Boolean)) return false;
+  [...tab.rows].forEach(r=>{ let pos = 0; [...r.cells].forEach(c=>{ const span = c.colSpan||1; let h = 0; for(let k=0;k<span;k++) if(oc[pos+k]) h++; if(h===span){ c.style.display = 'none'; c.dataset.vo = '1'; } else if(h>0){ if(!c.dataset.cs0) c.dataset.cs0 = span; c.colSpan = span-h; c.dataset.vo = '1'; } pos += span; }); });
+  return true;
+}
+function aplicarVisaoUsuario(){
+  if(__visaoMarcados){ visaoRestaurar(); __visaoMarcados = false; }
+  let v = visaoDoUsuario(); if(!v) return;
+  __visaoMarcados = true;
+  if(v.comentarios===false) v = {...v, colunas:{...(v.colunas||{}), tblLista:[...new Set([...((v.colunas||{}).tblLista||[]), 'Obs.'])]}};   // sem comentários, a coluna Obs. da Lista também some
+  if(v.comentarios===false){ document.body.classList.add('visao-sem-obs'); document.querySelectorAll('tr.linha-obs').forEach(r=>{ r.classList.remove('linha-obs'); r.dataset.voObs = '1'; }); }
+  (v.botoes||[]).forEach(id=>{ VISAO_BOTOES.forEach(g=>g.itens.forEach(i=>{ if(i[0]!==id) return; i[2].forEach(fn=>document.querySelectorAll(`[onclick*="${fn}("]`).forEach(e=>{ e.style.display = 'none'; e.dataset.vo = '1'; })); })); });
+  if(v.selos && v.selos.length) document.querySelectorAll('.badge').forEach(b=>{ if(v.selos.includes(visaoSeloFamilia(b.textContent))){ b.style.display = 'none'; b.dataset.vo = '1'; } });
+  let mexeu = false;
+  VISAO_TABELAS.forEach(t=>{ const o = v.colunas && v.colunas[t.key]; if(!o || !o.length) return; const tab = document.getElementById(t.key); if(tab && visaoAplicarColunas(tab, o, t.dias)) mexeu = true; });
+  if(mexeu && typeof aplicarCongelamento==='function'){ try{ aplicarCongelamento(); }catch(e){} }
+}
+let __visaoTimer = null;
+function visaoAgendar(){ if(__visaoTimer) return; __visaoTimer = setTimeout(()=>{ __visaoTimer = null; try{ aplicarVisaoUsuario(); }catch(e){ console.warn('visão:', e); } }, 20); }
+if(typeof MutationObserver!=='undefined' && document.body) new MutationObserver(m=>{ if(m.some(x=>!(x.target.closest && x.target.closest('#seloInfoOverlay')))) visaoAgendar(); }).observe(document.body, {childList:true, subtree:true});
+(function(){ const st = document.createElement('style'); st.textContent = 'body.visao-sem-obs .btn-obs{display:none!important}.am-vis summary{cursor:pointer;font-weight:700;margin:6px 0}.am-vis .am-vis-g{display:flex;flex-wrap:wrap;gap:4px 16px;margin:4px 0 8px}.am-vis .am-vis-g label{font-size:12.5px;display:flex;gap:4px;align-items:center;cursor:pointer}.am-vis .am-vis-t{font-weight:700;font-size:12px;color:var(--muted);text-transform:uppercase;margin:8px 0 2px}.am-vis .am-vis-tab{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:6px 0}'; document.head.appendChild(st); })();
+// ---- janela de permissões: seção "O que este usuário enxerga" ----
+function visaoPermissoesHtml(u){
+  const v = u.visao || {}, bo = v.botoes||[], so = v.selos||[], co = v.colunas||{};
+  const chk = (nome, val, ocultos, rot) => `<label><input type="checkbox" name="${nome}" value="${acessoEsc(val)}" ${ocultos.includes(val)?'':'checked'}> ${acessoEsc(rot||val)}</label>`;
+  const acoes = (sel) => `<a onclick="pmVisaoMarcar('${sel}',true)">marcar todos</a> · <a onclick="pmVisaoMarcar('${sel}',false)">desmarcar todos</a>`;
+  const nBot = VISAO_BOTOES.reduce((s,g)=>s+g.itens.length,0), nCol = VISAO_TABELAS.reduce((s,t)=>s+t.colunas.length,0);
+  const telas = [...new Set(VISAO_TABELAS.map(t=>t.tela))];
+  return `<div class="am-vis" id="pmVisao"><h4>👁 O que este usuário enxerga (opcional)</h4>
+    <div class="card-sub">Tudo vem <b>marcado</b> (visível). <b>Desmarque</b> o que deve ficar escondido para esta pessoa. Vale para a <b>tela</b>, para a <b>impressão da Lista Mestre</b> e para os <b>CSV da Lista Mestre, de Refugo e do Histórico de importações</b>. Nas demais exportações, esconda também o botão de exportar (ele fica bloqueado). Administradores veem tudo. ⚠ É uma restrição <b>visual</b>: organiza a tela de cada perfil, mas não protege informação sigilosa.</div>
+    <details><summary>Botões de ação (${nBot})</summary><div class="card-sub" style="margin:0 0 4px">Um botão desmarcado some da tela e a ação fica <b>bloqueada</b>. ${acoes('#pmVisao input[name=vbot]')}</div>${VISAO_BOTOES.map(g=>`<div class="am-vis-t">${acessoEsc(g.tela)}</div><div class="am-vis-g">${g.itens.map(i=>chk('vbot', i[0], bo, i[1])).join('')}</div>`).join('')}</details>
+    <details><summary>Selos (${VISAO_SELOS.length+1} famílias)</summary><div class="card-sub" style="margin:0 0 4px">${acoes('#pmVisao input[name=vselo]')}</div><div class="am-vis-g">${VISAO_SELOS.concat([{id:'outros',rot:'Demais selos'}]).map(f=>chk('vselo', f.id, so, f.rot)).join('')}</div></details>
+    <details><summary>Comentários das linhas</summary><div class="am-vis-g"><label><input type="checkbox" id="pmVerCom" ${v.comentarios===false?'':'checked'}> Ver comentários / observações das linhas (botão Obs., linha amarela e impressão). Quem não vê também não edita.</label></div></details>
+    <details><summary>Colunas das tabelas (${VISAO_TABELAS.length} tabelas, ${nCol} colunas)</summary>${telas.map(tl=>`<div class="am-vis-t">${acessoEsc(tl)}</div>${VISAO_TABELAS.filter(t=>t.tela===tl).map(t=>`<div class="am-vis-tab"><b>${acessoEsc(t.titulo)}</b> <span class="card-sub">${acoes(`#pmVisao input[name=vcol_${t.key}]`)}</span><div class="am-vis-g">${t.colunas.map(c=>chk('vcol_'+t.key, c, co[t.key]||[], c)).join('')}</div></div>`).join('')}`).join('')}</details>
+  </div>`;
+}
+function pmVisaoMarcar(sel, marcar){ document.querySelectorAll(sel).forEach(i=>i.checked = !!marcar); }
+function visaoLerPermissoes(){
+  const q = s => [...document.querySelectorAll('#pmVisao '+s)].map(i=>i.value);
+  const bot = q('input[name="vbot"]:not(:checked)'), selos = q('input[name="vselo"]:not(:checked)'), com = document.getElementById('pmVerCom'), colunas = {};
+  VISAO_TABELAS.forEach(t=>{ const o = q(`input[name="vcol_${t.key}"]:not(:checked)`); if(o.length) colunas[t.key] = o; });
+  const v = {}; if(bot.length) v.botoes = bot; if(selos.length) v.selos = selos; if(com && !com.checked) v.comentarios = false; if(Object.keys(colunas).length) v.colunas = colunas; return v;
+}
+function visaoResumoTexto(v){ v = v||{}; const n = (v.botoes||[]).length, s = (v.selos||[]).length, c = Object.values(v.colunas||{}).reduce((t,a)=>t+a.length,0); const p = []; if(n) p.push(n+' botão(ões)'); if(s) p.push(s+' família(s) de selo'); if(c) p.push(c+' coluna(s)'); if(v.comentarios===false) p.push('comentários'); return p.join(', '); }
+
+/* =========================================================================
+   ESTOQUE POR DEPÓSITO — "Estoque" e "Em processo"
+   O relatório do ERP traz uma coluna por depósito. Cada depósito é classificado como Estoque, Em processo ou Ignorar (DB.depositos); o saldo de cada item
+   por depósito fica guardado em item.stockDep, e item.stock / item.stockProc são calculados a partir da classificação (mudar a classificação recalcula tudo, sem reimportar).
+   Cabeçalhos repetidos no arquivo (ex.: duas colunas "110") viram "110" e "110_1" (a repetida), como a leitura da planilha os nomeia.
+   ========================================================================= */
+const DEP_SEED = {
+  estoque: ['110','00110 A','00110 B','119','00119 A','00119 B','00119 C','300','3110','03110 A','03110 B','3119','03119 A','03119 B','03119 C','3300'],
+  processo: ['111','301'],
+  ignorar: ['112','113','114','115','116','117','118','120','121','122','123','124','130','195','198','302','303','304','330','110_1','115_1','116_1','118_1','215','3112','3113','3115','3116','3118','3301','3302','415'],
+};
+const DEP_PADRAO = JSON.parse(JSON.stringify(DEP_SEED));   // padrão só de leitura: olhar a tela NÃO grava nada (DB.depositos só passa a existir quando há mudança de verdade)
+function depositosConfig(escrever){
+  if(!DB.depositos || !Array.isArray(DB.depositos.estoque)){ if(!escrever) return DEP_PADRAO; DB.depositos = JSON.parse(JSON.stringify(DEP_SEED)); }
+  if(escrever){ if(!Array.isArray(DB.depositos.processo)) DB.depositos.processo = []; if(!Array.isArray(DB.depositos.ignorar)) DB.depositos.ignorar = []; }
+  return DB.depositos;
+}
+function depositoClasse(k){ const c = depositosConfig(); return c.estoque.includes(k) ? 'estoque' : (c.processo.includes(k) ? 'processo' : (c.ignorar.includes(k) ? 'ignorar' : null)); }
+function depositoRotulo(k){ const m = String(k).match(/^(.*)_(\d+)$/); return m ? `${m[1]} (coluna repetida ${Number(m[2])+1})` : String(k); }
+// reconhece o layout "uma coluna por depósito" (não tem a coluna Estoque; tem Nº do item e, em geral, "Depós. total")
+function estoqueLayoutDepositos(rows){
+  if(!rows || !rows.length) return null;
+  const ks = Object.keys(rows[0]), nk = ks.map(k=>[k, normHeader(k)]);
+  const cod = nk.find(([k,n])=>/^n.{0,2} do item$/.test(n) || ['codigo do item','codigo','item'].includes(n));
+  const temEstoque = nk.some(([k,n])=>['estoque atual','estoque','saldo','quantidade em estoque','em processo','estoque em processo'].includes(n));
+  const tot = nk.find(([k,n])=>/^depos\.?\s*total$/.test(n) || n==='deposito total');
+  if(!cod || temEstoque) return null;
+  const meta = new Set([cod[0]]); nk.forEach(([k,n])=>{ if(['descricao do item','descricao','um','unidade'].includes(n) || (tot && k===tot[0])) meta.add(k); });
+  const dep = ks.filter(k=>!meta.has(k));
+  if(!tot && dep.length<4) return null;
+  return {codKey:cod[0], depKeys:dep};
+}
+function recalcularEstoquePorDepositos(){
+  (DB.items||[]).forEach(i=>{ if(!i.stockDep) return; let e = 0, p = 0; for(const [k,v] of Object.entries(i.stockDep)){ const c = depositoClasse(k); if(c==='estoque') e += v; else if(c==='processo') p += v; } i.stock = Math.round(e*1e6)/1e6; i.stockProc = Math.round(p*1e6)/1e6; });
+}
+/* a importação pode acrescentar depósitos novos: por isso usa depositosConfig(true), que grava */
+function importarEstoqueDepositos(rawRows, lay, report){
+  const cfg = depositosConfig(true); let atual = 0; const fora = [], novos = new Map(); let e = 0, p = 0;
+  lay.depKeys.forEach(k=>{ if(!depositoClasse(k)){ cfg.ignorar.push(k); novos.set(k, 0); } });   // depósito nunca visto: entra como "Ignorar" até ser classificado
+  rawRows.forEach(raw=>{
+    const cod = String(raw[lay.codKey]==null ? '' : raw[lay.codKey]).trim(); if(!cod) return;
+    const it = itemByCode(cod); if(!it){ fora.push(cod); return; }
+    const dep = {}; lay.depKeys.forEach(k=>{ const v = parseNumberFlexible(raw[k]); if(v===undefined || !isFinite(v) || v===0) return; dep[k] = v; if(novos.has(k)) novos.set(k, novos.get(k)+v); });
+    it.stockDep = dep; atual++;
+  });
+  recalcularEstoquePorDepositos();
+  (DB.items||[]).forEach(i=>{ if(i.stockDep){ e += i.stock||0; p += i.stockProc||0; } });
+  report.push({line:'—', status:'update', msg:`Estoque por depósito: ${atual} item(ns) atualizado(s). Em estoque: ${fmtL(e)} · Em processo: ${fmtL(p)} (somas de todas as unidades de medida).`});
+  if(fora.length) report.push({line:'—', status:'update', msg:`⚠ ${fora.length} item(ns) do arquivo não estão no cadastro de Itens e foram ignorados: ${fora.slice(0,15).join(', ')}${fora.length>15?'…':''}.`});
+  const nv = [...novos.entries()].filter(([k,v])=>v>0);
+  if(nv.length) report.push({line:'—', status:'update', msg:`⚠ Depósito(s) novo(s) com saldo, ainda sem classificação (contam como Ignorar): ${nv.map(([k])=>depositoRotulo(k)).join(', ')}. Classifique em Importação de Dados → Estoque Atual → Depósitos.`});
+  return atual;
+}
+/* ---- opção "Considerar estoque em processo nos cálculos" (global, vale para todos; sincronizada) ---- */
+const estoqueProcesso = i => Number(i && i.stockProc) || 0;
+function considerarProcesso(){ return !!DB.considerarEmProcesso; }
+function estoqueCalc(i){ return (Number(i && i.stock) || 0) + (considerarProcesso() ? estoqueProcesso(i) : 0); }   // o que conta nos cálculos de insumos
+function opcaoProcessoHtml(){ return `<label class="opcao-processo" style="display:inline-flex;gap:6px;align-items:center;font-size:12.5px;cursor:pointer;margin:0 0 10px" title="Quando marcada, o saldo em processo soma ao estoque nos cálculos de necessidades, materiais, reposição e relatórios. Vale para todas as telas e para todos os usuários. A geração do plano continua usando só o Estoque."><input type="checkbox" class="chk-considerar-processo" ${considerarProcesso()?'checked':''} onchange="setConsiderarProcesso(this.checked)"> Considerar o <b>estoque em processo</b> nos cálculos</label>`; }
+function renderOpcaoProcesso(){ document.querySelectorAll('.opcao-processo-host').forEach(h=>{ h.innerHTML = opcaoProcessoHtml(); }); }
+function setConsiderarProcesso(v){
+  DB.considerarEmProcesso = !!v; persistDB();
+  document.querySelectorAll('.chk-considerar-processo').forEach(c=>{ c.checked = !!v; });
+  showToast(v ? '🏭 O estoque em processo passou a SOMAR ao estoque nos cálculos de insumos.' : '🏭 O estoque em processo deixou de contar nos cálculos (só o Estoque).');
+  try{ renderNecessidades(); }catch(e){} try{ renderNecessidadesGrupo(); }catch(e){}
+  ['materiais','reposicao'].forEach(p=>{ const el = document.getElementById('page-'+p); if(el && el.classList.contains('active')){ try{ p==='materiais' ? renderMateriais() : renderReposicao(); }catch(e){} } });
+}
+const DEP_ROT = {estoque:'Estoque', processo:'Em processo', ignorar:'Ignorar'};
+function renderPainelDepositos(){
+  const card = document.getElementById('ultima_estoque'); if(!card) return; const host = card.closest('.import-card') || card.parentElement; if(!host) return;
+  let box = document.getElementById('depPainel'); const aberto = box ? box.open : false;
+  if(!box){ box = document.createElement('details'); box.id = 'depPainel'; box.style.cssText = 'margin-top:12px'; const rep = document.getElementById('report_estoque'); host.insertBefore(box, rep||null); }
+  const cfg = depositosConfig(), todos = [...cfg.estoque.map(k=>[k,'estoque']), ...cfg.processo.map(k=>[k,'processo']), ...cfg.ignorar.map(k=>[k,'ignorar'])];
+  const itens = DB.items||[], stat = k => { let n = 0, t = 0; itens.forEach(i=>{ const v = i.stockDep && i.stockDep[k]; if(v){ n++; t += v; } }); return [n, t]; };
+  const nE = cfg.estoque.length, nP = cfg.processo.length, nI = cfg.ignorar.length;
+  box.open = aberto;
+  box.innerHTML = `<summary style="cursor:pointer;font-weight:700">🏭 Depósitos: como contar cada um (Estoque, Em processo ou Ignorar) <span class="badge info" style="cursor:default">${nE} estoque · ${nP} em processo · ${nI} ignorados</span></summary>
+    <div class="card-sub" style="margin:6px 0 8px">Ao importar o relatório de estoque por depósito (uma coluna por depósito), o saldo de cada depósito conta como <b>Estoque</b>, <b>Em processo</b> ou é <b>Ignorado</b>, conforme esta classificação. Mudando aqui, os saldos se recalculam na hora, sem reimportar. Depósito novo no arquivo entra como Ignorar até você classificar.</div>
+    <div class="tbl-wrap" style="max-height:320px"><table class="data" id="tblDepositos"><thead><tr><th>Depósito</th><th>Itens com saldo</th><th>Saldo total</th><th>Conta como</th></tr></thead><tbody>${
+      todos.map(([k,c])=>{ const [n,t] = stat(k); return `<tr><td class="mono"><strong>${acessoEsc(depositoRotulo(k))}</strong></td><td class="mono">${n}</td><td class="mono">${fmtL(t)}</td><td><select data-dep="${acessoEsc(k)}" data-unico>${['estoque','processo','ignorar'].map(o=>`<option value="${o}" ${o===c?'selected':''}>${DEP_ROT[o]}</option>`).join('')}</select></td></tr>`; }).join('')}</tbody></table></div>
+    <div style="margin-top:8px"><button class="btn btn-sm btn-primary" onclick="salvarDepositos()">💾 Salvar classificação</button></div>`;
+}
+function salvarDepositos(){
+  const novo = {estoque:[], processo:[], ignorar:[]};
+  document.querySelectorAll('#tblDepositos select[data-dep]').forEach(s=>{ (novo[s.value] || novo.ignorar).push(s.dataset.dep); });
+  DB.depositos = novo; recalcularEstoquePorDepositos(); persistDB();
+  showToast(`🏭 Classificação salva: ${novo.estoque.length} em estoque, ${novo.processo.length} em processo, ${novo.ignorar.length} ignorados. Saldos recalculados.`);
+  renderPainelDepositos(); try{ renderItens(); }catch(e){} try{ renderNecessidades(); }catch(e){} try{ if(document.getElementById('page-materiais').classList.contains('active')) renderMateriais(); }catch(e){} try{ if(document.getElementById('page-reposicao').classList.contains('active')) renderReposicao(); }catch(e){}
+}
+
+/* =========================================================================
+   SUGESTÃO DE ESTOQUE DE SEGURANÇA — calculada a partir do consumo dos componentes nas OPs importadas do ERP (DB.ordensERP)
+   Três métodos lado a lado, por item e por grupo de reposição (o consumo do grupo é a soma dos itens):
+     A · cobertura fixa:      média diária × dias de cobertura
+     B · cobertura pelo prazo: média diária × (prazo de entrega × fator + folga em dias)
+     C · estatístico:         z × desvio padrão diário × √prazo  (só com histórico suficiente; senão usa A e avisa)
+   Nada é gravado sozinho: o usuário revisa, escolhe o método (ou mantém o atual) e aplica; a aplicação fica registrada (ESEG-nnnn).
+   Dados: DB.aplicacoesSeguranca [{id, numero, ts, usuario, params, metodo, itens:[{chave, tipo, codigo, nome, antes, depois, metodo}]}]
+   ========================================================================= */
+const ESEG_Z = {'90':1.2816, '95':1.6449, '97.5':1.96, '99':2.3263};
+let ESEG_ESCOLHA = new Map(), ESEG_SEL = new Map(), ESEG_VALOR = new Map(), ESEG_PREVIA = null, ESEG_CTX = 'janela';
+const ESEG_NOMES = {A:'A · Cobertura fixa', B:'B · Cobertura pelo prazo', C:'C · Estatístico', M:'Manter atual'};
+function esegNorm(c){ return String(c==null ? '' : c).trim().toUpperCase(); }
+function esegDiasEntre(a, b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+function esegPadrao(){ return {de:'', ate:'', base:'planejada', tipos:['i'], diasA:20, fator:1, folga:7, z:'95', minDias:8, prazoPadrao:7, arredondar:true, incluirSem:false}; }
+function esegArred(v, o){ if(!isFinite(v) || v<0) return null; if(!o || o.arredondar===false) return Math.round(v*100)/100; return v>=100 ? Math.ceil(v) : Math.ceil(v*100)/100; }
+/* cálculo puro: E = {ordens, itens, params, grupos, opc} */
+function esegCalcular(E){
+  const o = Object.assign(esegPadrao(), E.opc||{}), todas = (E.ordens||[]).filter(x=>x && x.data);
+  const ordens = todas.filter(x=>(!o.de || x.data>=o.de) && (!o.ate || x.data<=o.ate)), datas = ordens.map(x=>x.data).sort();
+  const de = o.de || (todas.map(x=>x.data).sort()[0]||''), ate = o.ate || (todas.map(x=>x.data).sort().slice(-1)[0]||''), avisos = [];
+  if(!de || !ate || !ordens.length) return {linhas:[], resumo:{de, ate, dias:0, ops:0, historico:0}, avisos:['Nenhuma OP importada com data dentro do período.']};
+  const dias = esegDiasEntre(de, ate) + 1; if(dias < 1) return {linhas:[], resumo:{de, ate, dias:0, ops:0}, avisos:['O período está invertido (De depois de Até).']};
+  const campo = o.base==='efetuada' ? 'efet' : 'plan', z = ESEG_Z[o.z] || Number(o.z) || 1.6449;
+  const grupos = (E.grupos||[]).filter(g=>g && g.chave!=null && Array.isArray(g.itens)), grupoDe = new Map();
+  grupos.forEach(g=>g.itens.forEach(c=>{ const k = esegNorm(c); if(k && !grupoDe.has(k)) grupoDe.set(k, g); }));
+  const param = new Map((E.params||[]).map(p=>[esegNorm(p.item), p])), itemPor = new Map((E.itens||[]).map(i=>[esegNorm(i.code), i]));
+  const series = new Map();
+  ordens.forEach(op=>{ const i = esegDiasEntre(de, op.data); if(i<0 || i>=dias) return;
+    (op.comps||[]).forEach(c=>{ if(!o.tipos.includes(c.tipo)) return; const q = Number(c[campo]) || 0; if(q<=0) return; const cod = esegNorm(c.cod), g = grupoDe.get(cod), chave = g ? 'G:'+g.chave : 'I:'+cod;
+      let s = series.get(chave); if(!s){ s = {chave, tipo:g?'grupo':'item', codigo:g?String(g.chave):cod, grupo:g, arr:new Array(dias).fill(0), total:0, membros:new Set()}; series.set(chave, s); }
+      s.arr[i] += q; s.total += q; s.membros.add(cod); }); });
+  const linhas = [];
+  const montar = (s)=>{
+    const n = dias, media = s.total/n, diasCom = s.arr.filter(x=>x>0).length, desvio = n>1 ? Math.sqrt(s.arr.reduce((t,x)=>t+(x-media)*(x-media),0)/(n-1)) : 0;
+    const it = s.tipo==='item' ? itemPor.get(s.codigo) : null, p = s.tipo==='item' ? param.get(s.codigo) : null, g = s.grupo;
+    const prazo = s.tipo==='grupo' ? ((g.prazo===undefined||g.prazo===null||g.prazo==='') ? null : Number(g.prazo)) : ((p && p.prazo!==undefined && p.prazo!==null && p.prazo!=='') ? Number(p.prazo) : null);
+    const atualBruto = s.tipo==='grupo' ? g.seguranca : (p ? p.seguranca : undefined), atual = (atualBruto===undefined||atualBruto===null||atualBruto==='') ? null : Number(atualBruto);
+    const A = esegArred(media * o.diasA, o), B = prazo!==null ? esegArred(media * (prazo*o.fator + o.folga), o) : null;
+    const curto = diasCom < o.minDias, prazoC = prazo!==null ? prazo : o.prazoPadrao;
+    const Cbruto = z * desvio * Math.sqrt(prazoC), C = curto ? A : esegArred(Cbruto, o), metodoC = curto ? 'cobertura (histórico curto)' : 'estatístico';
+    const alertas = []; if(curto) alertas.push('histórico curto'); if(prazo===null) alertas.push('sem prazo');
+    return {chave:s.chave, tipo:s.tipo, codigo:s.codigo, nome:s.tipo==='grupo' ? ((g.nome||g.descricao||'')+'') : (it?it.name:''), uom:s.tipo==='grupo' ? (g.uom||'') : (it?it.uom:''), membros:[...s.membros], total:s.total, diasCom, media, desvio, prazo, atual,
+      atualDias: atual!==null && media>0 ? atual/media : null, A, B, C, metodoC, alertas, semConsumo:false};
+  };
+  series.forEach(s=>linhas.push(montar(s)));
+  if(o.incluirSem){
+    (E.params||[]).forEach(p=>{ const cod = esegNorm(p.item); if(grupoDe.has(cod) || series.has('I:'+cod)) return; const seg = Number(p.seguranca); if(!(seg>0)) return; const it = itemPor.get(cod);
+      linhas.push({chave:'I:'+cod, tipo:'item', codigo:cod, nome:it?it.name:'', uom:it?it.uom:'', membros:[cod], total:0, diasCom:0, media:0, desvio:0, prazo:(p.prazo===undefined||p.prazo===null||p.prazo==='')?null:Number(p.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
+    grupos.forEach(g=>{ if(series.has('G:'+g.chave)) return; const seg = Number(g.seguranca); if(!(seg>0)) return; linhas.push({chave:'G:'+g.chave, tipo:'grupo', codigo:String(g.chave), nome:g.nome||g.descricao||'', uom:g.uom||'', membros:g.itens.map(esegNorm), total:0, diasCom:0, media:0, desvio:0, prazo:(g.prazo===undefined||g.prazo===null||g.prazo==='')?null:Number(g.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
+  }
+  linhas.sort((a,b)=>b.total-a.total || a.codigo.localeCompare(b.codigo));
+  if(dias < 30) avisos.push(`O histórico tem só ${dias} dia(s): com poucos dias de consumo, os métodos A e B (cobertura) são mais confiáveis que o C (estatístico).`);
+  return {linhas, resumo:{de, ate, dias, ops:ordens.length, historico:todas.length, z}, avisos};
+}
+function esegEntrada(o){ return {ordens:DB.ordensERP||[], itens:DB.items||[], params:DB.paramMateriais||[], grupos:DB.gruposReposicao||[], opc:o}; }
+/* o valor final de uma linha, conforme a escolha (A, B, C ou M = manter) */
+function esegValorFinal(l, esc){ if(esc==='M') return l.atual; const v = l[esc]; return (v===null||v===undefined) ? null : v; }
+function esegEscolhaDe(l, global){ return ESEG_ESCOLHA.get(l.chave) || global || 'M'; }
+
+/* ---------- janela ---------- */
+function esegOverlay(){
+  let o = document.getElementById('esegOverlay');
+  if(!o){ o = document.createElement('div'); o.id = 'esegOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:flex-start;justify-content:center;padding:3vh 12px;overflow:auto';
+    o.innerHTML = '<div id="esegCard" style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:1500px;width:100%;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"></div>'; document.body.appendChild(o); }
+  return o;
+}
+function fecharSugestaoSeguranca(){ const o = document.getElementById('esegOverlay'); if(o) o.remove(); }
+function esegLer(){
+  const v = id => { const e = document.getElementById(id); return e ? e.value : ''; }, n = (id, d)=>{ const x = Number(String(v(id)).replace(',','.')); return isFinite(x) && v(id)!=='' ? x : d; };
+  const tp = [...document.querySelectorAll('#esegCard input[name="esTipo"]:checked')].map(x=>x.value), P = esegPadrao();
+  return {de:v('esDe'), ate:v('esAte'), base:v('esBase')||'planejada', tipos:tp.length?tp:['i'], diasA:n('esDiasA',P.diasA), fator:n('esFator',P.fator), folga:n('esFolga',P.folga), z:v('esZ')||'95', minDias:n('esMin',P.minDias), prazoPadrao:n('esPrazoPad',P.prazoPadrao), arredondar:!!(document.getElementById('esArred')||{}).checked, incluirSem:!!(document.getElementById('esSem')||{}).checked};
+}
+function abrirSugestaoSeguranca(){
+  const P = esegPadrao(); ESEG_ESCOLHA = new Map(); ESEG_SEL = new Map(); ESEG_VALOR = new Map(); ESEG_CTX = 'janela';
+  const datas = (DB.ordensERP||[]).map(x=>x.data).filter(Boolean).sort(); P.de = datas[0]||''; P.ate = datas[datas.length-1]||'';
+  esegOverlay(); document.getElementById('esegCard').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">🛡 Sugestão de estoque de segurança</h3>
+      <div class="card-sub" style="margin:0">Calculada a partir do <strong>consumo dos componentes nas OPs importadas do ERP</strong>, por item e por grupo de reposição, com <strong>três métodos lado a lado</strong>. Nada é gravado sozinho: revise, escolha o método de cada material (ou mantenha o atual) e aplique.</div></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="esegHistorico()">📜 Aplicações anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharSugestaoSeguranca()">✕ Fechar</button></div></div>
+    <div id="esegCorpo">
+      <div class="filters" style="margin:12px 0 4px;position:static">
+        <div class="f"><label>Histórico de</label><input type="date" id="esDe" value="${P.de}" onchange="esegAtualizar()"></div>
+        <div class="f"><label>até</label><input type="date" id="esAte" value="${P.ate}" onchange="esegAtualizar()"></div>
+        <div class="f"><label>Consumo</label><select id="esBase" onchange="esegAtualizar()"><option value="planejada">Planejado na OP</option><option value="efetuada">Efetuado na OP</option></select></div>
+        <div class="f" style="flex:2"><label>Componentes</label><div style="display:flex;gap:12px;padding-top:4px"><label style="font-size:12.5px;cursor:pointer"><input type="checkbox" name="esTipo" value="i" checked onchange="esegAtualizar()"> Insumos e embalagens (INS-…)</label><label style="font-size:12.5px;cursor:pointer"><input type="checkbox" name="esTipo" value="p" onchange="esegAtualizar()"> Produtos / granel</label></div></div>
+        <div class="f"><label>Mostrar</label><select id="esVer" onchange="esegAtualizar()"><option value="">Itens e grupos</option><option value="item">Só itens</option><option value="grupo">Só grupos</option></select></div>
+        <div class="f"><label>Material (código ou descrição)</label><input type="text" id="esBusca" placeholder="buscar" autocomplete="off" oninput="esegAtualizar()"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px">
+        <div style="flex:1;min-width:260px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">A · Cobertura fixa</strong><div style="font-size:12px;margin-top:4px">média por dia × <input type="number" id="esDiasA" value="${P.diasA}" min="0" step="1" style="width:64px" onchange="esegAtualizar()"> dias</div></div>
+        <div style="flex:1;min-width:300px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">B · Cobertura pelo prazo de entrega</strong><div style="font-size:12px;margin-top:4px">média por dia × (prazo × <input type="number" id="esFator" value="${P.fator}" min="0" step="0.1" style="width:56px" onchange="esegAtualizar()"> + <input type="number" id="esFolga" value="${P.folga}" min="0" step="1" style="width:56px" onchange="esegAtualizar()"> dias de folga)</div></div>
+        <div style="flex:1.4;min-width:360px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">C · Estatístico</strong><div style="font-size:12px;margin-top:4px">nível de serviço <select id="esZ" onchange="esegAtualizar()"><option value="90">90%</option><option value="95" selected>95%</option><option value="97.5">97,5%</option><option value="99">99%</option></select> × desvio diário × √prazo · mínimo <input type="number" id="esMin" value="${P.minDias}" min="2" step="1" style="width:56px" onchange="esegAtualizar()"> dias com consumo (senão usa A) · prazo se faltar <input type="number" id="esPrazoPad" value="${P.prazoPadrao}" min="1" step="1" style="width:56px" onchange="esegAtualizar()"> d</div></div>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;margin-bottom:8px"><label style="cursor:pointer"><input type="checkbox" id="esArred" checked onchange="esegAtualizar()"> arredondar para cima</label><label style="cursor:pointer"><input type="checkbox" id="esSem" onchange="esegAtualizar()"> incluir materiais com segurança cadastrada e <b>sem consumo</b> no período</label><label style="cursor:pointer"><input type="checkbox" id="esAlerta" onchange="esegAtualizar()"> só com alerta</label></div>
+      <div id="esegAviso"></div><div id="esegKpis"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0 6px"><strong style="font-size:12.5px">Usar em todos os materiais mostrados:</strong>
+        <select id="esGlobal" onchange="esegGlobal()"><option value="M">Manter o atual</option><option value="A">A · Cobertura fixa</option><option value="B">B · Cobertura pelo prazo</option><option value="C">C · Estatístico</option></select>
+        <span class="card-sub" style="margin:0">Depois, ajuste material por material na coluna <b>Usar</b>.</span></div>
+      <div id="esegTabela"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap"><span id="esegRodape" style="align-self:center;font-size:12px;color:var(--muted)"></span><button class="btn btn-sm" onclick="esegExcel()">📗 Excel</button><button class="btn btn-sm" onclick="esegCsv()">⬇ CSV</button><button class="btn btn-primary" id="esegAplicarBtn" onclick="esegAplicar()">✔ Aplicar o que está marcado</button></div>
+    </div>`;
+  esegAtualizar();
+}
+function esegVisiveis(r){
+  const ver = (document.getElementById('esVer')||{}).value || '', b = normaTxt(((document.getElementById('esBusca')||{}).value||'').trim()), so = !!(document.getElementById('esAlerta')||{}).checked;
+  return r.linhas.filter(l=>(!ver || l.tipo===ver) && (!b || normaTxt(l.codigo+' '+l.nome+' '+l.membros.join(' ')).includes(b)) && (!so || l.alertas.length));
+}
+function esegGlobal(){ const g = document.getElementById('esGlobal').value; ESEG_ESCOLHA = new Map(); esegAtualizar(); }
+function esegEscolher(chave, v){ ESEG_ESCOLHA.set(chave, v); ESEG_VALOR.delete(chave); esegAtualizar(true); }
+function esegMarcar(chave, on){ ESEG_SEL.set(chave, !!on); esegAtualizar(true); }
+function esegValorManual(chave, txt){ const x = Number(String(txt).replace(',','.')); if(String(txt).trim()==='' ){ ESEG_VALOR.delete(chave); } else if(isFinite(x) && x>=0){ ESEG_VALOR.set(chave, x); ESEG_ESCOLHA.set(chave, 'X'); } esegAtualizar(true); }
+function esegAtualizar(manterCalculo){
+  const o = esegLer(), r = (manterCalculo && ESEG_PREVIA && ESEG_PREVIA.o && JSON.stringify(ESEG_PREVIA.o)===JSON.stringify(o)) ? ESEG_PREVIA.r : esegCalcular(esegEntrada(o));
+  ESEG_PREVIA = {o, r}; const vis = esegVisiveis(r), glob = (document.getElementById('esGlobal')||{}).value || 'M';
+  const fin = l => { const esc = esegEscolhaDe(l, glob); if(esc==='X') return {esc, v:ESEG_VALOR.get(l.chave)}; return {esc, v:esegValorFinal(l, esc)}; };
+  const marcado = l => { const f = fin(l); if(ESEG_SEL.has(l.chave)) return ESEG_SEL.get(l.chave) && f.v!==null && f.esc!=='M'; return f.esc!=='M' && f.v!==null && f.v!==l.atual; };
+  const nAplic = vis.filter(marcado).length, kp = (rot, val, sub) => `<div style="flex:1;min-width:150px;border:1px solid var(--line);border-left:4px solid var(--brand-yellow);border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">${rot}</div><div style="font-size:20px;font-weight:800">${val}</div><div style="font-size:11px;color:var(--muted)">${sub||''}</div></div>`;
+  document.getElementById('esegAviso').innerHTML = r.avisos.map(a=>`<div class="note" style="border-color:var(--warn,#d98200);margin:4px 0">${acessoEsc(a)}</div>`).join('');
+  document.getElementById('esegKpis').innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">${kp('Materiais', vis.length, `${r.linhas.filter(l=>l.tipo==='grupo').length} grupo(s) · ${r.linhas.filter(l=>l.tipo==='item').length} item(ns) no total`)}${kp('Histórico', (r.resumo.dias||0)+' dias', `${fmtDate(r.resumo.de)} a ${fmtDate(r.resumo.ate)} · ${r.resumo.ops||0} OPs`)}${kp('Com histórico curto', r.linhas.filter(l=>l.alertas.includes('histórico curto')).length, `menos de ${o.minDias} dias com consumo: o C usa a cobertura`)}${kp('Sem prazo', r.linhas.filter(l=>l.alertas.includes('sem prazo')).length, 'o B não calcula; o C usa o prazo padrão')}${kp('Marcados para aplicar', nAplic, 'na tabela abaixo')}</div>`;
+  const f2 = v => v===null||v===undefined ? '—' : fmtL(v);
+  document.getElementById('esegTabela').innerHTML = `<div class="tbl-wrap" style="max-height:440px"><table class="data" id="tblEseg"><thead><tr><th title="Aplicar este material">✓</th><th>Código</th><th>Material</th><th>UM</th><th>Consumo no período</th><th>Dias com consumo</th><th>Média / dia</th><th>Prazo (d)</th><th>Atual</th><th title="Quantos dias de consumo médio o valor atual cobre">Atual (dias)</th><th>A · Cobertura fixa</th><th>B · Pelo prazo</th><th>C · Estatístico</th><th>Usar</th><th>Valor a aplicar</th><th>Alertas</th></tr></thead><tbody>${
+    vis.length ? vis.slice(0,400).map(l=>{ const f = fin(l), mk = marcado(l), dif = (l.atual && f.v!==null && f.esc!=='M') ? (f.v-l.atual)/l.atual : null;
+      return `<tr ${l.semConsumo?'style="opacity:.75"':''}><td><input type="checkbox" ${mk?'checked':''} ${(f.esc==='M'||f.v===null)?'disabled':''} onchange="esegMarcar('${acessoEsc(l.chave)}', this.checked)"></td><td class="mono"><strong>${acessoEsc(l.codigo)}</strong>${l.tipo==='grupo'?' <span class="badge info" style="cursor:default">grupo · '+l.membros.length+'</span>':''}</td><td style="white-space:normal;max-width:240px;font-size:12px">${acessoEsc(l.nome)}</td><td>${acessoEsc(l.uom)}</td><td class="mono">${f2(l.total)}</td><td class="mono">${l.diasCom}</td><td class="mono">${f2(l.media)}</td><td class="mono">${l.prazo===null?'—':l.prazo}</td><td class="mono"><strong>${f2(l.atual)}</strong></td><td class="mono">${l.atualDias===null?'—':fmtL(l.atualDias)}</td>
+        <td class="mono" style="${f.esc==='A'?'background:#FFF2AB;font-weight:700':''}">${f2(l.A)}</td><td class="mono" style="${f.esc==='B'?'background:#FFF2AB;font-weight:700':''}">${f2(l.B)}</td><td class="mono" style="${f.esc==='C'?'background:#FFF2AB;font-weight:700':''}" title="${acessoEsc(l.metodoC)}">${f2(l.C)}${l.metodoC.startsWith('cobertura')?'<sup>*</sup>':''}</td>
+        <td><select onchange="esegEscolher('${acessoEsc(l.chave)}', this.value)">${['M','A','B','C'].map(k=>`<option value="${k}" ${f.esc===k?'selected':''}>${k==='M'?'Manter':k}</option>`).join('')}${f.esc==='X'?'<option value="X" selected>Manual</option>':''}</select></td>
+        <td><input type="number" step="any" min="0" value="${f.v===null||f.v===undefined?'':f.v}" style="width:96px" onchange="esegValorManual('${acessoEsc(l.chave)}', this.value)">${dif!==null?`<div style="font-size:10.5px;color:${dif>0?'#B8590A':'#2F7D46'}">${dif>0?'+':''}${fmtL(dif*100)}% do atual</div>`:''}</td>
+        <td style="white-space:normal;font-size:11px">${l.alertas.map(a=>`<span class="badge warn" style="cursor:default">${acessoEsc(a)}</span>`).join(' ')}</td></tr>`; }).join('') : '<tr><td colspan="16"><div class="empty">Nenhum material para estes filtros.</div></td></tr>'}</tbody></table></div>${vis.length>400?`<div class="card-sub" style="margin-top:4px">Mostrando os 400 de maior consumo de ${vis.length}. Refine os filtros ou use a busca.</div>`:''}<div class="card-sub" style="margin-top:4px"><sup>*</sup> histórico curto: no método C o valor é o da cobertura fixa (A).</div>`;
+  const b = document.getElementById('esegAplicarBtn'); if(b) b.disabled = !nAplic;
+  const rod = document.getElementById('esegRodape'); if(rod) rod.textContent = nAplic ? `${nAplic} material(is) marcado(s) para aplicar.` : 'Escolha um método (em "Usar em todos" ou linha a linha) para marcar o que será aplicado.';
+  ESEG_PREVIA.fin = fin; ESEG_PREVIA.marcado = marcado; ESEG_PREVIA.vis = vis;
+}
+/* ---------- aplicar (guardada por permissão) ---------- */
+function esegAplicar(){
+  if(!ESEG_PREVIA) return; const {r, o, fin, marcado, vis} = ESEG_PREVIA, esc = vis.filter(marcado).map(l=>({l, f:fin(l)}));
+  if(!esc.length){ alert('Nada marcado para aplicar.'); return; }
+  const nI = esc.filter(x=>x.l.tipo==='item').length, nG = esc.filter(x=>x.l.tipo==='grupo').length;
+  customConfirm(`Aplicar o estoque de segurança sugerido em <strong>${nI}</strong> item(ns) e <strong>${nG}</strong> grupo(s)?<br><span style="font-size:12px">Substitui o estoque de segurança cadastrado (importado) desses materiais. A aplicação fica registrada e pode ser consultada depois.</span>`, ()=>{
+    DB.aplicacoesSeguranca = DB.aplicacoesSeguranca || []; DB.paramMateriais = DB.paramMateriais || [];
+    const maxN = DB.aplicacoesSeguranca.reduce((m,s)=>Math.max(m, parseInt(String(s.numero).replace(/\D/g,''),10)||0), 0), ts = new Date().toISOString(), id = 'eseg_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    const usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '', itens = [];
+    esc.forEach(({l, f})=>{
+      const valor = Math.round(f.v*1000)/1000, antes = l.atual;
+      if(l.tipo==='grupo'){ const g = (DB.gruposReposicao||[]).find(x=>String(x.chave)===l.codigo); if(!g) return; g.seguranca = valor; }
+      else { let p = DB.paramMateriais.find(x=>esegNorm(x.item)===l.codigo); if(!p){ p = {id:l.codigo, item:l.codigo}; DB.paramMateriais.push(p); } p.seguranca = valor; }
+      itens.push({chave:l.chave, tipo:l.tipo, codigo:l.codigo, nome:l.nome, uom:l.uom, antes, depois:valor, metodo:f.esc, media:Math.round(l.media*1000)/1000, diasCom:l.diasCom, prazo:l.prazo});
+    });
+    DB.aplicacoesSeguranca.push({id, numero:'ESEG-'+String(maxN+1).padStart(4,'0'), ts, usuario, params:{...o}, periodo:{de:r.resumo.de, ate:r.resumo.ate, dias:r.resumo.dias, ops:r.resumo.ops}, itens});
+    persistDB(); showToast(`🛡 Estoque de segurança aplicado: ${itens.length} material(is). Registro ESEG-${String(maxN+1).padStart(4,'0')}.`);
+    ESEG_ESCOLHA = new Map(); ESEG_SEL = new Map(); ESEG_VALOR = new Map(); const gl = document.getElementById('esGlobal'); if(gl) gl.value = 'M'; esegAtualizar();   // volta a "Manter o atual": nada fica marcado para uma segunda aplicação sem querer
+    ['materiais','reposicao'].forEach(p=>{ const el = document.getElementById('page-'+p); if(el && el.classList.contains('active')){ try{ p==='materiais' ? renderMateriais() : renderReposicao(); }catch(e){} } });
+  });
+}
+/* ---------- histórico das aplicações ---------- */
+function esegHistorico(){
+  const lista = [...(DB.aplicacoesSeguranca||[])].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))); esegOverlay(); ESEG_CTX = 'historico';
+  document.getElementById('esegCard').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><div><h3 style="margin:0 0 4px">📜 Aplicações do estoque de segurança</h3><div class="card-sub" style="margin:0">O que foi aplicado, por quem e quando, com o valor antes e depois.</div></div><div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="abrirSugestaoSeguranca()">＋ Nova sugestão</button><button class="btn btn-sm btn-ghost" onclick="fecharSugestaoSeguranca()">✕ Fechar</button></div></div>
+    <div class="tbl-wrap" style="margin-top:12px;max-height:420px"><table class="data" id="tblEsegHist"><thead><tr><th>Registro</th><th>Data e hora</th><th>Usuário</th><th>Histórico usado</th><th>Materiais</th><th>Métodos</th><th></th></tr></thead><tbody>${
+      lista.length ? lista.map(s=>`<tr><td class="mono"><strong>${acessoEsc(s.numero)}</strong></td><td>${dhImp(s.ts)}</td><td>${acessoEsc(s.usuario||'—')}</td><td style="font-size:12px">${fmtDate(s.periodo.de)} a ${fmtDate(s.periodo.ate)} (${s.periodo.dias} d · ${s.periodo.ops} OPs)</td><td>${s.itens.length}</td><td style="font-size:12px">${['A','B','C','X'].map(k=>({k, n:s.itens.filter(i=>i.metodo===k).length})).filter(x=>x.n).map(x=>`${x.k==='X'?'Manual':x.k}: ${x.n}`).join(' · ')}</td><td><button class="btn btn-sm" onclick="esegVer('${s.id}')">Ver</button></td></tr>`).join('') : '<tr><td colspan="7"><div class="empty">Nenhuma aplicação ainda.</div></td></tr>'}</tbody></table></div><div id="esegDet"></div>`;
+}
+function esegVer(id){
+  const s = (DB.aplicacoesSeguranca||[]).find(x=>x.id===id); if(!s) return;
+  document.getElementById('esegDet').innerHTML = `<h4 style="margin:14px 0 6px">${acessoEsc(s.numero)} — ${s.itens.length} material(is)</h4><div class="tbl-wrap" style="max-height:320px"><table class="data"><thead><tr><th>Código</th><th>Material</th><th>UM</th><th>Antes</th><th>Depois</th><th>Método</th><th>Média/dia</th><th>Dias com consumo</th><th>Prazo</th></tr></thead><tbody>${s.itens.map(i=>`<tr><td class="mono"><strong>${acessoEsc(i.codigo)}</strong>${i.tipo==='grupo'?' <span class="badge info" style="cursor:default">grupo</span>':''}</td><td style="white-space:normal;font-size:12px">${acessoEsc(i.nome)}</td><td>${acessoEsc(i.uom)}</td><td class="mono">${i.antes===null||i.antes===undefined?'—':fmtL(i.antes)}</td><td class="mono"><strong>${fmtL(i.depois)}</strong></td><td>${i.metodo==='X'?'Manual':i.metodo}</td><td class="mono">${fmtL(i.media)}</td><td class="mono">${i.diasCom}</td><td class="mono">${i.prazo===null||i.prazo===undefined?'—':i.prazo}</td></tr>`).join('')}</tbody></table></div>`;
+}
+/* ---------- saídas ---------- */
+function esegAoa(){
+  if(!ESEG_PREVIA) return null; const {o, r, fin, marcado, vis} = ESEG_PREVIA, n = v => (v===null||v===undefined) ? '' : Math.round(v*1000)/1000;
+  return {
+    sugestao:[['Código','Tipo','Material','UM','Consumo no período','Dias com consumo','Média por dia','Desvio diário','Prazo (d)','Atual','Atual (dias de cobertura)','A · Cobertura fixa','B · Cobertura pelo prazo','C · Estatístico','C usado','Escolha','Valor a aplicar','Marcado','Alertas'],
+      ...vis.map(l=>{ const f = fin(l); return [l.codigo, l.tipo==='grupo'?'Grupo':'Item', l.nome, l.uom, n(l.total), l.diasCom, n(l.media), n(l.desvio), l.prazo===null?'':l.prazo, n(l.atual), n(l.atualDias), n(l.A), n(l.B), n(l.C), l.metodoC, f.esc==='M'?'Manter':(f.esc==='X'?'Manual':f.esc), n(f.v), marcado(l)?'Sim':'Não', l.alertas.join('; ')]; })],
+    parametros:[['Histórico', `${fmtDate(r.resumo.de)} a ${fmtDate(r.resumo.ate)} (${r.resumo.dias} dias, ${r.resumo.ops} OPs)`],['Consumo', o.base==='efetuada'?'Efetuado na OP':'Planejado na OP'],['Componentes', o.tipos.map(t=>t==='i'?'Insumos e embalagens':'Produtos / granel').join(' + ')],['A · dias de cobertura', o.diasA],['B · fator do prazo', o.fator],['B · folga (dias)', o.folga],['C · nível de serviço', o.z+'%'],['C · mínimo de dias com consumo', o.minDias],['C · prazo padrão (d)', o.prazoPadrao],['Arredondar para cima', o.arredondar?'Sim':'Não'],['Gerado em', dhImp(new Date().toISOString())]]
+  };
+}
+function esegExcel(){
+  const a = esegAoa(); if(!a) return null;
+  if(typeof XLSX === 'undefined'){ showToast('A biblioteca do Excel não carregou (sem internet?). Use o CSV.', 'error'); return null; }
+  const wb = XLSX.utils.book_new(), add = (nome, aoa, larg)=>{ const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = larg.map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, nome); };
+  add('Sugestão', a.sugestao, [18,8,44,6,14,12,12,12,9,12,12,14,14,14,24,10,14,9,36]); add('Parâmetros', a.parametros, [34,60]);
+  try{ XLSX.writeFile(wb, 'estoque_de_seguranca_sugerido.xlsx'); }catch(e){ console.warn('Download indisponível:', e); }
+  return wb;
+}
+function esegCsv(){
+  const a = esegAoa(); if(!a) return ''; const csv = '\uFEFF' + a.sugestao.map(l=>l.map(c=>{ c = String(c==null?'':c).replace('.',','); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); e.download = 'estoque_de_seguranca_sugerido.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
+}
+
+/* =========================================================================
+   MENU LATERAL RECOLHÍVEL — em telas médias o menu de 236 px come espaço das tabelas. Abaixo de 1400 px ele recolhe sozinho e vira uma gaveta (☰ no alto);
+   o botão do próprio menu ("◀ Recolher o menu" / "📌 Manter o menu aberto") guarda a escolha da pessoa neste navegador. Reaproveita a gaveta do celular (nav-open).
+   Até 900 px continua valendo o modo celular de antes.
+   ========================================================================= */
+const MENU_KEY = 'menzoil_menu', MENU_LARGURA_AUTO = 1400, MENU_LARGURA_CELULAR = 900;
+function menuPreferencia(){ try{ const v = localStorage.getItem(MENU_KEY); return (v==='aberto' || v==='recolhido') ? v : null; }catch(e){ return null; } }
+function menuDeveRecolher(largura, pref){
+  if(largura <= MENU_LARGURA_CELULAR) return false;       // celular: o CSS de antes já faz a gaveta
+  if(pref==='recolhido') return true;
+  if(pref==='aberto') return false;
+  return largura < MENU_LARGURA_AUTO;
+}
+function menuAplicar(){
+  const rec = menuDeveRecolher(window.innerWidth || 1920, menuPreferencia());
+  document.body.classList.toggle('menu-recolhido', rec);
+  if(!rec) document.body.classList.remove('nav-open');
+  const b = document.getElementById('btnRecolherMenu'); if(b) b.textContent = rec ? '📌 Manter o menu aberto' : '◀ Recolher o menu';
+}
+function menuAlternar(){
+  const rec = document.body.classList.contains('menu-recolhido');
+  try{ localStorage.setItem(MENU_KEY, rec ? 'aberto' : 'recolhido'); }catch(e){}
+  document.body.classList.remove('nav-open'); menuAplicar();
+  setTimeout(()=>{ try{ window.dispatchEvent(new Event('resize')); }catch(e){} }, 260);   // as tabelas refazem as colunas fixas com a área nova
+}
+(function(){
+  const btn = document.getElementById('btnRecolherMenu'); if(btn) btn.addEventListener('click', menuAlternar);
+  const nav = document.getElementById('navContainer'); if(nav) nav.addEventListener('click', ()=>{ if(document.body.classList.contains('menu-recolhido')) document.body.classList.remove('nav-open'); });   // escolheu uma tela: fecha a gaveta
+  window.addEventListener('resize', menuAplicar);
+  menuAplicar();
+})();
+
+/* =========================================================================
    COLUNAS CONGELADAS — nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista.
    A tabela continua a mesma: só as colunas escolhidas ganham "position: sticky" (classe .frz) com o deslocamento certo, e o cabeçalho também.
-   Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho e quando a tabela passa a ser exibida.
+   Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho (ou o menu recolhe) e quando a tabela passa a ser exibida.
+   Em telas menores o congelamento se ADAPTA: as colunas de descrição têm largura limitada (quebram em mais linhas; o texto inteiro vai no balão) e só ficam
+   fixas as colunas que cabem em ~42% da área visível — o resto da tabela sempre aparece e rola. Cada tabela tem a chave "❄ Colunas fixas":
+   Automático (padrão), Só o código ou Nenhuma, lembrada por navegador.
    ========================================================================= */
 const COLUNAS_CONGELADAS = [
-  {sel:'#tblLista',          cols:[1,3,4]}, // Data (que já era fixa), Item e Descrição; o Recurso rola normalmente
-  {sel:'#tblVisaoDiaMatrix', cols:[1,2]},   // Nº do item, Descrição
-  {sel:'#tblEfetuadoMatrix', cols:[1,2]},   // Nº do item, Descrição
-  {sel:'#tblMateriais',      cols:[1]},     // Material (código e descrição na mesma coluna)
-  {sel:'#tblNecessidades',   cols:[1,2]},   // Código, Insumo
-  {sel:'#tblItens',          cols:[1,2]},   // Código, Descrição (Cadastros)
-  {sel:'#tblLcPedidos',      cols:[1,2]},   // Pedido, Cliente
-  {sel:'#tblProdDia',        cols:[1,2]},   // Recurso/grupo, Total
+  {sel:'#tblLista',          cols:[1,3,4], desc:[4]}, // Data (que já era fixa), Item e Descrição; o Recurso rola normalmente
+  {sel:'#tblVisaoDiaMatrix', cols:[1,2],   desc:[2]}, // Nº do item, Descrição
+  {sel:'#tblEfetuadoMatrix', cols:[1,2],   desc:[2]}, // Nº do item, Descrição
+  {sel:'#tblMateriais',      cols:[1]},                // Material (código e descrição na mesma coluna)
+  {sel:'#tblNecessidades',   cols:[1,2],   desc:[2]}, // Código, Insumo
+  {sel:'#tblItens',          cols:[1,2],   desc:[2]}, // Código, Descrição (Cadastros)
+  {sel:'#tblLcPedidos',      cols:[1,2],   desc:[2]}, // Pedido, Cliente
+  {sel:'#tblProdDia',        cols:[1,2]},              // Recurso/grupo, Total
 ];
-function aplicarCongelamento(tbl, cols){
-  const linhas = [...tbl.rows]; if(!linhas.length) return;
-  const fl = tbl.tHead && tbl.tHead.querySelector('tr.lc-filtros');            // linha de filtros: gruda logo abaixo da linha de títulos
-  if(fl){ const h = Math.round(tbl.tHead.rows[0].getBoundingClientRect().height); [...fl.cells].forEach(c=>{ c.style.top = h+'px'; }); }
-  const cabLinhas = tbl.tHead && tbl.tHead.rows.length ? tbl.tHead.rows : null;
-  const cab = cabLinhas ? cabLinhas[cabLinhas.length-1] : linhas[0];
-  const larg = cols.map(c=> cab.cells[c-1] ? Math.round(cab.cells[c-1].getBoundingClientRect().width) : 0);
-  let acum = 0; const left = cols.map((c,i)=>{ const v = acum; acum += larg[i]; return v; });
-  const maior = Math.max(...cols);
-  linhas.forEach(tr=>{
-    if(tr.cells.length < maior) return;                                  // linhas de grupo/vazias (com colspan) ficam como estão
-    cols.forEach((c,i)=>{
-      const cel = tr.cells[c-1]; if(!cel || cel.colSpan>1) return;
-      cel.classList.add('frz'); cel.style.left = left[i]+'px'; cel.classList.toggle('frz-last', i===cols.length-1);
+const FRZ_DESC_MAX = 240, FRZ_FRACAO = 0.42, FRZ_KEY = 'menzoil_frz';
+const FRZ_ROTULOS = {auto:'Automático', codigo:'Só o código', nenhuma:'Nenhuma'};
+function frzModo(sel){ try{ const m = JSON.parse(localStorage.getItem(FRZ_KEY)||'{}'); return FRZ_ROTULOS[m[sel]] ? m[sel] : 'auto'; }catch(e){ return 'auto'; } }
+function frzSalvarModo(sel, modo){ try{ const m = JSON.parse(localStorage.getItem(FRZ_KEY)||'{}'); if(modo==='auto') delete m[sel]; else m[sel] = modo; localStorage.setItem(FRZ_KEY, JSON.stringify(m)); }catch(e){} }
+/* quantas colunas (a partir da primeira) devem ficar fixas, dado a largura de cada uma e a área visível */
+function frzEscolher(larguras, area, modo){
+  const n = larguras.length;
+  if(modo==='nenhuma') return 0;
+  if(modo==='codigo') return n ? 1 : 0;
+  if(!area || larguras.every(w=>!w)) return n;                      // sem medida (tabela oculta): mantém o comportamento de antes
+  let acum = 0, k = 0;
+  for(let i=0;i<n;i++){ if(acum + larguras[i] > area*FRZ_FRACAO) break; acum += larguras[i]; k++; }
+  if(k===0 && larguras[0] <= area*0.6) k = 1;                       // ao menos o código, se ele couber
+  return k;
+}
+/* mapa real de colunas: para cada linha, qual célula COMEÇA em cada coluna (considera rowSpan e colSpan — o cabeçalho de duas linhas das matrizes) */
+function frzMapa(tbl){
+  const mapa = [], ocupado = [];
+  [...tbl.rows].forEach((tr, r)=>{
+    mapa[r] = new Map(); ocupado[r] = ocupado[r] || new Set(); let col = 0;
+    [...tr.cells].forEach(cel=>{
+      while(ocupado[r].has(col)) col++;
+      mapa[r].set(col, cel); const cs = cel.colSpan||1, rs = cel.rowSpan||1;
+      for(let dr=1; dr<rs; dr++){ ocupado[r+dr] = ocupado[r+dr] || new Set(); for(let dc=0; dc<cs; dc++) ocupado[r+dr].add(col+dc); }
+      col += cs;
     });
   });
+  return mapa;
+}
+function aplicarCongelamento(tbl, cols, cfg){
+  if(!tbl){ COLUNAS_CONGELADAS.forEach(c=>{ const t = document.querySelector(c.sel); if(t && t.__frz) aplicarCongelamento(t, c.cols, c); }); return; }   // sem argumentos: refaz todas
+  cfg = cfg || COLUNAS_CONGELADAS.find(c=>c.sel==='#'+tbl.id) || {sel:'#'+tbl.id};
+  const linhas = [...tbl.rows]; if(!linhas.length) return;
+  const modo = frzModo(cfg.sel);
+  const fl = tbl.tHead && tbl.tHead.querySelector('tr.lc-filtros');            // linha de filtros: gruda logo abaixo da linha de títulos
+  if(fl){ const h = Math.round(tbl.tHead.rows[0].getBoundingClientRect().height); [...fl.cells].forEach(c=>{ c.style.top = h+'px'; }); }
+  const mapa = frzMapa(tbl), cel = (r, c)=> mapa[r].get(c-1);
+  // linha de referência para medir as larguras: a primeira linha do corpo em que todas as colunas existem e não são mescladas
+  let ref = -1; linhas.forEach((tr, r)=>{ if(ref>=0 || !tr.parentNode || tr.parentNode.tagName!=='TBODY') return; if(cols.every(c=>{ const x = cel(r,c); return x && (x.colSpan||1)===1; })) ref = r; });
+  if(ref<0) linhas.forEach((tr, r)=>{ if(ref>=0) return; if(cols.every(c=>{ const x = cel(r,c); return x && (x.colSpan||1)===1; })) ref = r; });
+  // largura da coluna = a maior entre a célula do corpo e a do cabeçalho (no navegador são iguais; o corpo é a referência nas matrizes de cabeçalho duplo)
+  const largura = c => { let m = 0; const x = ref>=0 ? cel(ref,c) : null; if(x) m = Math.round(x.getBoundingClientRect().width); linhas.forEach((tr, r)=>{ if(!tr.parentNode || tr.parentNode.tagName==='TBODY') return; const h = cel(r,c); if(h && (h.colSpan||1)===1) m = Math.max(m, Math.round(h.getBoundingClientRect().width)); }); return m; };
+  // 1) descrições com largura limitada: mede a largura natural e, se passar do limite, fixa o limite (largura mínima = máxima = 240 px, senão a tabela espreme a coluna) e quebra o texto
+  (cfg.desc||[]).forEach(c=>{
+    linhas.forEach((tr, r)=>{ const x = cel(r,c); if(!x || (x.colSpan||1)>1) return; x.style.width = ''; x.style.minWidth = ''; x.style.maxWidth = ''; x.style.whiteSpace = ''; x.style.overflowWrap = ''; });
+    if(modo==='nenhuma') return;
+    if(!(largura(c) > FRZ_DESC_MAX)) return;                            // já cabe no limite (ou sem medida): não mexe
+    linhas.forEach((tr, r)=>{
+      const x = cel(r,c); if(!x || (x.colSpan||1)>1) return;
+      x.style.width = FRZ_DESC_MAX+'px'; x.style.minWidth = FRZ_DESC_MAX+'px'; x.style.maxWidth = FRZ_DESC_MAX+'px'; x.style.whiteSpace = 'normal'; x.style.overflowWrap = 'anywhere';
+      if(x.tagName==='TD' && !x.title){ const tx = x.textContent.replace(/\s+/g,' ').trim(); if(tx.length>28) x.title = tx.slice(0,300); }
+    });
+  });
+  linhas.forEach((tr, r)=>cols.forEach(c=>{ const x = cel(r,c); if(x){ x.classList.remove('frz','frz-last'); x.style.left = ''; } }));   // limpa o congelamento anterior
+  // 2) quantas colunas cabem fixas na área visível
+  const larg = cols.map(largura);
+  const wrap = tbl.closest('.tbl-wrap') || tbl.parentElement, area = wrap ? Math.round(wrap.getBoundingClientRect().width) : 0;
+  const k = frzEscolher(larg, area, modo), usar = cols.slice(0, k);
+  let acum = 0; const left = usar.map((c,i)=>{ const v = acum; acum += larg[i]; return v; });
+  linhas.forEach((tr, r)=>{
+    usar.forEach((c,i)=>{
+      const x = cel(r,c); if(!x || (x.colSpan||1)>1) return;            // linhas de grupo (com colspan) ficam como estão
+      x.classList.add('frz'); x.style.left = left[i]+'px'; x.classList.toggle('frz-last', i===usar.length-1);
+    });
+  });
+  tbl.dataset.frzN = String(k); tbl.dataset.frzModo = modo;
+}
+/* a chave "❄ Colunas fixas", logo acima da tabela */
+function frzBarra(t, cfg){
+  const wrap = t.closest('.tbl-wrap') || t.parentElement; if(!wrap || !wrap.parentNode) return;
+  const ant = wrap.previousElementSibling; if(ant && ant.classList && ant.classList.contains('frz-bar')) return;
+  const bar = document.createElement('div'); bar.className = 'frz-bar'; bar.dataset.sel = cfg.sel; const modo = frzModo(cfg.sel);
+  bar.innerHTML = `<label title="Colunas que ficam sempre à vista quando a tabela rola para o lado. Automático: só as que cabem na tela. Em telas pequenas, use “Só o código” ou “Nenhuma”.">❄ Colunas fixas: <select>${Object.entries(FRZ_ROTULOS).map(([k,v])=>`<option value="${k}" ${k===modo?'selected':''}>${v}</option>`).join('')}</select></label>`;
+  bar.querySelector('select').addEventListener('change', e=>{ frzSalvarModo(cfg.sel, e.target.value); aplicarCongelamento(t, cfg.cols, cfg); });
+  wrap.parentNode.insertBefore(bar, wrap);
 }
 function iniciarCongelamento(){
   COLUNAS_CONGELADAS.forEach(cfg=>{
     const t = document.querySelector(cfg.sel); if(!t || t.__frz) return; t.__frz = true;
     let pend = false;
-    const agenda = () => { if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ aplicarCongelamento(t, cfg.cols); }catch(e){} }); };
+    const agenda = () => { if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ aplicarCongelamento(t, cfg.cols, cfg); }catch(e){} }); };
     try{ new MutationObserver(agenda).observe(t, {childList:true, subtree:true}); }catch(e){}
-    if(typeof ResizeObserver !== 'undefined'){ try{ new ResizeObserver(agenda).observe(t); }catch(e){} }   // quando a tabela passa a ser exibida ou muda de largura
+    if(typeof ResizeObserver !== 'undefined'){ try{ new ResizeObserver(agenda).observe(t); const w = t.closest('.tbl-wrap') || t.parentElement; if(w) new ResizeObserver(agenda).observe(w); }catch(e){} }   // quando a tabela (ou a área dela, ex.: o menu recolhe) muda de largura
     window.addEventListener('resize', agenda);
-    aplicarCongelamento(t, cfg.cols);
+    try{ frzBarra(t, cfg); }catch(e){}
+    aplicarCongelamento(t, cfg.cols, cfg);
   });
 }
 iniciarCongelamento();
@@ -9545,10 +10623,10 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-09.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-12.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes'];
-const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax'];   // viram registros da coleção "config"
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca'];
+const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
 
@@ -9711,6 +10789,7 @@ function syncProcessarResultados(lote, resultados){
     if(r.ok){
       if(op.tipo==='delete') Sync.base.delete(k); else Sync.base.set(k, {col:op.colecao, key:op.chave, s:op._s, v:r.versao});
       if(r.seq) Sync.seq = Math.max(Sync.seq, Number(r.seq)||0);
+      if(SYNC_COL_DADOS.includes(op.colecao)){ const u = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL : null; syncNotarAtualizacao(new Date().toISOString(), u ? (u.nome||u.usuario) : ''); }   // a própria gravação
     }
     else if(r.conflito){
       const t = r.atual || {};
@@ -9751,12 +10830,16 @@ function syncAvisarDescartes(){
 }
 
 /* ---------- recebimento (tempo real e reconciliação) ---------- */
+/* última atualização dos dados (modo online): vem do servidor — data e hora do registro e nome de quem alterou (plano, pedidos e itens) */
+const SYNC_COL_DADOS = ['plan','orders','items'];
+function syncNotarAtualizacao(ts, nome){ if(!ts) return; if(!Sync.ultima || String(ts) > String(Sync.ultima.ts)) Sync.ultima = {ts:String(ts), usuario:nome||''}; }
 function syncReceber(rows){
   let mudou = 0; const por = new Set();
   rows.forEach(row=>{
     if(!row || !row.colecao || String(row.chave).startsWith('__diag')) return;
     const key = String(row.chave), k = syncIdRow(row.colecao, key), b = Sync.base.get(k);
     Sync.seq = Math.max(Sync.seq, Number(row.seq)||0);
+    if(SYNC_COL_DADOS.includes(row.colecao)) syncNotarAtualizacao(row.atualizado_em, row.atualizado_por_nome || (Sync.perfis.get(row.atualizado_por)||{}).nome || '');   // data e hora do servidor
     if(b && Number(b.v) >= Number(row.versao)) return;           // já conhecido (inclusive o eco da própria gravação)
     const local = syncLocal(row.colecao, key), antes = local ? syncEstavel(local) : null;
     if(row.apagado){
@@ -9838,7 +10921,7 @@ function syncInvalidarCaches(){
   try{ limparCachePrioridades(); }catch(e){}
 }
 async function syncIniciar(){
-  Sync.ativo = false; Sync.base = new Map(); Sync.seq = 0; Sync.pendentes = 0;
+  Sync.ativo = false; Sync.ultima = null; Sync.base = new Map(); Sync.seq = 0; Sync.pendentes = 0;
   syncDefinirEstado('sincronizando', 'Carregando dados do servidor…');
   const rows = syncClonar(await Sync.backend.carregarRegistros(0)) || [];
   const vazio = syncServidorVazio(rows);
@@ -9907,10 +10990,10 @@ function syncRenderAgora(forcar){
    LOGIN, SESSÃO E USUÁRIOS (modo online): contas e permissões ficam no servidor
    ========================================================================= */
 function onlinePerfilParaUsuario(p){
-  return {id:p.id, usuario:p.usuario, nome:p.nome||p.usuario, admin:!!p.admin, ativo:!!p.ativo, permissoes:p.permissoes||{}, campos:p.campos||{}, travas:p.travas||{},
+  return {id:p.id, usuario:p.usuario, nome:p.nome||p.usuario, admin:!!p.admin, ativo:!!p.ativo, permissoes:p.permissoes||{}, campos:p.campos||{}, travas:p.travas||{}, visao:p.visao||{},
     trocarSenha:false, criadoEm:p.criadoEm||Date.now(), ultimoAcesso:p.ultimoAcesso||null};
 }
-const onlinePerfilEditavel = u => syncEstavel({nome:u.nome, admin:!!u.admin, ativo:!!u.ativo, permissoes:u.permissoes||{}, campos:u.campos||{}, travas:u.travas||{}});
+const onlinePerfilEditavel = u => syncEstavel({nome:u.nome, admin:!!u.admin, ativo:!!u.ativo, permissoes:u.permissoes||{}, campos:u.campos||{}, travas:u.travas||{}, visao:u.visao||{}});
 async function onlineCarregarPerfis(){
   let lista = [];
   try{ lista = syncClonar(await Sync.backend.listarPerfis()) || []; }catch(e){}
@@ -10364,7 +11447,7 @@ async function criarBackendSupabase(cfg){
     auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:false},
     realtime:{params:{eventsPerSecond:20}},
   });
-  const perfilDe = r => ({id:r.id, usuario:r.email, nome:r.nome, admin:!!r.admin, ativo:!!r.ativo, permissoes:r.permissoes||{}, campos:r.campos||{}, travas:r.travas||{},
+  const perfilDe = r => ({id:r.id, usuario:r.email, nome:r.nome, admin:!!r.admin, ativo:!!r.ativo, permissoes:r.permissoes||{}, campos:r.campos||{}, travas:r.travas||{}, visao:r.visao||{},
     criadoEm:Date.parse(r.criado_em)||Date.now(), ultimoAcesso:r.ultimo_acesso ? Date.parse(r.ultimo_acesso) : null});
   const comRede = async (err)=>{ if(!/failed to fetch|networkerror|network request failed|fetch failed/i.test(String((err&&err.message)||err))) return supabaseMensagem(err); if(cfg.semSonda) return supabaseMensagem(err); return supabaseExplicarSonda(await supabaseSondarServidor(n.url, n.key), n.url); };
   const erro = e => { const x = new Error(supabaseMensagem(e)); x.code = (e && (e.code==='42501' || /sem_permissao/.test(e.message||''))) ? 'sem_permissao' : (e && e.code); return x; };
@@ -10411,7 +11494,7 @@ async function criarBackendSupabase(cfg){
       const out = []; let cursor = Number(desdeSeq)||0;
       for(;;){                                                 // paginação por sequência (a API devolve no máximo 1.000 por vez)
         const {data, error} = await client.from('registros')
-          .select('colecao,chave,dados,versao,seq,apagado,atualizado_por,atualizado_por_nome')
+          .select('colecao,chave,dados,versao,seq,apagado,atualizado_por,atualizado_por_nome,atualizado_em')
           .gt('seq', cursor).order('seq', {ascending:true}).limit(1000);
         if(error) throw erro(error);
         out.push(...data);
@@ -10436,7 +11519,13 @@ async function criarBackendSupabase(cfg){
     },
     async listarPerfis(){ const {data, error} = await client.from('perfis').select('*').order('criado_em', {ascending:true}); if(error) throw erro(error); return data.map(perfilDe); },
     async salvarPerfil(p){
-      const {error} = await client.from('perfis').update({nome:p.nome, admin:!!p.admin, ativo:!!p.ativo, permissoes:p.permissoes||{}, campos:p.campos||{}, travas:p.travas||{}}).eq('id', p.id);
+      const base = {nome:p.nome, admin:!!p.admin, ativo:!!p.ativo, permissoes:p.permissoes||{}, campos:p.campos||{}, travas:p.travas||{}};
+      let {error} = await client.from('perfis').update({...base, visao:p.visao||{}}).eq('id', p.id);
+      // servidor ainda sem a coluna "visao" (schema.sql não foi rodado): grava o resto e avisa, em vez de travar as permissões
+      if(error && /visao/i.test(String(error.message||error.details||''))){
+        ({error} = await client.from('perfis').update(base).eq('id', p.id));
+        if(!error){ try{ if(typeof showToast==='function') showToast('Permissões salvas, MAS a visão por usuário (colunas, selos, comentários e botões escondidos) não foi gravada no servidor: rode o supabase/schema.sql de novo.', 'error'); }catch(e){} }
+      }
       if(error) throw erro(error);
     },
     async excluirPerfil(id){ const {error} = await client.from('perfis').delete().eq('id', id); if(error) throw erro(error); },

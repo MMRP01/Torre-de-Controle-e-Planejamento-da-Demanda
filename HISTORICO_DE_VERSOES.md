@@ -3,6 +3,39 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.1
+- **Telas menores: as tabelas voltam a aparecer.** Em notebook e janela pequena, as colunas congeladas ocupavam quase toda a área (Necessidades deixava 19% da área livre a 1280 px; Itens por Dia, 32%).
+  Agora: (1) as colunas de **descrição congeladas têm largura limitada** (240 px, quebram em mais linhas; o texto inteiro vai no balão); (2) o **congelamento é adaptativo**: só ficam fixas as colunas que cabem em ~42% da
+  área visível; (3) o **menu lateral recolhe sozinho abaixo de 1400 px** (gaveta com ☰; o botão do menu guarda a escolha neste navegador); (4) cada tabela larga tem a chave **❄ Colunas fixas** (Automático, Só o código ou Nenhuma),
+  lembrada por navegador. A 1280 px a área livre vai a 70–78% nessas telas. Quem só lê também pode usar a chave e o botão do menu (são preferências de tela).
+- **Correção nas matrizes de cabeçalho duplo (Itens por Dia e Planejado x Efetuado):** as células Qtd./Litros do cabeçalho eram marcadas como fixas por engano e as larguras eram medidas na linha errada.
+  O congelamento agora usa o mapa real das colunas (rowSpan/colSpan) e mede pela primeira linha de dados.
+- Sem mudança no servidor nem nos dados.
+
+## 2026-11-11.1
+- **Estoque por depósito (Estoque e Em processo).** A importação de estoque reconhece o relatório do ERP com **uma coluna por depósito**: cada depósito é classificado como **Estoque**, **Em processo** ou
+  **Ignorar** (classificação pré-carregada e editável no painel "Depósitos", no cartão de Estoque; mudar a classificação recalcula os saldos sem reimportar). O saldo por depósito fica guardado no item. Itens
+  fora do cadastro são ignorados com um aviso (não viram erro) e depósito novo entra como Ignorar até ser classificado. A planilha simples (Código; Estoque Atual) continua valendo e aceita a coluna Em Processo.
+- **Duas colunas "Estoque" e "Em processo"** no Cadastro de Itens, Necessidades, Necessidades por Grupo, Planejamento de Materiais, grade do Plano de Reposição e relatório de compras, e a opção
+  **"Considerar o estoque em processo nos cálculos"** (global, sincronizada, desligada por padrão). A geração do plano continua usando só o Estoque.
+- **Sugestão de estoque de segurança a partir das OPs do ERP**, por item e por grupo de reposição, com **três métodos lado a lado** (A cobertura fixa, B cobertura pelo prazo de entrega, C estatístico), comparação
+  com o valor atual, alertas (histórico curto, sem prazo), escolha por material, aplicação com **registro (ESEG-nnnn) do antes e depois**, histórico e saídas em Excel e CSV. Botão na tela de Planejamento de Materiais.
+- **Plano de Reposição: filtro por legenda** (Não atende, Atende mas abaixo do estoque de segurança, Atende, Acima do estoque máximo), também no relatório de reposição.
+- **Itens por Dia: "Última atualização dos dados"** (data, hora e usuário) e a última importação de pedidos.
+- **Lista Mestre:** o selo "alterada" passou para baixo do campo de data (não cobre mais o Recurso).
+- **Servidor:** coleção nova `aplicacoesSeguranca`: é preciso rodar o **supabase/schema.sql** de novo (além da coluna da visão por usuário, da versão anterior).
+
+## 2026-11-10.1
+- **Visão por usuário: o administrador escolhe o que cada pessoa enxerga.** Na janela de permissões do usuário há a seção **"O que este usuário enxerga"**, com tudo marcado (visível) por padrão:
+  - **Colunas de todas as tabelas** (34 tabelas, 250 colunas; as colunas de dias contam como um grupo). Valem na tela, na impressão da Lista Mestre e nos CSV da Lista Mestre, de Refugo e do
+    Histórico de importações; nas demais exportações, esconda também o botão de exportar.
+  - **Selos**, por família (19 famílias mais "Demais selos").
+  - **Comentários das linhas**: o botão Obs., a linha amarela e a observação impressa; quem não vê também não abre, não grava nem apaga a observação.
+  - **Botões de ação**, por tela (Gerar plano, Solicitar OP, Relatórios, Importar, Backup, Exportar CSV, cadastros e outros). Um botão escondido também fica **bloqueado**.
+  Administradores veem tudo. **É uma restrição visual** (as permissões são aplicadas no navegador): organiza a tela de cada perfil, mas não protege informação sigilosa. As alterações ficam no registro de acessos.
+- 5 tabelas ganharam identificação (Localizações de granel, Resumo da Lista Mestre e os três quadros dos Dashboards).
+- **Coluna nova no servidor (perfis.visao): é preciso rodar o supabase/schema.sql de novo** (ele acrescenta a coluna sem apagar nada).
+
 ## 2026-11-09.1
 - **Capacidade dos Recursos: resumo ao clicar na célula.** Clicar numa célula (recurso x dia) abre o resumo dos **itens e quantidades alocados** naquele dia: capacidade base, paradas descontadas,
   capacidade do dia, alocado, ocupação e saldo; tabela por item (quantidade, litros, % da capacidade, linhas, Nº OP, Nº OP Granel, pedidos, clientes e situação); paradas do dia; e o botão
