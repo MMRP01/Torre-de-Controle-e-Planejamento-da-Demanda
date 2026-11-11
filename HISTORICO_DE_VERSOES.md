@@ -3,6 +3,15 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.6
+- **Relatório de reposição e lista do Plano de Reposição: o filtro "Ação do plano" passa a valer por linha.** Antes só filtrava o material pela ação principal; como o alerta de excesso é independente dela, um material que
+  precisava comprar também mostrava linhas de "Reduzir / adiar entrega" ou "Não comprar" mesmo com esses tipos desmarcados. Agora cada linha só entra se o tipo dela foi escolhido (e o material entra se a ação principal ou
+  alguma linha dele foi escolhida); "Emitir pedido hoje" e "até a data" separam os pedidos pela data de emissão. Vários grupos escolhidos na tela também passam a ser respeitados no relatório ("Grupos escolhidos na tela", com "✕ remover").
+- **Quantidade a pedir editável no relatório de reposição, com simulação.** Antes de gerar, cada linha de compra tem um campo com a quantidade sugerida, editável; a coluna **Simulação** refaz o saldo do material com a chegada
+  dessa quantidade e sinaliza: Atende, Abaixo do segurança, Ainda falta (com a data) ou Passa do máximo, e um resumo sob os indicadores conta os materiais em cada situação. A atualização é feita no lugar (mantém o foco e a rolagem).
+  As quantidades editadas ficam no relatório gerado (com a sugerida e a simulação, também no Excel, PDF e CSV) e **não entram em nenhum cálculo** do Plano de Reposição: serão lançadas depois em Pedidos de compra em aberto.
+  A simulação reproduz o saldo com plano do motor (conferido nos materiais com compra). Relatórios gravados antes desta versão continuam abrindo e exportando. Sem mudança no servidor nem nos dados.
+
 ## 2026-11-12.5
 - **Sugestão de estoque de segurança: média mensal (D) e metade da média mensal (E).** D = consumo total ÷ (dias do período ÷ dias do mês, padrão 30), com os mesmos filtros dos outros métodos (período, planejado ou efetuado,
   componentes, grupos) e o mesmo valor nas duas bases da média; E = metade de D. Entram na tabela, no Excel/CSV, no registro das aplicações (ESEG) e nas opções de escolha: "Usar em todos os materiais mostrados" e "Usar" por material.
