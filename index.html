@@ -144,6 +144,8 @@ table.data tr:last-child td{border-bottom:none;}
   display:flex; align-items:center; justify-content:center; z-index:60; box-shadow:0 3px 12px rgba(0,0,0,.35);
 }
 .scroll-arrow:hover{background:#B8001A;}
+    .scroll-arrow{transition:opacity .15s ease;}
+    .scroll-arrow.sa-off{opacity:0;pointer-events:none;}
 .scroll-arrow-left{left:252px;}
 .scroll-arrow-right{right:16px;}
 @media(max-width:900px){.scroll-arrow{display:none !important;}}  /* no toque, rolar com o dedo basta */
@@ -1332,7 +1334,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-10","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-11","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -4186,8 +4188,8 @@ function ensureScrollArrows(){
 }
 function setScrollArrowsTarget(wrapId){
   const {left, right} = ensureScrollArrows();
-  if(!wrapId){ left.style.display='none'; right.style.display='none'; return; }
-  left.style.display='flex'; right.style.display='flex';
+  if(!wrapId){ left.style.display='none'; right.style.display='none'; if(typeof setasAlvo==='function') setasAlvo(null); return; }
+  left.style.display='flex'; right.style.display='flex'; if(typeof setasAlvo==='function') setasAlvo(wrapId);
   left.onclick = ()=> scrollTbl(wrapId, -1);
   right.onclick = ()=> scrollTbl(wrapId, 1);
 }
@@ -10290,7 +10292,9 @@ let ESEG_ESCOLHA = new Map(), ESEG_SEL = new Map(), ESEG_VALOR = new Map(), ESEG
 const ESEG_NOMES = {A:'A · Cobertura fixa', B:'B · Cobertura pelo prazo', C:'C · Estatístico', M:'Manter atual'};
 function esegNorm(c){ return String(c==null ? '' : c).trim().toUpperCase(); }
 function esegDiasEntre(a, b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
-function esegPadrao(){ return {de:'', ate:'', base:'planejada', tipos:['i'], diasA:20, fator:1, folga:7, z:'95', minDias:8, prazoPadrao:7, arredondar:true, incluirSem:false}; }
+function esegPadrao(){ return {de:'', ate:'', base:'planejada', baseMedia:'periodo', tipos:['i'], diasA:20, fator:1, folga:7, z:'95', minDias:8, prazoPadrao:7, arredondar:true, incluirSem:false}; }
+/* padrões dos parâmetros conforme a base da média: com a média só dos dias com consumo, a cobertura passa a contar DIAS DE CONSUMO (poucos), não dias corridos */
+const ESEG_PADRAO_MEDIA = {periodo:{diasA:20, fator:1, folga:7}, consumo:{diasA:2, fator:1, folga:0}};
 function esegArred(v, o){ if(!isFinite(v) || v<0) return null; if(!o || o.arredondar===false) return Math.round(v*100)/100; return v>=100 ? Math.ceil(v) : Math.ceil(v*100)/100; }
 /* cálculo puro: E = {ordens, itens, params, grupos, opc} */
 function esegCalcular(E){
@@ -10310,22 +10314,24 @@ function esegCalcular(E){
       s.arr[i] += q; s.total += q; s.membros.add(cod); }); });
   const linhas = [];
   const montar = (s)=>{
-    const n = dias, media = s.total/n, diasCom = s.arr.filter(x=>x>0).length, desvio = n>1 ? Math.sqrt(s.arr.reduce((t,x)=>t+(x-media)*(x-media),0)/(n-1)) : 0;
+    const n = dias, mediaPeriodo = s.total/n, diasCom = s.arr.filter(x=>x>0).length, desvio = n>1 ? Math.sqrt(s.arr.reduce((t,x)=>t+(x-mediaPeriodo)*(x-mediaPeriodo),0)/(n-1)) : 0;   // o desvio (método C) é sempre pelo calendário
+    const soConsumo = o.baseMedia==='consumo', mediaConsumo = diasCom>0 ? s.total/diasCom : 0, media = soConsumo ? mediaConsumo : mediaPeriodo;
     const it = s.tipo==='item' ? itemPor.get(s.codigo) : null, p = s.tipo==='item' ? param.get(s.codigo) : null, g = s.grupo;
     const prazo = s.tipo==='grupo' ? ((g.prazo===undefined||g.prazo===null||g.prazo==='') ? null : Number(g.prazo)) : ((p && p.prazo!==undefined && p.prazo!==null && p.prazo!=='') ? Number(p.prazo) : null);
     const atualBruto = s.tipo==='grupo' ? g.seguranca : (p ? p.seguranca : undefined), atual = (atualBruto===undefined||atualBruto===null||atualBruto==='') ? null : Number(atualBruto);
-    const A = esegArred(media * o.diasA, o), B = prazo!==null ? esegArred(media * (prazo*o.fator + o.folga), o) : null;
+    const ocorr = prazo!==null ? prazo*diasCom/n : null;   // quantos dias de consumo se esperam dentro do prazo de entrega
+    const A = esegArred(media * o.diasA, o), B = prazo!==null ? esegArred(soConsumo ? media * (ocorr*o.fator + o.folga) : media * (prazo*o.fator + o.folga), o) : null;
     const curto = diasCom < o.minDias, prazoC = prazo!==null ? prazo : o.prazoPadrao;
     const Cbruto = z * desvio * Math.sqrt(prazoC), C = curto ? A : esegArred(Cbruto, o), metodoC = curto ? 'cobertura (histórico curto)' : 'estatístico';
     const alertas = []; if(curto) alertas.push('histórico curto'); if(prazo===null) alertas.push('sem prazo');
-    return {chave:s.chave, tipo:s.tipo, codigo:s.codigo, nome:s.tipo==='grupo' ? ((g.nome||g.descricao||'')+'') : (it?it.name:''), uom:s.tipo==='grupo' ? (g.uom||'') : (it?it.uom:''), membros:[...s.membros], total:s.total, diasCom, media, desvio, prazo, atual,
+    return {chave:s.chave, tipo:s.tipo, codigo:s.codigo, nome:s.tipo==='grupo' ? ((g.nome||g.descricao||'')+'') : (it?it.name:''), uom:s.tipo==='grupo' ? (g.uom||'') : (it?it.uom:''), membros:[...s.membros], total:s.total, diasCom, media, mediaPeriodo, mediaConsumo, ocorr, desvio, prazo, atual,
       atualDias: atual!==null && media>0 ? atual/media : null, A, B, C, metodoC, alertas, semConsumo:false};
   };
   series.forEach(s=>linhas.push(montar(s)));
   if(o.incluirSem){
     (E.params||[]).forEach(p=>{ const cod = esegNorm(p.item); if(grupoDe.has(cod) || series.has('I:'+cod)) return; const seg = Number(p.seguranca); if(!(seg>0)) return; const it = itemPor.get(cod);
-      linhas.push({chave:'I:'+cod, tipo:'item', codigo:cod, nome:it?it.name:'', uom:it?it.uom:'', membros:[cod], total:0, diasCom:0, media:0, desvio:0, prazo:(p.prazo===undefined||p.prazo===null||p.prazo==='')?null:Number(p.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
-    grupos.forEach(g=>{ if(series.has('G:'+g.chave)) return; const seg = Number(g.seguranca); if(!(seg>0)) return; linhas.push({chave:'G:'+g.chave, tipo:'grupo', codigo:String(g.chave), nome:g.nome||g.descricao||'', uom:g.uom||'', membros:g.itens.map(esegNorm), total:0, diasCom:0, media:0, desvio:0, prazo:(g.prazo===undefined||g.prazo===null||g.prazo==='')?null:Number(g.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
+      linhas.push({chave:'I:'+cod, tipo:'item', codigo:cod, nome:it?it.name:'', uom:it?it.uom:'', membros:[cod], total:0, diasCom:0, media:0, mediaPeriodo:0, mediaConsumo:0, ocorr:null, desvio:0, prazo:(p.prazo===undefined||p.prazo===null||p.prazo==='')?null:Number(p.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
+    grupos.forEach(g=>{ if(series.has('G:'+g.chave)) return; const seg = Number(g.seguranca); if(!(seg>0)) return; linhas.push({chave:'G:'+g.chave, tipo:'grupo', codigo:String(g.chave), nome:g.nome||g.descricao||'', uom:g.uom||'', membros:g.itens.map(esegNorm), total:0, diasCom:0, media:0, mediaPeriodo:0, mediaConsumo:0, ocorr:null, desvio:0, prazo:(g.prazo===undefined||g.prazo===null||g.prazo==='')?null:Number(g.prazo), atual:seg, atualDias:null, A:0, B:0, C:0, metodoC:'sem consumo', alertas:['sem consumo no período'], semConsumo:true}); });
   }
   linhas.sort((a,b)=>b.total-a.total || a.codigo.localeCompare(b.codigo));
   if(dias < 30) avisos.push(`O histórico tem só ${dias} dia(s): com poucos dias de consumo, os métodos A e B (cobertura) são mais confiáveis que o C (estatístico).`);
@@ -10347,7 +10353,7 @@ function fecharSugestaoSeguranca(){ const o = document.getElementById('esegOverl
 function esegLer(){
   const v = id => { const e = document.getElementById(id); return e ? e.value : ''; }, n = (id, d)=>{ const x = Number(String(v(id)).replace(',','.')); return isFinite(x) && v(id)!=='' ? x : d; };
   const tp = [...document.querySelectorAll('#esegCard input[name="esTipo"]:checked')].map(x=>x.value), P = esegPadrao();
-  return {de:v('esDe'), ate:v('esAte'), base:v('esBase')||'planejada', tipos:tp.length?tp:['i'], diasA:n('esDiasA',P.diasA), fator:n('esFator',P.fator), folga:n('esFolga',P.folga), z:v('esZ')||'95', minDias:n('esMin',P.minDias), prazoPadrao:n('esPrazoPad',P.prazoPadrao), arredondar:!!(document.getElementById('esArred')||{}).checked, incluirSem:!!(document.getElementById('esSem')||{}).checked};
+  return {de:v('esDe'), ate:v('esAte'), base:v('esBase')||'planejada', baseMedia:v('esMedia')==='consumo'?'consumo':'periodo', tipos:tp.length?tp:['i'], diasA:n('esDiasA',P.diasA), fator:n('esFator',P.fator), folga:n('esFolga',P.folga), z:v('esZ')||'95', minDias:n('esMin',P.minDias), prazoPadrao:n('esPrazoPad',P.prazoPadrao), arredondar:!!(document.getElementById('esArred')||{}).checked, incluirSem:!!(document.getElementById('esSem')||{}).checked};
 }
 function abrirSugestaoSeguranca(){
   const P = esegPadrao(); ESEG_ESCOLHA = new Map(); ESEG_SEL = new Map(); ESEG_VALOR = new Map(); ESEG_CTX = 'janela';
@@ -10362,12 +10368,13 @@ function abrirSugestaoSeguranca(){
         <div class="f"><label>até</label><input type="date" id="esAte" value="${P.ate}" onchange="esegAtualizar()"></div>
         <div class="f"><label>Consumo</label><select id="esBase" onchange="esegAtualizar()"><option value="planejada">Planejado na OP</option><option value="efetuada">Efetuado na OP</option></select></div>
         <div class="f" style="flex:2"><label>Componentes</label><div style="display:flex;gap:12px;padding-top:4px"><label style="font-size:12.5px;cursor:pointer"><input type="checkbox" name="esTipo" value="i" checked onchange="esegAtualizar()"> Insumos e embalagens (INS-…)</label><label style="font-size:12.5px;cursor:pointer"><input type="checkbox" name="esTipo" value="p" onchange="esegAtualizar()"> Produtos / granel</label></div></div>
+        <div class="f" style="flex:1.3"><label>Média por dia calculada sobre</label><select id="esMedia" onchange="esegTrocarMedia()" title="Todos os dias do período: consumo total ÷ dias do período. Só os dias com consumo: consumo total ÷ dias em que houve consumo (média por dia de consumo; os dias de cobertura passam a ser dias de consumo)."><option value="periodo">Todos os dias do período</option><option value="consumo">Só os dias com consumo</option></select></div>
         <div class="f"><label>Mostrar</label><select id="esVer" onchange="esegAtualizar()"><option value="">Itens e grupos</option><option value="item">Só itens</option><option value="grupo">Só grupos</option></select></div>
         <div class="f"><label>Material (código ou descrição)</label><input type="text" id="esBusca" placeholder="buscar" autocomplete="off" oninput="esegAtualizar()"></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px">
-        <div style="flex:1;min-width:260px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">A · Cobertura fixa</strong><div style="font-size:12px;margin-top:4px">média por dia × <input type="number" id="esDiasA" value="${P.diasA}" min="0" step="1" style="width:64px" onchange="esegAtualizar()"> dias</div></div>
-        <div style="flex:1;min-width:300px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">B · Cobertura pelo prazo de entrega</strong><div style="font-size:12px;margin-top:4px">média por dia × (prazo × <input type="number" id="esFator" value="${P.fator}" min="0" step="0.1" style="width:56px" onchange="esegAtualizar()"> + <input type="number" id="esFolga" value="${P.folga}" min="0" step="1" style="width:56px" onchange="esegAtualizar()"> dias de folga)</div></div>
+        <div style="flex:1;min-width:260px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">A · Cobertura fixa</strong><div style="font-size:12px;margin-top:4px"><span id="esLblA1">média por dia</span> × <input type="number" id="esDiasA" value="${P.diasA}" min="0" step="1" style="width:64px" onchange="esegAtualizar()"> <span id="esLblA2">dias</span></div></div>
+        <div style="flex:1;min-width:300px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">B · Cobertura pelo prazo de entrega</strong><div style="font-size:12px;margin-top:4px"><span id="esLblB1">média por dia</span> × (<span id="esLblB2">prazo</span> × <input type="number" id="esFator" value="${P.fator}" min="0" step="0.1" style="width:56px" onchange="esegAtualizar()"> + <input type="number" id="esFolga" value="${P.folga}" min="0" step="1" style="width:56px" onchange="esegAtualizar()"> <span id="esLblB3">dias de folga</span>)</div></div>
         <div style="flex:1.4;min-width:360px;border:1px solid var(--line);border-radius:8px;padding:8px 12px"><strong style="font-size:12px">C · Estatístico</strong><div style="font-size:12px;margin-top:4px">nível de serviço <select id="esZ" onchange="esegAtualizar()"><option value="90">90%</option><option value="95" selected>95%</option><option value="97.5">97,5%</option><option value="99">99%</option></select> × desvio diário × √prazo · mínimo <input type="number" id="esMin" value="${P.minDias}" min="2" step="1" style="width:56px" onchange="esegAtualizar()"> dias com consumo (senão usa A) · prazo se faltar <input type="number" id="esPrazoPad" value="${P.prazoPadrao}" min="1" step="1" style="width:56px" onchange="esegAtualizar()"> d</div></div>
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;margin-bottom:8px"><label style="cursor:pointer"><input type="checkbox" id="esArred" checked onchange="esegAtualizar()"> arredondar para cima</label><label style="cursor:pointer"><input type="checkbox" id="esSem" onchange="esegAtualizar()"> incluir materiais com segurança cadastrada e <b>sem consumo</b> no período</label><label style="cursor:pointer"><input type="checkbox" id="esAlerta" onchange="esegAtualizar()"> só com alerta</label></div>
@@ -10384,20 +10391,23 @@ function esegVisiveis(r){
   const ver = (document.getElementById('esVer')||{}).value || '', b = normaTxt(((document.getElementById('esBusca')||{}).value||'').trim()), so = !!(document.getElementById('esAlerta')||{}).checked;
   return r.linhas.filter(l=>(!ver || l.tipo===ver) && (!b || normaTxt(l.codigo+' '+l.nome+' '+l.membros.join(' ')).includes(b)) && (!so || l.alertas.length));
 }
+/* troca a base da média: os parâmetros A e B voltam aos padrões daquela base (cobertura em dias corridos ou em dias de consumo) */
+function esegTrocarMedia(){ const m = (document.getElementById('esMedia')||{}).value==='consumo' ? 'consumo' : 'periodo', d = ESEG_PADRAO_MEDIA[m]; [['esDiasA',d.diasA],['esFator',d.fator],['esFolga',d.folga]].forEach(([id,v])=>{ const e = document.getElementById(id); if(e) e.value = v; }); esegAtualizar(); }
 function esegGlobal(){ const g = document.getElementById('esGlobal').value; ESEG_ESCOLHA = new Map(); esegAtualizar(); }
 function esegEscolher(chave, v){ ESEG_ESCOLHA.set(chave, v); ESEG_VALOR.delete(chave); esegAtualizar(true); }
 function esegMarcar(chave, on){ ESEG_SEL.set(chave, !!on); esegAtualizar(true); }
 function esegValorManual(chave, txt){ const x = Number(String(txt).replace(',','.')); if(String(txt).trim()==='' ){ ESEG_VALOR.delete(chave); } else if(isFinite(x) && x>=0){ ESEG_VALOR.set(chave, x); ESEG_ESCOLHA.set(chave, 'X'); } esegAtualizar(true); }
 function esegAtualizar(manterCalculo){
   const o = esegLer(), r = (manterCalculo && ESEG_PREVIA && ESEG_PREVIA.o && JSON.stringify(ESEG_PREVIA.o)===JSON.stringify(o)) ? ESEG_PREVIA.r : esegCalcular(esegEntrada(o));
-  ESEG_PREVIA = {o, r}; const vis = esegVisiveis(r), glob = (document.getElementById('esGlobal')||{}).value || 'M';
+  ESEG_PREVIA = {o, r}; const vis = esegVisiveis(r), glob = (document.getElementById('esGlobal')||{}).value || 'M', soC = o.baseMedia==='consumo';
+  [['esLblA1', soC?'média por dia de consumo':'média por dia'],['esLblA2', soC?'dias de consumo':'dias'],['esLblB1', soC?'média por dia de consumo':'média por dia'],['esLblB2', soC?'consumos esperados no prazo':'prazo'],['esLblB3', soC?'dias de consumo de folga':'dias de folga']].forEach(([id,t])=>{ const e = document.getElementById(id); if(e) e.textContent = t; });
   const fin = l => { const esc = esegEscolhaDe(l, glob); if(esc==='X') return {esc, v:ESEG_VALOR.get(l.chave)}; return {esc, v:esegValorFinal(l, esc)}; };
   const marcado = l => { const f = fin(l); if(ESEG_SEL.has(l.chave)) return ESEG_SEL.get(l.chave) && f.v!==null && f.esc!=='M'; return f.esc!=='M' && f.v!==null && f.v!==l.atual; };
   const nAplic = vis.filter(marcado).length, kp = (rot, val, sub) => `<div style="flex:1;min-width:150px;border:1px solid var(--line);border-left:4px solid var(--brand-yellow);border-radius:8px;padding:8px 12px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase">${rot}</div><div style="font-size:20px;font-weight:800">${val}</div><div style="font-size:11px;color:var(--muted)">${sub||''}</div></div>`;
   document.getElementById('esegAviso').innerHTML = r.avisos.map(a=>`<div class="note" style="border-color:var(--warn,#d98200);margin:4px 0">${acessoEsc(a)}</div>`).join('');
   document.getElementById('esegKpis').innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">${kp('Materiais', vis.length, `${r.linhas.filter(l=>l.tipo==='grupo').length} grupo(s) · ${r.linhas.filter(l=>l.tipo==='item').length} item(ns) no total`)}${kp('Histórico', (r.resumo.dias||0)+' dias', `${fmtDate(r.resumo.de)} a ${fmtDate(r.resumo.ate)} · ${r.resumo.ops||0} OPs`)}${kp('Com histórico curto', r.linhas.filter(l=>l.alertas.includes('histórico curto')).length, `menos de ${o.minDias} dias com consumo: o C usa a cobertura`)}${kp('Sem prazo', r.linhas.filter(l=>l.alertas.includes('sem prazo')).length, 'o B não calcula; o C usa o prazo padrão')}${kp('Marcados para aplicar', nAplic, 'na tabela abaixo')}</div>`;
   const f2 = v => v===null||v===undefined ? '—' : fmtL(v);
-  document.getElementById('esegTabela').innerHTML = `<div class="tbl-wrap" style="max-height:440px"><table class="data" id="tblEseg"><thead><tr><th title="Aplicar este material">✓</th><th>Código</th><th>Material</th><th>UM</th><th>Consumo no período</th><th>Dias com consumo</th><th>Média / dia</th><th>Prazo (d)</th><th>Atual</th><th title="Quantos dias de consumo médio o valor atual cobre">Atual (dias)</th><th>A · Cobertura fixa</th><th>B · Pelo prazo</th><th>C · Estatístico</th><th>Usar</th><th>Valor a aplicar</th><th>Alertas</th></tr></thead><tbody>${
+  document.getElementById('esegTabela').innerHTML = `<div class="tbl-wrap" style="max-height:440px"><table class="data" id="tblEseg"><thead><tr><th title="Aplicar este material">✓</th><th>Código</th><th>Material</th><th>UM</th><th>Consumo no período</th><th>Dias com consumo</th><th title="${soC?'Consumo total ÷ dias em que houve consumo':'Consumo total ÷ dias do período'}">${soC?'Média / dia de consumo':'Média / dia'}</th><th>Prazo (d)</th><th>Atual</th><th title="${soC?'Quantos dias de consumo (na média por dia de consumo) o valor atual cobre':'Quantos dias de consumo médio o valor atual cobre'}">${soC?'Atual (dias de consumo)':'Atual (dias)'}</th><th>A · Cobertura fixa</th><th>B · Pelo prazo</th><th>C · Estatístico</th><th>Usar</th><th>Valor a aplicar</th><th>Alertas</th></tr></thead><tbody>${
     vis.length ? vis.slice(0,400).map(l=>{ const f = fin(l), mk = marcado(l), dif = (l.atual && f.v!==null && f.esc!=='M') ? (f.v-l.atual)/l.atual : null;
       return `<tr ${l.semConsumo?'style="opacity:.75"':''}><td><input type="checkbox" ${mk?'checked':''} ${(f.esc==='M'||f.v===null)?'disabled':''} onchange="esegMarcar('${acessoEsc(l.chave)}', this.checked)"></td><td class="mono"><strong>${acessoEsc(l.codigo)}</strong>${l.tipo==='grupo'?' <span class="badge info" style="cursor:default">grupo · '+l.membros.length+'</span>':''}</td><td style="white-space:normal;max-width:240px;font-size:12px">${acessoEsc(l.nome)}</td><td>${acessoEsc(l.uom)}</td><td class="mono">${f2(l.total)}</td><td class="mono">${l.diasCom}</td><td class="mono">${f2(l.media)}</td><td class="mono">${l.prazo===null?'—':l.prazo}</td><td class="mono"><strong>${f2(l.atual)}</strong></td><td class="mono">${l.atualDias===null?'—':fmtL(l.atualDias)}</td>
         <td class="mono" style="${f.esc==='A'?'background:#FFF2AB;font-weight:700':''}">${f2(l.A)}</td><td class="mono" style="${f.esc==='B'?'background:#FFF2AB;font-weight:700':''}">${f2(l.B)}</td><td class="mono" style="${f.esc==='C'?'background:#FFF2AB;font-weight:700':''}" title="${acessoEsc(l.metodoC)}">${f2(l.C)}${l.metodoC.startsWith('cobertura')?'<sup>*</sup>':''}</td>
@@ -10444,9 +10454,9 @@ function esegVer(id){
 function esegAoa(){
   if(!ESEG_PREVIA) return null; const {o, r, fin, marcado, vis} = ESEG_PREVIA, n = v => (v===null||v===undefined) ? '' : Math.round(v*1000)/1000;
   return {
-    sugestao:[['Código','Tipo','Material','UM','Consumo no período','Dias com consumo','Média por dia','Desvio diário','Prazo (d)','Atual','Atual (dias de cobertura)','A · Cobertura fixa','B · Cobertura pelo prazo','C · Estatístico','C usado','Escolha','Valor a aplicar','Marcado','Alertas'],
-      ...vis.map(l=>{ const f = fin(l); return [l.codigo, l.tipo==='grupo'?'Grupo':'Item', l.nome, l.uom, n(l.total), l.diasCom, n(l.media), n(l.desvio), l.prazo===null?'':l.prazo, n(l.atual), n(l.atualDias), n(l.A), n(l.B), n(l.C), l.metodoC, f.esc==='M'?'Manter':(f.esc==='X'?'Manual':f.esc), n(f.v), marcado(l)?'Sim':'Não', l.alertas.join('; ')]; })],
-    parametros:[['Histórico', `${fmtDate(r.resumo.de)} a ${fmtDate(r.resumo.ate)} (${r.resumo.dias} dias, ${r.resumo.ops} OPs)`],['Consumo', o.base==='efetuada'?'Efetuado na OP':'Planejado na OP'],['Componentes', o.tipos.map(t=>t==='i'?'Insumos e embalagens':'Produtos / granel').join(' + ')],['A · dias de cobertura', o.diasA],['B · fator do prazo', o.fator],['B · folga (dias)', o.folga],['C · nível de serviço', o.z+'%'],['C · mínimo de dias com consumo', o.minDias],['C · prazo padrão (d)', o.prazoPadrao],['Arredondar para cima', o.arredondar?'Sim':'Não'],['Gerado em', dhImp(new Date().toISOString())]]
+    sugestao:[['Código','Tipo','Material','UM','Consumo no período','Dias com consumo','Média por dia (todos os dias do período)','Média por dia (só dias com consumo)','Média usada','Desvio diário','Prazo (d)','Atual','Atual (dias de cobertura)','A · Cobertura fixa','B · Cobertura pelo prazo','C · Estatístico','C usado','Escolha','Valor a aplicar','Marcado','Alertas'],
+      ...vis.map(l=>{ const f = fin(l); return [l.codigo, l.tipo==='grupo'?'Grupo':'Item', l.nome, l.uom, n(l.total), l.diasCom, n(l.mediaPeriodo), n(l.mediaConsumo), n(l.media), n(l.desvio), l.prazo===null?'':l.prazo, n(l.atual), n(l.atualDias), n(l.A), n(l.B), n(l.C), l.metodoC, f.esc==='M'?'Manter':(f.esc==='X'?'Manual':f.esc), n(f.v), marcado(l)?'Sim':'Não', l.alertas.join('; ')]; })],
+    parametros:[['Histórico', `${fmtDate(r.resumo.de)} a ${fmtDate(r.resumo.ate)} (${r.resumo.dias} dias, ${r.resumo.ops} OPs)`],['Consumo', o.base==='efetuada'?'Efetuado na OP':'Planejado na OP'],['Média por dia calculada sobre', o.baseMedia==='consumo'?'Só os dias com consumo (a cobertura conta dias de consumo)':'Todos os dias do período'],['Componentes', o.tipos.map(t=>t==='i'?'Insumos e embalagens':'Produtos / granel').join(' + ')],['A · dias de cobertura', o.diasA],['B · fator do prazo', o.fator],['B · folga (dias)', o.folga],['C · nível de serviço', o.z+'%'],['C · mínimo de dias com consumo', o.minDias],['C · prazo padrão (d)', o.prazoPadrao],['Arredondar para cima', o.arredondar?'Sim':'Não'],['Gerado em', dhImp(new Date().toISOString())]]
   };
 }
 function esegExcel(){
@@ -10496,6 +10506,47 @@ function menuAlternar(){
 })();
 
 /* =========================================================================
+   SETAS DE ROLAGEM HORIZONTAL (‹ ›) — acompanham a TABELA e a TELA
+   Antes ficavam presas em posições fixas da janela (esquerda a 252 px, para o menu aberto; meio da janela), então com o menu recolhido a seta esquerda boiava no meio do
+   conteúdo. Agora: a seta esquerda fica no canto esquerdo da área da tabela e a direita no canto direito (os dois cantos da tela), e as duas ficam
+   no meio da parte da tabela que está VISÍVEL na janela. Somem quando a tabela não está na tela, quando não há o que rolar ou quando já se chegou ao fim daquele lado.
+   Reposicionam ao rolar a página, rolar a tabela, redimensionar a janela, recolher o menu, redesenhar a tabela ou mudar as colunas fixas.
+   ========================================================================= */
+var SETAS = SETAS || {alvo:null, ligado:new WeakSet(), pend:false};
+function setasCalcular(m){
+  /* m: {rect (da área da tabela), cabBottom, vw, vh, scrollLeft, sobra}  →  {visivel, xEsq, xDir, y, esqOff, dirOff} */
+  const topo = Math.max(m.rect.top, m.cabBottom||0, 0), base = Math.min(m.rect.bottom, m.vh);
+  const visivel = m.rect.width > 0 && (base - topo) >= 56 && m.sobra > 4;
+  const T = 38, folga = 8;
+  const xEsq = Math.max(m.rect.left, 0) + folga, xDir = Math.min(m.rect.right, m.vw) - T - folga;   // nos CANTOS da área da tabela (as colunas fixas não deslocam mais a seta esquerda)
+  return {visivel, xEsq:Math.min(Math.max(xEsq, 4), m.vw - T - 4), xDir:Math.max(xDir, 4), y:Math.round((topo + base)/2 - T/2), esqOff:!visivel || m.scrollLeft <= 2, dirOff:!visivel || m.scrollLeft >= m.sobra - 2};
+}
+function setasPosicionar(){
+  const els = (typeof _scrollArrowsEls !== 'undefined') ? _scrollArrowsEls : null; if(!els) return;
+  const {left, right} = els, wrap = SETAS.alvo ? document.getElementById(SETAS.alvo) : null;
+  if(!wrap || left.style.display==='none'){ return; }
+  const tbl = wrap.querySelector('table'), r = wrap.getBoundingClientRect(), ult = tbl ? tbl.querySelector('th.frz-last, td.frz-last') : null;
+  const vw = Math.min(window.innerWidth || 1920, document.documentElement.clientWidth || window.innerWidth || 1920), vh = window.innerHeight || 800;
+  const c = setasCalcular({rect:r, cabBottom: tbl && tbl.tHead ? tbl.tHead.getBoundingClientRect().bottom : 0, fixasDireita: ult ? Math.round(ult.getBoundingClientRect().right - r.left) : 0, vw, vh, scrollLeft:wrap.scrollLeft, sobra:wrap.scrollWidth - wrap.clientWidth});
+  left.classList.toggle('sa-off', c.esqOff); right.classList.toggle('sa-off', c.dirOff);
+  if(!c.visivel) return;
+  [left, right].forEach(b=>{ b.style.top = c.y+'px'; b.style.transform = 'none'; b.style.right = 'auto'; });
+  left.style.left = c.xEsq+'px'; right.style.left = c.xDir+'px';
+}
+function setasAgendar(){ if(SETAS.pend) return; SETAS.pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ SETAS.pend = false; try{ setasPosicionar(); }catch(e){} }); }
+/* chamada por setScrollArrowsTarget: qual tabela as setas controlam agora */
+function setasAlvo(wrapId){
+  SETAS.alvo = wrapId || null; const wrap = wrapId ? document.getElementById(wrapId) : null;
+  if(wrap && !SETAS.ligado.has(wrap)){
+    SETAS.ligado.add(wrap); wrap.addEventListener('scroll', setasAgendar, {passive:true});
+    if(typeof ResizeObserver !== 'undefined'){ try{ const ro = new ResizeObserver(setasAgendar); ro.observe(wrap); const t = wrap.querySelector('table'); if(t) ro.observe(t); }catch(e){} }
+  }
+  setasAgendar(); setTimeout(setasAgendar, 350);   // depois que a página termina de desenhar
+}
+window.addEventListener('scroll', setasAgendar, {passive:true});
+window.addEventListener('resize', setasAgendar);
+
+/* =========================================================================
    COLUNAS CONGELADAS — nas tabelas largas (que rolam para o lado), as colunas de código e descrição ficam sempre à vista.
    A tabela continua a mesma: só as colunas escolhidas ganham "position: sticky" (classe .frz) com o deslocamento certo, e o cabeçalho também.
    Reaplica sozinho quando a tabela é redesenhada, quando a tela muda de tamanho (ou o menu recolhe) e quando a tabela passa a ser exibida.
@@ -10514,14 +10565,16 @@ const COLUNAS_CONGELADAS = [
   {sel:'#tblProdDia',        cols:[1,2]},              // Recurso/grupo, Total
 ];
 const FRZ_DESC_MAX = 240, FRZ_FRACAO = 0.42, FRZ_KEY = 'menzoil_frz';
-const FRZ_ROTULOS = {auto:'Automático', codigo:'Só o código', nenhuma:'Nenhuma'};
+const FRZ_ROTULOS = {auto:'Automático', codigo:'Só o código', todas:'Código e descrição', nenhuma:'Nenhuma'};
 function frzModo(sel){ try{ const m = JSON.parse(localStorage.getItem(FRZ_KEY)||'{}'); return FRZ_ROTULOS[m[sel]] ? m[sel] : 'auto'; }catch(e){ return 'auto'; } }
 function frzSalvarModo(sel, modo){ try{ const m = JSON.parse(localStorage.getItem(FRZ_KEY)||'{}'); if(modo==='auto') delete m[sel]; else m[sel] = modo; localStorage.setItem(FRZ_KEY, JSON.stringify(m)); }catch(e){} }
-/* quantas colunas (a partir da primeira) devem ficar fixas, dado a largura de cada uma e a área visível */
-function frzEscolher(larguras, area, modo){
+/* quantas colunas (a partir da primeira) devem ficar fixas, dado a largura de cada uma e a área visível.
+   nCodigo = quantas das primeiras colunas são de código (as demais são descrição): "Só o código" fixa essas; "Código e descrição" fixa todas, mesmo em tela pequena */
+function frzEscolher(larguras, area, modo, nCodigo){
   const n = larguras.length;
   if(modo==='nenhuma') return 0;
-  if(modo==='codigo') return n ? 1 : 0;
+  if(modo==='codigo') return n ? Math.min(n, Math.max(1, nCodigo||1)) : 0;
+  if(modo==='todas') return n;
   if(!area || larguras.every(w=>!w)) return n;                      // sem medida (tabela oculta): mantém o comportamento de antes
   let acum = 0, k = 0;
   for(let i=0;i<n;i++){ if(acum + larguras[i] > area*FRZ_FRACAO) break; acum += larguras[i]; k++; }
@@ -10570,7 +10623,8 @@ function aplicarCongelamento(tbl, cols, cfg){
   // 2) quantas colunas cabem fixas na área visível
   const larg = cols.map(largura);
   const wrap = tbl.closest('.tbl-wrap') || tbl.parentElement, area = wrap ? Math.round(wrap.getBoundingClientRect().width) : 0;
-  const k = frzEscolher(larg, area, modo), usar = cols.slice(0, k);
+  const nCod = cols.length - cols.filter(c=>(cfg.desc||[]).includes(c)).length;   // colunas de código = as que não são descrição
+  const k = frzEscolher(larg, area, modo, nCod), usar = cols.slice(0, k);
   let acum = 0; const left = usar.map((c,i)=>{ const v = acum; acum += larg[i]; return v; });
   linhas.forEach((tr, r)=>{
     usar.forEach((c,i)=>{
@@ -10579,13 +10633,14 @@ function aplicarCongelamento(tbl, cols, cfg){
     });
   });
   tbl.dataset.frzN = String(k); tbl.dataset.frzModo = modo;
+  if(typeof setasAgendar === 'function') setasAgendar();   // as setas de rolagem ficam logo depois das colunas fixas
 }
 /* a chave "❄ Colunas fixas", logo acima da tabela */
 function frzBarra(t, cfg){
   const wrap = t.closest('.tbl-wrap') || t.parentElement; if(!wrap || !wrap.parentNode) return;
   const ant = wrap.previousElementSibling; if(ant && ant.classList && ant.classList.contains('frz-bar')) return;
   const bar = document.createElement('div'); bar.className = 'frz-bar'; bar.dataset.sel = cfg.sel; const modo = frzModo(cfg.sel);
-  bar.innerHTML = `<label title="Colunas que ficam sempre à vista quando a tabela rola para o lado. Automático: só as que cabem na tela. Em telas pequenas, use “Só o código” ou “Nenhuma”.">❄ Colunas fixas: <select>${Object.entries(FRZ_ROTULOS).map(([k,v])=>`<option value="${k}" ${k===modo?'selected':''}>${v}</option>`).join('')}</select></label>`;
+  bar.innerHTML = `<label title="Colunas que ficam sempre à vista quando a tabela rola para o lado. Automático: só as que cabem na tela. Só o código: fixa só as colunas de código. Código e descrição: fixa as duas, mesmo em tela pequena. Nenhuma: tudo rola.">❄ Colunas fixas: <select>${Object.entries(FRZ_ROTULOS).map(([k,v])=>`<option value="${k}" ${k===modo?'selected':''}>${v}</option>`).join('')}</select></label>`;
   bar.querySelector('select').addEventListener('change', e=>{ frzSalvarModo(cfg.sel, e.target.value); aplicarCongelamento(t, cfg.cols, cfg); });
   wrap.parentNode.insertBefore(bar, wrap);
 }
@@ -10623,7 +10678,7 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-12.1';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-12.4';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
 const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso'];   // viram registros da coleção "config"

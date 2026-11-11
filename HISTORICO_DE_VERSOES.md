@@ -3,6 +3,22 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.4
+- **Sugestão de estoque de segurança: média por dia calculada sobre "todos os dias do período" (padrão) ou "só os dias com consumo".** Na segunda opção a média é o consumo total ÷ os dias em que houve consumo (média por dia de consumo)
+  e a cobertura passa a contar **dias de consumo**: o método A cobre N dias de consumo (padrão 2), o B usa os consumos esperados dentro do prazo × fator + folga em dias de consumo (padrão 0); o C não muda.
+  Os parâmetros voltam aos padrões da base escolhida ao trocar; as colunas, o Excel/CSV (ambas as médias e a média usada) e o registro das aplicações (ESEG) guardam a base. Sem mudança no servidor nem nos dados.
+
+## 2026-11-12.3
+- **Setas de rolar para o lado nos cantos da tabela.** Na versão anterior a seta esquerda ficava logo depois das colunas fixas e, com Data e Item largos, caía no meio da tabela, sobre os campos. Agora a esquerda fica no
+  canto esquerdo da área da tabela e a direita no canto direito, no meio da parte visível, em qualquer largura de janela e com ou sem menu recolhido. Sem mudança no servidor nem nos dados.
+
+## 2026-11-12.2
+- **Setas de rolar para o lado (‹ ›) acompanham a tabela e a tela.** Antes eram fixas na janela (esquerda a 252 px, meio da janela): com o menu recolhido, a esquerda ficava no meio do conteúdo. Agora a esquerda fica logo
+  depois das colunas fixas, a direita na borda da tabela, as duas no meio da parte VISÍVEL da tabela, e somem quando a tabela está fora da tela, quando não há o que rolar ou ao chegar ao fim daquele lado.
+  Reposicionam ao rolar a página ou a tabela, redimensionar, recolher o menu e mudar as colunas fixas. (Lista Mestre, Itens por Dia e Planejado x Efetuado.)
+- **Colunas fixas:** nova opção **"Código e descrição"** (fixa também a descrição, mesmo em tela pequena). "Só o código" passa a fixar as colunas de código (na Lista Mestre: Data e Item, e não só a Data).
+- Sem mudança no servidor nem nos dados.
+
 ## 2026-11-12.1
 - **Telas menores: as tabelas voltam a aparecer.** Em notebook e janela pequena, as colunas congeladas ocupavam quase toda a área (Necessidades deixava 19% da área livre a 1280 px; Itens por Dia, 32%).
   Agora: (1) as colunas de **descrição congeladas têm largura limitada** (240 px, quebram em mais linhas; o texto inteiro vai no balão); (2) o **congelamento é adaptativo**: só ficam fixas as colunas que cabem em ~42% da
