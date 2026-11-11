@@ -3,6 +3,11 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.5
+- **Sugestão de estoque de segurança: média mensal (D) e metade da média mensal (E).** D = consumo total ÷ (dias do período ÷ dias do mês, padrão 30), com os mesmos filtros dos outros métodos (período, planejado ou efetuado,
+  componentes, grupos) e o mesmo valor nas duas bases da média; E = metade de D. Entram na tabela, no Excel/CSV, no registro das aplicações (ESEG) e nas opções de escolha: "Usar em todos os materiais mostrados" e "Usar" por material.
+  A janela avisa quando o período tem menos de um mês (D e E viram projeção). Agora são cinco métodos lado a lado (A a E). Sem mudança no servidor nem nos dados.
+
 ## 2026-11-12.4
 - **Sugestão de estoque de segurança: média por dia calculada sobre "todos os dias do período" (padrão) ou "só os dias com consumo".** Na segunda opção a média é o consumo total ÷ os dias em que houve consumo (média por dia de consumo)
   e a cobertura passa a contar **dias de consumo**: o método A cobre N dias de consumo (padrão 2), o B usa os consumos esperados dentro do prazo × fator + folga em dias de consumo (padrão 0); o C não muda.
