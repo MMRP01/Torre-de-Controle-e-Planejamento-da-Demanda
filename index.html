@@ -1334,7 +1334,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-11","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-12","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -2727,7 +2727,7 @@ async function runImport(kind, inputId, modeId, reportId){
   if(document.getElementById('page-materiais')?.classList.contains('active')) renderMateriais();
   if(document.getElementById('page-reposicao')?.classList.contains('active')) renderReposicao();
   registrarImportacao({kind, modo:modeId?(mode==='replace'?'Substituir':'Atualizar'):'—', arquivo:file.name, lidas:rawRows.length, added, updated, errors, resultado:resultadoImportacao(added,updated,errors), ...(d=>({detalhes:d.detalhes, maisDetalhes:d.maisDetalhes}))(detalhesDoRelatorio(report))});   // quem importou, quando e o que entrou
-  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos();
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos(); renderPainelSubgrupo();
   persistDB();
 }
 
@@ -2895,7 +2895,7 @@ function renderImportacao(){
       <div id="${repId}"></div>
     </div>`;
   }).join('');
-  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos();
+  atualizarUltimasImportacoes(); renderHistoricoImportacoes(); renderPainelDepositos(); renderPainelSubgrupo();
 }
 
 /* =========================================================================
@@ -7274,6 +7274,7 @@ const CATALOGO_CAMPOS = {
     {id:'pedidos',   label:'Importar pedidos',                    acoes:[['runImport',0,'pedidos']]},
     {id:'estoque',   label:'Importar estoque',                    acoes:[['runImport',0,'estoque']]},
     {id:'depositos',  label:'Classificar depósitos (Estoque / Em processo / Ignorar)', acoes:['salvarDepositos']},
+    {id:'gruposub',   label:'Montar grupos de reposição pelo Subgrupo (ligar/desligar)', acoes:['setGruposPorSubgrupo']},
     {id:'compras',   label:'Importar pedidos de compra em aberto', acoes:[['runImport',0,'compras']]},
     {id:'parametros',label:'Importar estoque de segurança e prazos', acoes:[['runImport',0,'parametros']]},
     {id:'gruposrep', label:'Importar grupos de reposição',         acoes:[['runImport',0,'gruposrep']]},
@@ -7319,7 +7320,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData','salvarDepositos','setConsiderarProcesso','abrirSugestaoSeguranca','esegAplicar'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData','salvarDepositos','setGruposPorSubgrupo','setConsiderarProcesso','abrirSugestaoSeguranca','esegAplicar'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
@@ -8124,7 +8125,7 @@ function init(){
       const codExibe = ehGrupo ? cod : (it ? it.code : (codigoOriginal.get(cod) || cod));
       materiais.push({
         id: ehGrupo ? chaveInterna : 'I:'+codExibe, tipo: ehGrupo ? 'grupo' : 'item', membros: membros,
-        codigo:codExibe, nome: ehGrupo ? ('Grupo '+cod) : (it ? it.name : '(item sem cadastro)'), grupo: it ? (it.group||'') : '', uom: ehGrupo ? umGrupo : (it ? (it.uom||'') : ''), cadastrado: ehGrupo ? true : !!it,
+        codigo:codExibe, nome: ehGrupo ? (grp.nome || ('Grupo '+cod)) : (it ? it.name : '(item sem cadastro)'), grupo: it ? (it.group||'') : (ehGrupo ? (grp.grupoCad||'') : ''), uom: ehGrupo ? umGrupo : (it ? (it.uom||'') : ''), cadastrado: ehGrupo ? true : !!it,
         estoqueAtual:arred(estoque), estoqueFisico:arred(estFisico), emProcesso:arred(emProc), consideraProcesso:comProc, seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
         prazoDias:prazo, prazoOrigem: prz ? prz.origem : null, semPrazo: prazo === null,
         consumoTotal:arred(consTot), entradasTotal:arred(entTot), saldoFinal:arred(saldo), minSaldo:arred(minSaldo), dataMinSaldo:dataMin,
@@ -8285,7 +8286,7 @@ function materiaisEntrada(opcExtra){
     prazos:par.filter(p=>p.prazo!==undefined && p.prazo!==null && p.prazo!=='').map(p=>({tipo:'item', chave:p.item, dias:p.prazo})),
     seguranca:par.filter(p=>p.seguranca!==undefined && p.seguranca!==null && p.seguranca!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.seguranca})),
     maximos:par.filter(p=>p.maximo!==undefined && p.maximo!==null && p.maximo!=='').map(p=>({tipo:'item', chave:p.item, qtd:p.maximo})),
-    gruposReposicao:(DB.gruposReposicao||[]).map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo, maximo:g.maximo})),
+    gruposReposicao:gruposEfetivos().map(g=>({chave:g.chave, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo, maximo:g.maximo, nome:g.nome, grupoCad:g.grupoCad})),
     opcoes:Object.assign({ fim: val('matFim') || undefined, pedidoAtrasado: val('matAtrasados') || 'hoje', considerarProcesso: !!DB.considerarEmProcesso }, opcExtra||{}) };
 }
 const MAT_ACAO = {
@@ -8308,7 +8309,7 @@ function renderMateriais(){
   // avisos de preparo
   const av = [];
   if(!(DB.plan||[]).length) av.push('Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.');
-  if(!(DB.paramMateriais||[]).length && !(DB.gruposReposicao||[]).length) av.push('Nenhum estoque de segurança ou prazo foi importado (cartões em <strong>Importação de Dados</strong>).');
+  if(!(DB.paramMateriais||[]).length && !gruposEfetivos().length) av.push('Nenhum estoque de segurança ou prazo foi importado (cartões em <strong>Importação de Dados</strong>).');
   if(!(DB.comprasAbertas||[]).length) av.push('Nenhum pedido de compra em aberto foi importado: o cálculo considera só o estoque atual.');
   r.avisos.forEach(a=>{ if(a.tipo==='pedido_atrasado') av.push(a.texto); if(a.tipo==='sem_receita') av.push(`${a.itens.length} item(ns) do plano sem receita (não entram no cálculo): ${acessoEsc(a.itens.slice(0,6).join(', '))}${a.itens.length>6?'…':''}.`); });
   const ctr = document.getElementById('matAviso'); ctr.style.display = av.length ? '' : 'none'; ctr.innerHTML = av.map(x=>'• '+x).join('<br>');
@@ -8431,8 +8432,8 @@ function renderReposicao(){
   populateSelectSeguro(document.getElementById('rpGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
   const av = [];
   if(!(DB.plan||[]).length) av.push('Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.');
-  if(!(DB.paramMateriais||[]).length && !(DB.gruposReposicao||[]).length) av.push('Nenhum estoque de segurança, prazo ou máximo foi importado (cartões em <strong>Importação de Dados</strong>).');
-  else if(!(DB.paramMateriais||[]).some(p=>Number(p.maximo)>0) && !(DB.gruposReposicao||[]).some(g=>Number(g.maximo)>0)) av.push('Nenhum <strong>estoque máximo</strong> foi importado: o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)) e não há alerta de excesso. Importe a coluna "Estoque Máximo" junto com o estoque de segurança.');
+  if(!(DB.paramMateriais||[]).length && !gruposEfetivos().length) av.push('Nenhum estoque de segurança, prazo ou máximo foi importado (cartões em <strong>Importação de Dados</strong>).');
+  else if(!(DB.paramMateriais||[]).some(p=>Number(p.maximo)>0) && !gruposEfetivos().some(g=>Number(g.maximo)>0)) av.push('Nenhum <strong>estoque máximo</strong> foi importado: o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)) e não há alerta de excesso. Importe a coluna "Estoque Máximo" junto com o estoque de segurança.');
   if(!(DB.comprasAbertas||[]).length) av.push('Nenhum pedido de compra em aberto foi importado: o cálculo considera só o estoque atual.');
   r.avisos.forEach(a=>{ if(a.tipo==='pedido_atrasado') av.push(a.texto); if(a.tipo==='sem_receita') av.push(`${a.itens.length} item(ns) do plano sem receita (não entram no cálculo): ${acessoEsc(a.itens.slice(0,6).join(', '))}${a.itens.length>6?'…':''}.`); });
   const sp = r.materiais.filter(m=>m.semPrazo && m.plano.acao!=='ok').length;
@@ -8559,6 +8560,72 @@ function exportReposicaoCsv(){
   const csv = '\uFEFF' + [cab, ...lin].map(l=>l.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
   try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `plano_reposicao_${todayISO()}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Não foi possível baixar o arquivo', e); }
   return csv;
+}
+
+/* =========================================================================
+   GRUPOS DE REPOSIÇÃO PELO SUBGRUPO DO CADASTRO DE ITENS
+   Itens com o MESMO Subgrupo (2 ou mais) passam a ser planejados como UM material (grupo de reposição): estoque, consumo, entregas, estoque de segurança, máximo e prazo somados, como nos grupos importados.
+   Itens "Sem subgrupo", ou com um Subgrupo que só tem 1 item, continuam individuais. Um grupo IMPORTADO ("Grupos de reposição") sempre vale mais: seus itens saem do grupo automático.
+   Parâmetros do grupo automático: estoque de segurança e máximo = SOMA dos itens; prazo = MAIOR prazo dos itens (dos parâmetros cadastrados por item). Podem ser ajustados (ex.: ao aplicar a sugestão de
+   estoque de segurança): o ajuste fica em DB.gruposReposicao como registro {chave, origem:'subgrupo', seguranca?, prazo?, maximo?}, sem itens (a lista de itens é sempre recalculada do cadastro).
+   Liga/desliga: DB.gruposPorSubgrupo (padrão ligado).
+   ========================================================================= */
+function subgrupoValido(s){ const t = String(s==null ? '' : s).trim(); if(!t) return ''; const n = t.toLowerCase(); return (n==='sem subgrupo' || n==='-' || n==='—' || n==='n/a') ? '' : t; }
+function gruposPorSubgrupoAtivo(){ return DB.gruposPorSubgrupo !== false; }
+const normCodGS = c => String(c==null ? '' : c).trim().toUpperCase();
+/* grupos montados pelo Subgrupo (sem os parâmetros): [{chave, nome, itens:[códigos], grupoCad, origem:'subgrupo'}] */
+function gruposDoSubgrupo(){
+  if(!gruposPorSubgrupoAtivo()) return [];
+  const explicitos = (DB.gruposReposicao||[]).filter(g=>g && !g.origem), usados = new Set(), chavesExpl = new Set(explicitos.map(g=>String(g.chave).trim().toLowerCase()));
+  explicitos.forEach(g=>(g.itens||[]).forEach(c=>usados.add(normCodGS(c))));
+  const por = new Map();
+  (DB.items||[]).forEach(i=>{ const s = subgrupoValido(i.subgroup); if(!s || usados.has(normCodGS(i.code))) return; const k = s.toLowerCase(); if(!por.has(k)) por.set(k, {chave:s, itens:[]}); por.get(k).itens.push(i); });
+  return [...por.values()].filter(x=>x.itens.length>=2 && !chavesExpl.has(x.chave.toLowerCase())).sort((a,b)=>a.chave.localeCompare(b.chave)).map(x=>{
+    const gs = [...new Set(x.itens.map(i=>String(i.group||'').trim()).filter(g=>g && g.toLowerCase()!=='sem grupo'))];
+    return {chave:x.chave, nome:'Subgrupo '+x.chave, itens:x.itens.map(i=>i.code), grupoCad:gs.length===1 ? gs[0] : '', origem:'subgrupo'};
+  });
+}
+/* parâmetros de um grupo automático: o ajuste guardado (se houver) ou a soma/maior dos itens */
+function paramsGrupoSubgrupo(g){
+  const ov = (DB.gruposReposicao||[]).find(x=>x && x.origem==='subgrupo' && String(x.chave).trim().toLowerCase()===g.chave.toLowerCase()) || {};
+  const par = new Map((DB.paramMateriais||[]).map(p=>[normCodGS(p.item), p])), tem = v => v!==undefined && v!==null && v!=='' && isFinite(Number(v));
+  const ps = g.itens.map(c=>par.get(normCodGS(c))).filter(Boolean);
+  const soma = k => { const v = ps.filter(p=>tem(p[k])).map(p=>Number(p[k])); return v.length ? Math.round(v.reduce((a,b)=>a+b,0)*1000)/1000 : undefined; };
+  const maior = k => { const v = ps.filter(p=>tem(p[k])).map(p=>Number(p[k])); return v.length ? Math.max(...v) : undefined; };
+  const dSeg = soma('seguranca'), dPraz = maior('prazo'), dMax = soma('maximo');
+  return {seguranca: tem(ov.seguranca) ? Number(ov.seguranca) : dSeg, prazo: tem(ov.prazo) ? Number(ov.prazo) : dPraz, maximo: tem(ov.maximo) ? Number(ov.maximo) : dMax,
+          ajustado:{seguranca:tem(ov.seguranca), prazo:tem(ov.prazo), maximo:tem(ov.maximo)}, derivado:{seguranca:dSeg, prazo:dPraz, maximo:dMax}};
+}
+/* TODOS os grupos que o motor deve usar: os importados + os automáticos pelo Subgrupo */
+function gruposEfetivos(){
+  const expl = (DB.gruposReposicao||[]).filter(g=>g && !g.origem).map(g=>({chave:g.chave, id:g.id, grupo:g.grupo, itens:g.itens||[], seguranca:g.seguranca, prazo:g.prazo, maximo:g.maximo, origem:'importado'}));
+  const auto = gruposDoSubgrupo().map(g=>{ const p = paramsGrupoSubgrupo(g); return {chave:g.chave, nome:g.nome, itens:g.itens, grupoCad:g.grupoCad, seguranca:p.seguranca, prazo:p.prazo, maximo:p.maximo, origem:'subgrupo'}; });
+  return [...expl, ...auto];
+}
+/* guarda um ajuste num grupo automático (ex.: estoque de segurança aplicado pela sugestão) */
+function ajustarGrupoSubgrupo(chave, campos){
+  DB.gruposReposicao = DB.gruposReposicao || [];
+  let r = DB.gruposReposicao.find(x=>x && x.origem==='subgrupo' && String(x.chave).trim().toLowerCase()===String(chave).trim().toLowerCase());
+  if(!r){ r = {id:'sub:'+chave, chave:String(chave), origem:'subgrupo', itens:[]}; DB.gruposReposicao.push(r); }
+  Object.assign(r, campos); return r;
+}
+function setGruposPorSubgrupo(v){
+  DB.gruposPorSubgrupo = !!v; persistDB();
+  showToast(v ? '🧩 Grupos de reposição montados pelo Subgrupo do cadastro de itens (2 ou mais itens com o mesmo Subgrupo).' : '🧩 Grupos pelo Subgrupo desligados: só valem os grupos importados.');
+  renderPainelSubgrupo();
+  ['materiais','reposicao'].forEach(p=>{ const el = document.getElementById('page-'+p); if(el && el.classList.contains('active')){ try{ p==='materiais' ? renderMateriais() : renderReposicao(); }catch(e){} } });
+}
+function renderPainelSubgrupo(){
+  const card = document.getElementById('ultima_gruposrep'); if(!card) return; const host = card.closest('.import-card') || card.parentElement; if(!host) return;
+  let box = document.getElementById('subPainel'); const aberto = box ? box.open : false;
+  if(!box){ box = document.createElement('details'); box.id = 'subPainel'; box.style.cssText = 'margin-top:12px'; const rep = document.getElementById('report_gruposrep'); host.insertBefore(box, rep||null); }
+  const gs = gruposDoSubgrupo(), ativo = gruposPorSubgrupoAtivo(), nIt = gs.reduce((t,g)=>t+g.itens.length,0), f = v => (v===undefined||v===null) ? '—' : fmtL(v);
+  box.open = aberto;
+  box.innerHTML = `<summary style="cursor:pointer;font-weight:700">🧩 Grupos pelo Subgrupo do cadastro de itens <span class="badge ${ativo?'info':''}" style="cursor:default">${ativo ? gs.length+' grupo(s) · '+nIt+' itens' : 'desligado'}</span></summary>
+    <div class="card-sub" style="margin:6px 0 8px">Itens com o <b>mesmo Subgrupo</b> (2 ou mais) são planejados como <b>um só material</b>: estoque, consumo, entregas, estoque de segurança, máximo e prazo somados. O estoque de segurança e o máximo do grupo são a <b>soma</b> dos itens e o prazo é o <b>maior</b> prazo deles (dos parâmetros importados por item); a sugestão de estoque de segurança pode ajustar o valor do grupo. Itens "Sem subgrupo" ou sozinhos no Subgrupo continuam individuais, e um grupo <b>importado</b> acima sempre vale mais.</div>
+    <label style="display:inline-flex;gap:6px;align-items:center;font-size:12.5px;cursor:pointer;margin:0 0 8px"><input type="checkbox" ${ativo?'checked':''} onchange="setGruposPorSubgrupo(this.checked)"> Montar grupos de reposição pelo Subgrupo do cadastro de itens</label>
+    ${ativo ? `<div class="tbl-wrap" style="max-height:300px"><table class="data" id="tblSubgrupos"><thead><tr><th>Subgrupo (grupo)</th><th>Grupo do cadastro</th><th>Itens</th><th>Estoque de segurança</th><th>Prazo (d)</th><th>Máximo</th></tr></thead><tbody>${
+      gs.length ? gs.map(g=>{ const p = paramsGrupoSubgrupo(g), aj = k => p.ajustado[k] ? ' <span class="badge warn" style="cursor:default" title="Valor ajustado para este grupo (não é a soma dos itens)">ajustado</span>' : ''; return `<tr><td><strong>${acessoEsc(g.chave)}</strong></td><td>${acessoEsc(g.grupoCad||'—')}</td><td class="mono" title="${acessoEsc(g.itens.join(', '))}">${g.itens.length}</td><td class="mono">${f(p.seguranca)}${aj('seguranca')}</td><td class="mono">${p.prazo===undefined?'—':p.prazo}${aj('prazo')}</td><td class="mono">${f(p.maximo)}${aj('maximo')}</td></tr>`; }).join('') : '<tr><td colspan="6"><div class="empty">Nenhum Subgrupo com 2 ou mais itens (fora dos grupos importados).</div></td></tr>'}</tbody></table></div>` : ''}`;
 }
 
 /* =========================================================================
@@ -9250,8 +9317,8 @@ function rrepFiltrar(lista, f, hoje){
 function rrepAvisos(r){
   const av = [], txt = s => String(s).replace(/<[^>]+>/g,'');
   if(!(DB.plan||[]).length) av.push('Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.');
-  if(!(DB.paramMateriais||[]).length && !(DB.gruposReposicao||[]).length) av.push('Nenhum estoque de segurança, prazo ou máximo foi importado.');
-  else if(!(DB.paramMateriais||[]).some(p=>Number(p.maximo)>0) && !(DB.gruposReposicao||[]).some(g=>Number(g.maximo)>0)) av.push('Nenhum estoque máximo foi importado: o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)) e não há alerta de excesso.');
+  if(!(DB.paramMateriais||[]).length && !gruposEfetivos().length) av.push('Nenhum estoque de segurança, prazo ou máximo foi importado.');
+  else if(!(DB.paramMateriais||[]).some(p=>Number(p.maximo)>0) && !gruposEfetivos().some(g=>Number(g.maximo)>0)) av.push('Nenhum estoque máximo foi importado: o nível alvo dos pedidos é estimado (segurança + consumo médio × (prazo + ciclo)) e não há alerta de excesso.');
   if(!(DB.comprasAbertas||[]).length) av.push('Nenhum pedido de compra em aberto foi importado: o cálculo considera só o estoque atual.');
   (r.avisos||[]).forEach(a=>{ if(a.tipo==='pedido_atrasado') av.push(txt(a.texto)); if(a.tipo==='sem_receita') av.push(`${a.itens.length} item(ns) do plano sem receita (não entram no cálculo): ${a.itens.slice(0,6).join(', ')}${a.itens.length>6?'…':''}`); });
   const sp = r.materiais.filter(m=>m.semPrazo && m.plano.acao!=='ok').length;
@@ -9559,8 +9626,8 @@ const SELO_REGRAS = [
     const f = us.filter(u=> t==='ativo' ? u.ativo!==false && !u.pendente : t==='desativado' ? u.ativo===false : t==='aguardando liberação' ? u.pendente : t==='acesso total' ? u.admin : (!u.admin && !Object.values(u.permissoes||{}).some(v=>v&&v!=='nenhum')));
     return {oque:{'ativo':'Usuário com acesso liberado: pode entrar na ferramenta.','desativado':'Usuário bloqueado: não consegue entrar, mas o histórico dele fica preservado.','acesso total':'Administrador: vê todas as telas, edita tudo e gerencia usuários.','nenhuma tela':'Usuário sem permissão em nenhuma tela: entra, mas não vê nada.','aguardando liberação':'Conta criada que ainda espera a liberação do administrador.'}[t],
       resumo:[['Usuários nesta situação',f.length]], itens:{cab:['Usuário','Nome'], linhas:f.slice(0,12).map(u=>[u.usuario, u.nome||'']), total:f.length}, acao:'Altere em Usuários e Permissões (somente administrador).', it:'IT-PCP-015'}; }],
-  [/^grupo\b|^Grupo ·/i, ()=>{ const g = DB.gruposReposicao||[];
-    return {oque:'Material de reposição que agrupa vários códigos de item (por exemplo, equivalentes) e é planejado como um só.', resumo:[['Grupos de reposição cadastrados',g.length]], itens:{cab:['Grupo','Itens do grupo'], linhas:g.slice(0,12).map(x=>[x.grupo||x.nome||x.id, (x.itens||x.membros||[]).length||'—']), total:g.length}, acao:'Para alterar os grupos, reimporte os Grupos de reposição em Importação de Dados.', it:'IT-PCP-002 e IT-PCP-017'}; }],
+  [/^grupo\b|^Grupo ·|^Subgrupo\b/i, ()=>{ const g = gruposEfetivos();
+    return {oque:'Material de reposição que agrupa vários códigos de item (por exemplo, equivalentes) e é planejado como um só.', resumo:[['Grupos de reposição (importados + pelo Subgrupo)',g.length]], itens:{cab:['Grupo','Itens do grupo'], linhas:g.slice(0,12).map(x=>[x.nome||x.grupo||x.chave||x.id, (x.itens||x.membros||[]).length||'—']), total:g.length}, acao:'Os grupos vêm do arquivo Grupos de reposição (Importação de Dados) e, para os itens que ficaram de fora, do Subgrupo do cadastro de itens (2 ou mais itens com o mesmo Subgrupo).', it:'IT-PCP-002 e IT-PCP-017'}; }],
   [/Baseado no Plano Mestre|Baseado nos pedidos em aberto/i, (m)=>{ const plano = /Plano Mestre/i.test(m[0]);
     return {oque: plano ? 'A necessidade de insumos foi calculada sobre as linhas do Plano Mestre (o que está programado).' : 'Não há plano de produção: a necessidade foi calculada sobre os pedidos em aberto, sem data de produção.', resumo:[['Linhas no plano',(DB.plan||[]).length],['Pedidos em aberto',(DB.orders||[]).length]], acao: plano ? 'Nenhuma ação: a base é o plano atual.' : 'Gere o Plano Mestre para ver a necessidade por data.', it:'IT-PCP-003'}; }],
   [/produção apontada/i, (m,c)=>{ const n = (DB.plan||[]).filter(p=>linhaTemProducao(p));
@@ -10167,7 +10234,7 @@ const VISAO_BOTOES = [
  {tela:'Plano Mestre', itens:[['gerar_plano','Gerar plano automaticamente',['generatePlan']],['confirmar_plano','Salvar / Confirmar plano',['confirmarPlano']],['reabrir_plano','Reabrir plano como rascunho',['reabrirPlanoComoRascunho']],['alterar_prog','Alterar programação (painel e aplicar)',['toggleAlterPanel','executeAlterarProgramacao']],['limpar_plano','Limpar plano (painel e executar)',['toggleClearPanel','executeClearPlan']],['mover_dia','Alterar a data de um dia inteiro',['toggleMovePanel','moveEntireDay']],['planejar_pedido','Planejar pedido na montagem manual',['planejarPedidoLinha']],['reprogramar','Reprogramar pendência',['reprogramarPendencia']]]},
  {tela:'Lista Mestre', itens:[['solicitar_op','Solicitar ordem de produção (abrir, gerar e cancelar)',['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']],['sol_saidas','Solicitação de OP: imprimir e exportar CSV',['solOpImprimir','solOpCsv']],['rel_insumos','Relatório de insumos (abrir e gerar)',['abrirRelatorioInsumos','gerarRelatorioInsumos']],['rel_insumos_saidas','Relatório de insumos: Excel, PDF e CSV',['rinsExcel','rinsImprimir','rinsCsv']],['add_linha','Adicionar linha direto na Lista',['adicionarLinhaListaMestre']],['excluir_linha','Excluir linha da Lista',['deleteListaLine']],['parada_rapida','Registrar parada pela Lista',['abrirParadaRapida']],['imprimir_lista','Abrir lista para impressão',['doPrint']],['exportar_linhas','Exportar relatório de linhas (.csv)',['exportReport']]]},
  {tela:'Materiais e Reposição', itens:[['rel_reposicao','Relatório de reposição (abrir e gerar)',['abrirRelatorioReposicao','gerarRelatorioReposicao']],['rel_reposicao_saidas','Relatório de reposição: Excel, PDF e CSV',['rrepExcel','rrepImprimir','rrepCsv']],['rel_compras','Relatório de compras',['abrirRelatorioCompras','imprimirRelatorioCompras']],['sugestao_seg','Sugestão de estoque de segurança (abrir e aplicar)',['abrirSugestaoSeguranca','esegAplicar']],['sugestao_seg_saidas','Sugestão de estoque de segurança: Excel e CSV',['esegExcel','esegCsv']]]},
- {tela:'Importação e backup', itens:[['importar','Importar dados (todas as importações)',['runImport']],['modelos','Baixar modelos de importação (.csv)',['downloadTemplate']],['depositos','Classificar depósitos (Estoque / Em processo)',['salvarDepositos']],['considerar_processo','Opção: considerar o estoque em processo nos cálculos',['setConsiderarProcesso']],['hist_imp_saidas','Histórico de importações: exportar CSV e Excel dos erros',['exportHistoricoImportacoes','exportDetalhesImportacaoExcel','exportDetalhesImportacaoCsv']],['backup_exp','Exportar backup (.json)',['exportarBackup']],['backup_rest','Restaurar backup',['restaurarBackup']],['limpar_dados','Limpar dados salvos',['limparDadosSalvos']]]},
+ {tela:'Importação e backup', itens:[['importar','Importar dados (todas as importações)',['runImport']],['modelos','Baixar modelos de importação (.csv)',['downloadTemplate']],['depositos','Classificar depósitos (Estoque / Em processo)',['salvarDepositos']],['gruposub','Montar grupos pelo Subgrupo (liga/desliga)',['setGruposPorSubgrupo']],['considerar_processo','Opção: considerar o estoque em processo nos cálculos',['setConsiderarProcesso']],['hist_imp_saidas','Histórico de importações: exportar CSV e Excel dos erros',['exportHistoricoImportacoes','exportDetalhesImportacaoExcel','exportDetalhesImportacaoCsv']],['backup_exp','Exportar backup (.json)',['exportarBackup']],['backup_rest','Restaurar backup',['restaurarBackup']],['limpar_dados','Limpar dados salvos',['limparDadosSalvos']]]},
  {tela:'Cadastros e capacidade', itens:[['salvar_cap','Salvar capacidades e configurações',['salvarCapacidadesManualmente']],['recursos','Adicionar recurso e ajuste do dia',['addResource','addOverride','removeOverride']],['itens_cad','Adicionar e excluir itens',['addItem','deleteItem']],['receitas','Adicionar e excluir receitas',['addRecipe','deleteRecipe']],['pedidos_cad','Adicionar e excluir pedidos',['addOrder','deleteOrder']],['locais','Locais de granel',['addLocalGranel','deleteLocalGranel']],['prioridades_cad','Adicionar e excluir prioridades',['addPrioridade','deletePrioridade']]]},
  {tela:'Apontamentos', itens:[['paradas_reg','Registrar e excluir paradas',['addParada','deleteParada']],['motivos','Motivos de parada (adicionar e excluir)',['addMotivoParada','deleteMotivoParada']],['refugo_reg','Registrar e excluir refugo',['addRefugo','deleteRefugo']]]},
  {tela:'Exportações CSV das telas', itens:[['csv_efetuado','Planejado x Efetuado',['exportEfetuadoCsv']],['csv_materiais','Planejamento de Materiais',['exportMateriaisCsv']],['csv_refugos','Refugo / Perdas',['exportRefugosCsv']],['csv_reposicao','Plano de Reposição',['exportReposicaoCsv']],['csv_visaodia','Itens por Dia',['exportVisaoDiaCsv']],['csv_dash','Dashboards (indicadores)',['exportDashCsv']],['csv_leadtime','Pedidos & Lead Time',['exportLeadtimeCsv']]]},
@@ -10416,7 +10483,7 @@ function esegCalcular(E){
   if(dias < 30) avisos.push(`O histórico tem só ${dias} dia(s): com poucos dias de consumo, os métodos A e B (cobertura) são mais confiáveis que o C (estatístico).`);
   return {linhas, resumo:{de, ate, dias, ops:ordens.length, historico:todas.length, z}, avisos};
 }
-function esegEntrada(o){ return {ordens:DB.ordensERP||[], itens:DB.items||[], params:DB.paramMateriais||[], grupos:DB.gruposReposicao||[], opc:o}; }
+function esegEntrada(o){ return {ordens:DB.ordensERP||[], itens:DB.items||[], params:DB.paramMateriais||[], grupos:gruposEfetivos(), opc:o}; }
 /* o valor final de uma linha, conforme a escolha (A, B, C ou M = manter) */
 function esegValorFinal(l, esc){ if(esc==='M') return l.atual; const v = l[esc]; return (v===null||v===undefined) ? null : v; }
 function esegEscolhaDe(l, global){ return ESEG_ESCOLHA.get(l.chave) || global || 'M'; }
@@ -10509,7 +10576,7 @@ function esegAplicar(){
     const usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '', itens = [];
     esc.forEach(({l, f})=>{
       const valor = Math.round(f.v*1000)/1000, antes = l.atual;
-      if(l.tipo==='grupo'){ const g = (DB.gruposReposicao||[]).find(x=>String(x.chave)===l.codigo); if(!g) return; g.seguranca = valor; }
+      if(l.tipo==='grupo'){ const g = (DB.gruposReposicao||[]).find(x=>x && !x.origem && String(x.chave)===l.codigo); if(g) g.seguranca = valor; else if(gruposDoSubgrupo().some(x=>x.chave===l.codigo)) ajustarGrupoSubgrupo(l.codigo, {seguranca:valor}); else return; }
       else { let p = DB.paramMateriais.find(x=>esegNorm(x.item)===l.codigo); if(!p){ p = {id:l.codigo, item:l.codigo}; DB.paramMateriais.push(p); } p.seguranca = valor; }
       itens.push({chave:l.chave, tipo:l.tipo, codigo:l.codigo, nome:l.nome, uom:l.uom, antes, depois:valor, metodo:f.esc, media:Math.round(l.media*1000)/1000, diasCom:l.diasCom, prazo:l.prazo});
     });
@@ -10758,10 +10825,10 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-12.7';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-12.8';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
 const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca'];
-const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso'];   // viram registros da coleção "config"
+const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso','gruposPorSubgrupo'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
 

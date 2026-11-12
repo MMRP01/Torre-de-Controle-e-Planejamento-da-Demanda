@@ -3,6 +3,13 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.8
+- **Grupos de reposição montados pelo Subgrupo do cadastro de itens.** Itens com o mesmo **Subgrupo** (2 ou mais) passam a ser planejados como um só material (estoque, consumo, entregas, estoque de segurança, máximo e prazo
+  somados), sem precisar importar o arquivo "Grupos de reposição". "Sem subgrupo" e subgrupos com um item só continuam individuais; um grupo **importado** sempre vale mais (seus itens saem do grupo automático).
+  Parâmetros do grupo: estoque de segurança e máximo = **soma** dos itens; prazo = **maior** prazo dos itens (parâmetros importados por item). Podem ser **ajustados** (a sugestão de estoque de segurança grava o valor no
+  grupo, sem mexer nos itens). A lista de itens do grupo é sempre recalculada do cadastro. Vale no Plano de Reposição, no Planejamento de Materiais, no relatório de reposição e na sugestão de estoque de segurança.
+  Painel "Grupos pelo Subgrupo" no cartão Grupos de reposição (Importação de Dados), com a chave para ligar e desligar (permissão própria; sincronizada; padrão ligado). Sem mudança no servidor.
+
 ## 2026-11-12.7
 - **Relatório de reposição: cada linha tem a sua caixa de incluir/tirar.** Antes a caixa agia sobre o material inteiro, então desmarcar uma linha tirava todas as linhas do mesmo item. Agora só a linha desmarcada sai
   (as outras linhas do mesmo material continuam); o material só sai da grade de saldos quando todas as linhas dele foram tiradas. O rodapé e o registro dizem "linha(s) tirada(s)" (o Excel traz "Linhas tiradas do relatório").
