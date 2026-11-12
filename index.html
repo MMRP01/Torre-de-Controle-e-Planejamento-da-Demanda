@@ -9209,6 +9209,7 @@ function rinsImprimir(id){
    ========================================================================= */
 const RREP_SECOES_DEF = [['lista','Lista de reposição'], ['grade','Grade de saldos por dia'], ['avisos','Avisos']];
 let RREP_SECOES = (()=>{ try{ const v = JSON.parse(localStorage.getItem('menzoil_rrepSecoes')||'null'); if(Array.isArray(v)) return v.filter(x=>RREP_SECOES_DEF.some(d=>d[0]===x)); }catch(e){} return ['lista','avisos']; })();
+/* RREP_EXCL: chaves das LINHAS tiradas do relatório (cada linha tem a sua caixa; as outras linhas do mesmo material continuam) */
 let RREP_EXCL = new Set(), RREP_ABA = 'lista', RREP_CTX = 'previa', RREP_PREVIA = null, RREP_ULTIMO = null, RREP_GRUPOS = [];
 /* QUANTIDADE A PEDIR EDITÁVEL: antes de gerar, a quantidade de cada compra pode ser trocada; a tela simula o efeito (saldo com as chegadas das quantidades escolhidas) e sinaliza.
    Essas quantidades valem SÓ para a simulação e para o relatório gerado: não entram nos cálculos do Plano de Reposição (os pedidos serão lançados depois nos pedidos de compra em aberto). */
@@ -9265,7 +9266,7 @@ function rrepKpis(lin, nMat){
 }
 function rrepCalcular(f, excl){
   const r = MateriaisMotor.projetarMateriais(rrepEntrada(f)), hoje = r.hoje || todayISO();
-  const todos = reposOrdenar(rrepFiltrar(r.materiais, f, hoje)), mats = todos.filter(m=>!(excl||new Set()).has(m.id));
+  const todos = reposOrdenar(rrepFiltrar(r.materiais, f, hoje)), ex = excl || new Set();
   const qtdDe = l => (RREP_QTD.has(l.chave) && (l.tipo==='pedido'||l.tipo==='emergencial')) ? RREP_QTD.get(l.chave) : l.qtd;
   // simulação por material: usa TODAS as linhas de compra dele (mesmo as que o filtro de ação esconde), com a quantidade sugerida ou a editada
   const simPor = new Map();
@@ -9274,7 +9275,9 @@ function rrepCalcular(f, excl){
     const l = rrepCompacta(x, hoje), compra = l.tipo==='pedido'||l.tipo==='emergencial'; l.qtdSug = l.qtd;
     if(compra){ if(RREP_QTD.has(l.chave)){ l.qtd = RREP_QTD.get(l.chave); l.editada = true; if(l.antes!==null && l.antes!==undefined) l.apos = Math.round((l.antes + l.qtd)*1000)/1000; } const sm = simPor.get(x.m.id); if(sm) l.sim = {status:sm.status, texto:sm.texto, detalhe:sm.detalhe, min:sm.min, pico:sm.pico}; }
     return l; });
-  const lin = todasLin.filter(x=>!(excl||new Set()).has(x.mid));   // só entram as linhas dos tipos escolhidos em "Ação do plano"
+  const lin = todasLin.filter(x=>!ex.has(x.chave));
+  const resumo = new Map(); todasLin.forEach(l=>{ const a = resumo.get(l.mid) || {inc:0}; if(!ex.has(l.chave)) a.inc++; resumo.set(l.mid, a); });
+  const mats = todos.filter(m=>{ const a = resumo.get(m.id); return !a || a.inc>0; });   // o material só sai da grade quando TODAS as linhas dele foram tiradas   // só entram as linhas dos tipos escolhidos em "Ação do plano"
   return {r, todos, mats, lista:lin, listaTodas:todasLin, kpis:rrepKpis(lin, r.materiais.length), avisos:rrepAvisos(r), dias:r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [], hoje};
 }
 
@@ -9298,7 +9301,7 @@ function rrepQtdHtml(x, comCaixa){
 function rrepTabLista(lin, comCaixa){
   const tp = t => REPOS_TIPO[t] || {rot:t, cls:''};
   return `<div class="tbl-wrap" style="max-height:380px"><table class="data"><thead><tr>${comCaixa?'<th></th>':''}<th>Data da ação</th><th>Ação</th><th>Material</th><th>UM</th><th>Quantidade${comCaixa?' a pedir ✎':''}</th><th>Emitir até</th><th>Chegada necessária</th><th>Saldo antes</th><th>Saldo após</th><th title="Efeito das quantidades a pedir sobre o saldo do material no horizonte">Simulação</th><th>Segurança</th><th>Máximo</th><th>Observação</th></tr></thead><tbody>${
-    lin.length ? lin.map(x=>`<tr data-k="${acessoEsc(x.chave||'')}" ${comCaixa&&RREP_EXCL.has(x.mid)?'style="opacity:.5;text-decoration:line-through"':''}>${comCaixa?`<td><input type="checkbox" ${RREP_EXCL.has(x.mid)?'':'checked'} onchange="rrepToggleMaterial('${acessoEsc(x.mid)}')" title="Incluir ou excluir este material do relatório"></td>`:''}<td class="mono">${x.data?(x.hoje?'<strong>HOJE</strong> · ':'')+fmtDate(x.data):'—'}</td><td><span class="badge ${tp(x.tipo).cls}">${acessoEsc(x.acao)}</span></td><td><strong class="mono">${acessoEsc(x.cod)}</strong>${x.mtipo==='Grupo'?' <span class="badge">grupo</span>':''}<div style="font-size:11px;color:var(--muted);white-space:normal;max-width:240px">${acessoEsc(x.nome)}</div></td><td>${acessoEsc(x.uom)}</td><td class="mono rr-qtdcel" style="font-weight:700">${rrepQtdHtml(x, comCaixa)}</td><td class="mono">${x.emitir?fmtDate(x.emitir):'—'}</td><td class="mono">${x.chegada?fmtDate(x.chegada):'—'}</td><td class="mono">${rrepN(x.antes)}</td><td class="mono rr-apos">${rrepN(x.apos)}</td><td class="rr-sim" style="white-space:normal;min-width:150px">${rrepSimHtml(x)}</td><td class="mono">${rrepN(x.seg)}</td><td class="mono">${x.max>0?rrepN(x.max):'—'}</td><td style="white-space:normal;min-width:240px;font-size:12px">${acessoEsc(x.obs)}</td></tr>`).join('') : `<tr><td colspan="${comCaixa?14:13}"><div class="empty">Nenhuma reposição para estes filtros.</div></td></tr>`}</tbody></table></div>`;
+    lin.length ? lin.map(x=>`<tr data-k="${acessoEsc(x.chave||'')}" ${comCaixa&&RREP_EXCL.has(x.chave)?'style="opacity:.5;text-decoration:line-through"':''}>${comCaixa?`<td><input type="checkbox" class="rr-incl" data-k="${acessoEsc(x.chave||'')}" ${RREP_EXCL.has(x.chave)?'':'checked'} onchange="rrepToggleLinha(this.dataset.k)" title="Incluir ou tirar ESTA linha do relatório (as outras linhas do mesmo material não mudam)"></td>`:''}<td class="mono">${x.data?(x.hoje?'<strong>HOJE</strong> · ':'')+fmtDate(x.data):'—'}</td><td><span class="badge ${tp(x.tipo).cls}">${acessoEsc(x.acao)}</span></td><td><strong class="mono">${acessoEsc(x.cod)}</strong>${x.mtipo==='Grupo'?' <span class="badge">grupo</span>':''}<div style="font-size:11px;color:var(--muted);white-space:normal;max-width:240px">${acessoEsc(x.nome)}</div></td><td>${acessoEsc(x.uom)}</td><td class="mono rr-qtdcel" style="font-weight:700">${rrepQtdHtml(x, comCaixa)}</td><td class="mono">${x.emitir?fmtDate(x.emitir):'—'}</td><td class="mono">${x.chegada?fmtDate(x.chegada):'—'}</td><td class="mono">${rrepN(x.antes)}</td><td class="mono rr-apos">${rrepN(x.apos)}</td><td class="rr-sim" style="white-space:normal;min-width:150px">${rrepSimHtml(x)}</td><td class="mono">${rrepN(x.seg)}</td><td class="mono">${x.max>0?rrepN(x.max):'—'}</td><td style="white-space:normal;min-width:240px;font-size:12px">${acessoEsc(x.obs)}</td></tr>`).join('') : `<tr><td colspan="${comCaixa?14:13}"><div class="empty">Nenhuma reposição para estes filtros.</div></td></tr>`}</tbody></table></div>`;
 }
 /* atualiza a simulação NO LUGAR (sem redesenhar a tabela): mantém o foco, a rolagem e permite ir de uma quantidade para a próxima com Tab */
 function rrepRefrescarSimulacao(){
@@ -9312,7 +9315,7 @@ function rrepRefrescarSimulacao(){
   });
   const k = document.getElementById('rrKpis'); if(k) k.innerHTML = rrepKpisHtml(c.kpis);
   const info = document.getElementById('rrQtdInfo'); if(info) info.innerHTML = RREP_QTD.size ? `<a href="javascript:void(0)" onclick="rrepRestaurarQtd()">↺ voltar às quantidades sugeridas (${RREP_QTD.size} editada(s))</a>` : '';
-  const rod = document.getElementById('rrRodape'); if(rod){ const ex = RREP_EXCL.size ? `${RREP_EXCL.size} material(is) excluído(s) do relatório.` : ''; rod.textContent = [ex, RREP_QTD.size ? `${RREP_QTD.size} quantidade(s) editada(s).` : ''].filter(Boolean).join(' '); }
+  const rod = document.getElementById('rrRodape'); if(rod){ const ex = RREP_EXCL.size ? `${RREP_EXCL.size} linha(s) tirada(s) do relatório.` : ''; rod.textContent = [ex, RREP_QTD.size ? `${RREP_QTD.size} quantidade(s) editada(s).` : ''].filter(Boolean).join(' '); }
 }
 function rrepEditarQtd(chave, v){
   const txt = String(v).trim().replace(',','.'), n = Number(txt), l = RREP_PREVIA && RREP_PREVIA.c.listaTodas.find(x=>x.chave===chave);
@@ -9369,6 +9372,7 @@ function abrirRelatorioReposicao(){
   rrepAtualizar();
 }
 function rrepAtualizar(){
+  const wrap0 = document.querySelector('#rrPreview .tbl-wrap'), st0 = wrap0 ? [wrap0.scrollTop, wrap0.scrollLeft] : null;   // guarda a rolagem da tabela para não voltar ao topo a cada caixa marcada
   const f = rrepLerFiltros(), c = rrepCalcular(f, RREP_EXCL); RREP_PREVIA = {c, f};
   const sem = !(DB.plan||[]).length;
   document.getElementById('rrAviso').innerHTML = sem ? '<div class="note" style="border-color:var(--warn,#d98200);margin:6px 0">Ainda não há plano de produção: gere o Plano Mestre para ver a necessidade de materiais.</div>' : '';
@@ -9376,26 +9380,29 @@ function rrepAtualizar(){
   const secs = rrepSecoesLer(), fora = RREP_SECOES_DEF.map(d=>d[0]).filter(x=>!secs.includes(x));
   const abas = [['lista',`Lista de reposição (${c.lista.length})`], ['grade',`Grade de saldos por dia (${c.mats.length})`], ['avisos',`Avisos (${c.avisos.length})`]];
   document.getElementById('rrAbas').innerHTML = rrepAbasHtml(abas, RREP_ABA, 'rrepAba', fora);
-  document.getElementById('rrPreview').innerHTML = RREP_ABA==='grade' ? rrepTabGrade(c.mats, c.dias, 60) : RREP_ABA==='avisos' ? rrepTabAvisos(c.avisos) : `<div class="card-sub" style="margin:4px 0">Nas compras, <strong>edite a quantidade a pedir</strong> (✎): a coluna <strong>Simulação</strong> mostra o efeito (atende, abaixo do segurança, ainda falta ou passa do máximo). Essas quantidades valem só para a simulação e para este relatório: <strong>não entram nos cálculos</strong>; depois de emitir, lance os pedidos em <em>Pedidos de compra em aberto</em>. <span id="rrQtdInfo">${RREP_QTD.size?`<a href="javascript:void(0)" onclick="rrepRestaurarQtd()">↺ voltar às quantidades sugeridas (${RREP_QTD.size} editada(s))</a>`:''}</span><br>Desmarque a caixa para <strong>tirar o material do relatório</strong> antes de gerar. ${RREP_EXCL.size?`<a href="javascript:void(0)" onclick="rrepRestaurar()">↺ restaurar (${RREP_EXCL.size} material(is) excluído(s))</a>`:''}</div>` + rrepTabLista(c.listaTodas, true);
+  document.getElementById('rrPreview').innerHTML = RREP_ABA==='grade' ? rrepTabGrade(c.mats, c.dias, 60) : RREP_ABA==='avisos' ? rrepTabAvisos(c.avisos) : `<div class="card-sub" style="margin:4px 0">Nas compras, <strong>edite a quantidade a pedir</strong> (✎): a coluna <strong>Simulação</strong> mostra o efeito (atende, abaixo do segurança, ainda falta ou passa do máximo). Essas quantidades valem só para a simulação e para este relatório: <strong>não entram nos cálculos</strong>; depois de emitir, lance os pedidos em <em>Pedidos de compra em aberto</em>. <span id="rrQtdInfo">${RREP_QTD.size?`<a href="javascript:void(0)" onclick="rrepRestaurarQtd()">↺ voltar às quantidades sugeridas (${RREP_QTD.size} editada(s))</a>`:''}</span><br>Desmarque a caixa de uma linha para <strong>tirar só essa linha do relatório</strong> antes de gerar (as outras linhas do mesmo material continuam). ${RREP_EXCL.size?`<a href="javascript:void(0)" onclick="rrepRestaurar()">↺ restaurar (${RREP_EXCL.size} linha(s) tirada(s))</a>`:''}</div>` + rrepTabLista(c.listaTodas, true);
   const b = document.getElementById('rrGerar'); if(b) b.disabled = !c.mats.length || !secs.length || (secs.length===1 && secs[0]==='lista' && !c.lista.length && false);
-  const rod = document.getElementById('rrRodape'); if(rod) rod.textContent = !secs.length ? 'Marque ao menos uma seção para incluir no relatório.' : [RREP_EXCL.size ? `${RREP_EXCL.size} material(is) excluído(s) do relatório.` : '', RREP_QTD.size ? `${RREP_QTD.size} quantidade(s) editada(s).` : ''].filter(Boolean).join(' ');
+  const rod = document.getElementById('rrRodape'); if(rod) rod.textContent = !secs.length ? 'Marque ao menos uma seção para incluir no relatório.' : [RREP_EXCL.size ? `${RREP_EXCL.size} linha(s) tirada(s) do relatório.` : '', RREP_QTD.size ? `${RREP_QTD.size} quantidade(s) editada(s).` : ''].filter(Boolean).join(' ');
+  if(st0){ const w1 = document.querySelector('#rrPreview .tbl-wrap'); if(w1){ w1.scrollTop = st0[0]; w1.scrollLeft = st0[1]; } }
 }
 function rrepLimparGrupos(){ RREP_GRUPOS = []; const e = document.getElementById('rrGrupos'); if(e) e.style.display = 'none'; rrepAtualizar(); }
 function rrepAba(id){ RREP_ABA = id; rrepAtualizar(); }
-function rrepToggleMaterial(id){ if(RREP_EXCL.has(id)) RREP_EXCL.delete(id); else RREP_EXCL.add(id); rrepAtualizar(); }
+function rrepToggleLinha(chave){ if(RREP_EXCL.has(chave)) RREP_EXCL.delete(chave); else RREP_EXCL.add(chave); rrepAtualizar(); }
+/* tira (ou devolve) de uma vez TODAS as linhas de um material */
+function rrepToggleMaterial(mid){ const ch = (RREP_PREVIA ? RREP_PREVIA.c.listaTodas : []).filter(l=>l.mid===mid).map(l=>l.chave); if(!ch.length) return; const todasFora = ch.every(k=>RREP_EXCL.has(k)); ch.forEach(k=>{ if(todasFora) RREP_EXCL.delete(k); else RREP_EXCL.add(k); }); rrepAtualizar(); }
 function rrepRestaurar(){ RREP_EXCL = new Set(); rrepAtualizar(); }
 
 /* ---------- registrar (guardada por permissão) ---------- */
 function rrepFiltrosTxt(f){ f = f||{}; const a = (f.acoes||[]); return [a.length && a.length<RREP_ACOES.length ? 'Ações: '+a.map(x=>(RREP_ACOES.find(y=>y[0]===x)||[0,x])[1]).join(', ') : 'Todas as ações', (f.legendas&&f.legendas.length?'Legenda: '+f.legendas.map(x=>(RREP_LEGENDAS.find(l=>l[0]===x)||[0,x])[1]).join(', '):''), f.tipo==='grupo'?'Só grupos':(f.tipo==='item'?'Só itens':''), f.grupo?`Grupo: ${f.grupo}`:'', (f.grupos&&f.grupos.length)?`Grupos: ${f.grupos.join(', ')}`:'', f.busca?`Material: ${f.busca}`:'', f.fim?`Horizonte até ${fmtDate(f.fim)}`:'', `Pedidos atrasados: ${f.atrasados==='ignorar'?'ignorar':'chegando hoje'}`, `Ciclo ${f.ciclo} dia(s)`].filter(Boolean).join(' · '); }
 function gerarRelatorioReposicao(){
   const f = rrepLerFiltros(), secs = rrepSecoesLer(); if(!secs.length){ alert('Marque ao menos uma seção para incluir no relatório.'); return; }
-  const c = rrepCalcular(f, RREP_EXCL); if(!c.mats.length){ alert('Nenhum material dentro destes filtros (ou todos foram excluídos).'); return; }
-  customConfirm(`Gerar e registrar o relatório de reposição com <strong>${c.lista.length}</strong> ação(ões) em <strong>${c.kpis.materiais}</strong> material(is)?<br><span style="font-size:12px">Seções: ${secs.map(x=>RREP_SECAO_CURTA[x]).join(', ')} · ${c.kpis.emergencial} emergencial(is) · ${c.kpis.pedidos} pedido(s) a emitir${RREP_EXCL.size?` · ${RREP_EXCL.size} material(is) excluído(s)`:''}${c.kpis.editadas?` · ${c.kpis.editadas} quantidade(s) editada(s)`:''}.</span>`, ()=>{
+  const c = rrepCalcular(f, RREP_EXCL); if(!c.mats.length){ alert('Nenhum material dentro destes filtros (ou todas as linhas foram tiradas).'); return; }
+  customConfirm(`Gerar e registrar o relatório de reposição com <strong>${c.lista.length}</strong> ação(ões) em <strong>${c.kpis.materiais}</strong> material(is)?<br><span style="font-size:12px">Seções: ${secs.map(x=>RREP_SECAO_CURTA[x]).join(', ')} · ${c.kpis.emergencial} emergencial(is) · ${c.kpis.pedidos} pedido(s) a emitir${RREP_EXCL.size?` · ${RREP_EXCL.size} linha(s) tirada(s)`:''}${c.kpis.editadas?` · ${c.kpis.editadas} quantidade(s) editada(s)`:''}.</span>`, ()=>{
     DB.relatoriosReposicao = DB.relatoriosReposicao || [];
     const maxN = DB.relatoriosReposicao.reduce((m,s)=>Math.max(m, parseInt(String(s.numero).replace(/\D/g,''),10)||0), 0);
     const ts = new Date().toISOString(), id = 'rrp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const numero = 'RREP-'+String(maxN+1).padStart(4,'0'), usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '';
-    DB.relatoriosReposicao.push({id, numero, ts, usuario, filtros:{...f}, secoes:secs, kpis:{...c.kpis}, nMateriais:c.mats.length, excluidos:RREP_EXCL.size, lista:secs.includes('lista')?c.lista.map(x=>({...x})):[], avisos:secs.includes('avisos')?c.avisos.slice():[]});
+    DB.relatoriosReposicao.push({id, numero, ts, usuario, filtros:{...f}, secoes:secs, kpis:{...c.kpis}, nMateriais:c.mats.length, excluidos:RREP_EXCL.size, exclPor:'linha', lista:secs.includes('lista')?c.lista.map(x=>({...x})):[], avisos:secs.includes('avisos')?c.avisos.slice():[]});
     RREP_ULTIMO = {id, c, hoje:c.hoje}; RREP_QTD = new Map();   // depois de gerar, as quantidades editadas ficam só no relatório: não entram mais em nenhum cálculo
     persistDB(); showToast(`📄 Relatório ${numero} registrado: ${c.lista.length} ação(ões), ${c.kpis.materiais} material(is).`);
     rrepVer(id);
@@ -9416,7 +9423,7 @@ function rrepVer(id, aba){
   const naoGuardado = !d.c && d.secoes.includes('grade'), csvOk = d.secoes.includes('lista');
   document.getElementById('rrepCard').innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">📄 Relatório de reposição ${acessoEsc(s.numero)} <span class="badge ok">registrado</span></h3>
-      <div class="card-sub" style="margin:4px 0 0">${solOpDataHora(s.ts)} · por <strong>${acessoEsc(s.usuario||'—')}</strong> · ${d.lista.length||s.kpis.acoes} ação(ões) em ${s.nMateriais} material(is)${s.excluidos?` (${s.excluidos} excluído(s))`:''}<br>${acessoEsc(rrepFiltrosTxt(s.filtros))}<br>Seções incluídas: ${d.secoes.map(x=>acessoEsc(RREP_SECAO_CURTA[x]||x)).join(' · ')}</div></div>
+      <div class="card-sub" style="margin:4px 0 0">${solOpDataHora(s.ts)} · por <strong>${acessoEsc(s.usuario||'—')}</strong> · ${d.lista.length||s.kpis.acoes} ação(ões) em ${s.nMateriais} material(is)${s.excluidos?` (${s.excluidos} ${s.exclPor==='linha'?'linha(s) tirada(s)':'excluído(s)'})`:''}<br>${acessoEsc(rrepFiltrosTxt(s.filtros))}<br>Seções incluídas: ${d.secoes.map(x=>acessoEsc(RREP_SECAO_CURTA[x]||x)).join(' · ')}</div></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-sm btn-primary" onclick="rrepExcel('${s.id}')">📗 Exportar Excel</button><button class="btn btn-sm" onclick="rrepImprimir('${s.id}')">🖨 PDF / Imprimir</button><button class="btn btn-sm" ${csvOk?'':'disabled title="O CSV leva a Lista de reposição, que não foi incluída neste relatório"'} onclick="rrepCsv('${s.id}')">⬇ CSV</button><button class="btn btn-sm" onclick="rrepMostrarHistorico()">📜 Relatórios anteriores</button><button class="btn btn-sm btn-ghost" onclick="fecharRelatorioReposicao()">✕ Fechar</button></div></div>
     <div style="margin-top:12px">${rrepKpisHtml(s.kpis)}</div>
     ${d.lista.some(x=>x.editada) ? '<div class="note" style="margin:10px 0 0">Este relatório tem <strong>quantidades editadas</strong> antes de gerar (a coluna Simulação usa essas quantidades; a quantidade sugerida aparece abaixo de cada uma). Elas valem só para este relatório e <strong>não entram nos cálculos</strong> do Plano de Reposição: lance os pedidos em <em>Pedidos de compra em aberto</em>.</div>' : ''}
@@ -9445,7 +9452,7 @@ function rrepAoa(id){
   if(d.c && sec.includes('grade')) out.grade = [['Código','Material','Tipo','UM','Ação do plano','Estoque atual','Estoque de segurança','Estoque máximo', ...d.c.dias.map(x=>fmtDate(x))],
     ...d.c.mats.map(m=>[m.codigo, m.nome, m.tipo==='grupo'?'Grupo':'Item', m.uom, (REPOS_ACAO[m.plano.acao]||{rot:m.plano.acao}).rot, num(m.estoqueAtual), num(m.seguranca), num(m.maximo), ...m.serie.map(x=>num(x.saldo))])];
   if(sec.includes('avisos')) out.avisos = [['Aviso'], ...d.avisos.map(a=>[a])];
-  out.parametros = [['Relatório', s.numero], ['Data e hora', solOpDataHora(s.ts)], ['Usuário', s.usuario||''], ['Filtros', rrepFiltrosTxt(s.filtros)], ['Seções incluídas', sec.map(x=>RREP_SECAO_CURTA[x]||x).join(', ')], ['Materiais no relatório', s.nMateriais], ['Materiais excluídos', s.excluidos||0],
+  out.parametros = [['Relatório', s.numero], ['Data e hora', solOpDataHora(s.ts)], ['Usuário', s.usuario||''], ['Filtros', rrepFiltrosTxt(s.filtros)], ['Seções incluídas', sec.map(x=>RREP_SECAO_CURTA[x]||x).join(', ')], ['Materiais no relatório', s.nMateriais], [s.exclPor==='linha' ? 'Linhas tiradas do relatório' : 'Materiais excluídos', s.excluidos||0],
     ['Ações', s.kpis.acoes], ['Compra emergencial', s.kpis.emergencial], ['Pedidos a emitir', s.kpis.pedidos], ['Pedidos a emitir hoje', s.kpis.pedidosHoje], ['Reduzir / adiar entrega', s.kpis.reduzir], ['Não comprar (acima do máximo)', s.kpis.naoComprar], ['Saldo da grade', 'sem novos pedidos (estoque + entregas − consumo do plano)'],
     ['Quantidades editadas', s.kpis.editadas||0], ['Simulação (materiais com compra)', s.kpis.sim ? `atendem ${s.kpis.sim.ok} · abaixo do segurança ${s.kpis.sim.abaixo} · ainda faltam ${s.kpis.sim.falta} · passam do máximo ${s.kpis.sim.exc}` : ''],
     ['Quantidade a pedir', 'Pode ter sido editada antes de gerar. Vale só para este relatório e para a simulação: não entra nos cálculos do Plano de Reposição (os pedidos serão lançados em Pedidos de compra em aberto).']];
@@ -9476,13 +9483,16 @@ function rrepCsv(id){
   try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); a.download = `${d.rec.numero}.csv`; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ console.warn('Download indisponível:', e); }
   return csv;
 }
+/* layout de IMPRESSÃO (PDF): só estas colunas da lista. A tela da ferramenta, o Excel e o CSV continuam com todas as colunas. */
+const RREP_IMP_COLUNAS = ['Data da ação','Ação','Código','Descrição','UM','Quantidade','Chegada necessária','Quantidade sugerida','Simulação com a quantidade pedida'];
+function rrepListaImpressao(lista){ if(!lista || !lista.length) return null; const idx = RREP_IMP_COLUNAS.map(c=>lista[0].indexOf(c)); return [RREP_IMP_COLUNAS.slice(), ...lista.slice(1).map(l=>idx.map(i=>i<0 ? '' : l[i]))]; }
 function rrepHtmlImpressao(id){
   const d = rrepDados(id); if(!d) return ''; const s = d.rec, a = rrepAoa(id);
   const tab = (cab, linhas, cls) => `<table class="${cls||''}"><thead><tr>${cab.map(c=>`<th>${acessoEsc(c)}</th>`).join('')}</tr></thead><tbody>${linhas.map(l=>`<tr>${l.map(c=>`<td${typeof c==='number'?' class="n"':''}>${acessoEsc(c===''||c==null?'':(typeof c==='number'?fmtL(c):c))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>${acessoEsc(s.numero)}</title><style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,sans-serif;margin:16px;color:#222}h1{font-size:19px;margin:0}h2{font-size:14px;margin:16px 0 6px}.sub{color:#555;font-size:12px;margin:4px 0 12px}table{border-collapse:collapse;width:100%;font-size:10px}table.grade{font-size:8px}th,td{border:1px solid #999;padding:3px 5px;text-align:left;vertical-align:top}th{background:#eee}td.n{text-align:right;white-space:nowrap}thead{display:table-header-group}tr{page-break-inside:avoid}ul{font-size:11px;padding-left:18px}.ass{display:flex;gap:30px;margin-top:36px;font-size:12px}.ass div{flex:1;border-top:1px solid #333;padding-top:4px;text-align:center}</style></head><body>
     <h1>Relatório de reposição — ${acessoEsc(s.numero)}</h1>
     <div class="sub">${solOpDataHora(s.ts)} · gerado por ${acessoEsc(s.usuario||'—')} · ${s.kpis.acoes} ação(ões) em ${s.nMateriais} material(is) · compra emergencial: ${s.kpis.emergencial} · pedidos a emitir: ${s.kpis.pedidos} (${s.kpis.pedidosHoje} hoje) · reduzir/adiar: ${s.kpis.reduzir} · não comprar: ${s.kpis.naoComprar}<br>${acessoEsc(rrepFiltrosTxt(s.filtros))}<br>Seções: ${d.secoes.map(x=>acessoEsc(RREP_SECAO_CURTA[x]||x)).join(' · ')}</div>
-    ${a.lista?`<h2>Lista de reposição (${d.lista.length})</h2>${tab(a.lista[0], a.lista.slice(1))}`:''}
+    ${a.lista?`<h2>Lista de reposição (${d.lista.length})</h2>${(()=>{ const li = rrepListaImpressao(a.lista); return tab(li[0], li.slice(1)); })()}`:''}
     ${a.avisos?`<h2>Avisos</h2><ul>${d.avisos.map(x=>`<li>${acessoEsc(x)}</li>`).join('')||'<li>Nenhum aviso.</li>'}</ul>`:''}
     ${a.grade?`<h2>Grade de saldos por dia (sem novos pedidos)</h2>${tab(a.grade[0], a.grade.slice(1), 'grade')}`:''}
     <div class="ass"><div>Elaborado por</div><div>PCP</div><div>Compras</div></div></body></html>`;
@@ -10748,7 +10758,7 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-12.6';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-12.7';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
 const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso'];   // viram registros da coleção "config"

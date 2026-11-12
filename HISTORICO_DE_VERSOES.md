@@ -3,6 +3,13 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-12.7
+- **Relatório de reposição: cada linha tem a sua caixa de incluir/tirar.** Antes a caixa agia sobre o material inteiro, então desmarcar uma linha tirava todas as linhas do mesmo item. Agora só a linha desmarcada sai
+  (as outras linhas do mesmo material continuam); o material só sai da grade de saldos quando todas as linhas dele foram tiradas. O rodapé e o registro dizem "linha(s) tirada(s)" (o Excel traz "Linhas tiradas do relatório").
+  A rolagem da tabela é preservada ao marcar e desmarcar. A simulação da quantidade a pedir não muda por tirar uma linha do relatório.
+- **Relatório de reposição: layout de impressão (PDF) enxuto.** A lista impressa traz só: Data da ação, Ação, Código, Descrição, UM, Quantidade, Chegada necessária, Quantidade sugerida e Simulação com a quantidade pedida.
+  O relatório na ferramenta (prévia e resultado), o Excel e o CSV continuam com todas as colunas. Sem mudança no servidor nem nos dados.
+
 ## 2026-11-12.6
 - **Relatório de reposição e lista do Plano de Reposição: o filtro "Ação do plano" passa a valer por linha.** Antes só filtrava o material pela ação principal; como o alerta de excesso é independente dela, um material que
   precisava comprar também mostrava linhas de "Reduzir / adiar entrega" ou "Não comprar" mesmo com esses tipos desmarcados. Agora cada linha só entra se o tipo dela foi escolhido (e o material entra se a ação principal ou
