@@ -461,6 +461,43 @@ body.menu-recolhido #mobileBar{display:flex;position:sticky;top:0;z-index:90;hei
 body.menu-recolhido #mobileBar button{background:transparent;border:1px solid #555;color:#fff;border-radius:8px;font-size:18px;width:42px;height:30px;line-height:1;cursor:pointer;}
 body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media print{ .frz-bar,#btnRecolherMenu,body.menu-recolhido #mobileBar{display:none !important;} }
+
+/* ---- filtro das tabelas: uma barra única (busca em todas as colunas + Filtros) ---- */
+.xf-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 6px;font-size:12.5px;}
+.xf-bar .xf-q{flex:0 1 300px;min-width:170px;padding:6px 10px;border:1px solid var(--line,#ccc);border-radius:8px;font-size:12.5px;background:var(--surface,#fff);color:inherit;box-sizing:border-box;}
+.xf-btn{border:0;background:transparent;cursor:pointer;padding:0 3px;margin-left:3px;opacity:.35;font-size:10px;line-height:1;vertical-align:middle;color:inherit;}
+.xf-btn::before{content:"▾";}
+th:hover .xf-btn{opacity:.9;}
+.xf-btn.ativo{opacity:1;color:#C1001F;font-weight:800;}
+.xf-chips{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.xf-chip{display:inline-flex;gap:6px;align-items:center;background:#FDECEF;border:1px solid #F3B8C2;color:#8A0F22;border-radius:999px;padding:2px 4px 2px 10px;cursor:pointer;font-size:12px;}
+.xf-chip b{cursor:pointer;padding:0 6px;border-radius:50%;} .xf-chip b:hover{background:#C1001F;color:#fff;}
+.xf-limpar{color:#C1001F;cursor:pointer;font-weight:700;font-size:12px;}
+.xf-avancado{color:var(--muted);cursor:pointer;font-size:12px;text-decoration:underline;}
+.xf-info{color:var(--muted);margin-left:auto;font-size:12px;}
+th.xf-th{cursor:pointer;} th.xf-th[data-ord="asc"]::after{content:" ▴";color:#C1001F;} th.xf-th[data-ord="desc"]::after{content:" ▾";color:#C1001F;}
+tr[data-xf-oculta]{display:none !important;}
+#tblLista:not(.lc-mostrar) tr.lc-filtros:not(.tem-ativo){display:none;}
+.xf-pop{position:absolute;z-index:99500;width:300px;background:var(--surface,#fff);color:var(--text,#222);border:1px solid var(--line,#ccc);border-radius:10px;box-shadow:0 12px 36px rgba(0,0,0,.28);padding:10px;font-size:12.5px;font-weight:400;text-transform:none;letter-spacing:0;}
+.xf-pop .xf-tit{margin:0 0 6px;} .xf-pop .xf-tit label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.xf-pop .xf-ord button{display:block;width:100%;text-align:left;background:transparent;border:0;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:12.5px;}
+.xf-pop .xf-ord button:hover{background:rgba(0,0,0,.06);}
+.xf-pop .xf-cond{margin:6px 0;border-top:1px solid var(--line,#ddd);border-bottom:1px solid var(--line,#ddd);padding:6px 0;}
+.xf-pop .xf-cond summary{cursor:pointer;font-weight:700;}
+.xf-pop .xf-cond select,.xf-pop .xf-cond input{display:block;width:100%;margin-top:5px;box-sizing:border-box;}
+.xf-pop .xf-busca{width:100%;box-sizing:border-box;margin:4px 0 6px;}
+.xf-pop .xf-lista{border:1px solid var(--line,#ddd);border-radius:6px;padding:4px 6px;max-height:220px;overflow:auto;}
+.xf-pop .xf-it,.xf-pop .xf-todos{display:flex;gap:6px;align-items:center;padding:2px 0;cursor:pointer;}
+.xf-pop .xf-it span{flex:1;white-space:normal;word-break:break-word;}
+.xf-pop .xf-it em{font-style:normal;color:var(--muted);font-size:11px;}
+.xf-pop .xf-vazio{color:var(--muted);padding:6px;}
+.xf-pop .xf-rod{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.xf-pop .xf-rod button{padding:5px 12px;border-radius:7px;border:1px solid var(--line,#bbb);background:#fff;cursor:pointer;}
+.xf-pop .xf-rod .xf-ok{background:#C1001F;color:#fff;border-color:#C1001F;font-weight:700;}
+.atu-link{color:#8CC8FF;text-decoration:underline;font-weight:700;}
+.vd-atr{color:#B71C1C;font-weight:800;cursor:help;margin-left:4px;}
+.vd-nova{color:#1565C0;font-weight:800;cursor:help;font-size:11px;margin-left:4px;background:#E8F1FB;border-radius:6px;padding:0 4px;}
+@media print{ .xf-btn,.xf-bar,.xf-pop{display:none !important;} tr[data-xf-oculta]{display:none !important;} }
 </style>
 </head>
 <body>
@@ -572,6 +609,7 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
       </div>
       <div class="note" id="rpAviso" style="margin-bottom:14px"></div>
       <div class="opcao-processo-host"></div>
+    <div id="rpCenarioInfo" style="margin:-4px 0 8px;font-size:12.5px"></div>
     <div class="grid grid-4" id="rpKpis"></div>
       <div class="filters">
         <div class="f"><label>Ação do plano</label><select id="rpAcao" onchange="renderReposicao()">
@@ -598,7 +636,7 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
           <span><i class="rp-sw rec"></i>Dia com recebimento sugerido pelo plano</span>
         </div>
         <label style="display:inline-flex;gap:8px;align-items:center;font-size:12.5px;margin:0 0 10px;cursor:pointer"><input type="checkbox" id="rpComPlano" onchange="renderReposicao()"> Mostrar o saldo com o plano de reposição (pedidos sugeridos incluídos)</label>
-        <div class="tbl-wrap rp-wrap"><table class="rp-grade" id="tblReposGrade"></table></div>
+        <div class="tbl-wrap rp-wrap"><table class="rp-grade" id="tblReposGrade" data-xf-colunas="7"></table></div>
       </div>
       <div class="card" id="rpCardLista" style="display:none">
         <h3>Lista de ações <span class="dash-por" id="rpCountLista"></span></h3>
@@ -807,7 +845,8 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
         <div class="head-actions"><button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button><button class="btn" onclick="exportVisaoDiaCsv()">⬇ Exportar (.csv)</button></div>
       </div>
 
-      <div class="grid grid-4" id="vdKpis"></div>
+      <div id="vdAtrasoAviso"></div>
+  <div class="grid grid-4" id="vdKpis"></div>
 
       <div class="filters">
         <div class="f"><label>De</label><input type="date" id="vdDe" onchange="renderVisaoDia()"></div>
@@ -815,11 +854,13 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
         <div class="f"><label>Cliente</label><select id="vdCliente" onchange="renderVisaoDia()"></select></div>
         <div class="f"><label>Cód. Item</label><input placeholder="buscar código ou descrição..." id="vdBuscaItem" oninput="renderVisaoDia()"></div>
         <div class="f"><label>Recurso</label><select id="vdRecurso" onchange="renderVisaoDia()"></select></div>
+        <div class="f"><label>&nbsp;</label><label style="font-weight:400;cursor:pointer;text-transform:none;font-size:12.5px"><input type="checkbox" id="vdSoPlan" checked onchange="renderVisaoDia()"> Só itens com planejamento no período</label></div>
         <div class="f-actions"><button class="btn btn-ghost" onclick="clearVisaoDiaFiltros()">Limpar filtros</button></div>
       </div>
 
       <div class="card">
-        <div class="card-sub" style="margin-bottom:10px">Role a tabela para o lado para ver todos os dias do período. Colunas de dia mostram Qtd. (na unidade do item) e Litros lado a lado.</div>
+        <div class="card-sub" style="margin-bottom:10px">Role a tabela para o lado para ver todos os dias do período. Colunas de dia mostram Qtd. (na unidade do item) e Litros lado a lado. <strong>⏰</strong> = item em atraso (pendente; <strong>⏰!</strong> = sem nova data informada) · <strong>📅</strong> = nova data prevista informada (quantidade atrasada que deve ser produzida neste dia). A data do plano não muda.</div>
+        <div id="vdSemPlano" class="card-sub" style="margin:0 0 8px"></div>
         <div class="tbl-wrap" id="vdMatrixWrap"><table class="data" id="tblVisaoDiaMatrix"></table></div>
       </div>
     </section>
@@ -938,13 +979,32 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
     </section>
 
     <!-- ============ LISTA MESTRE ============ -->
-    <section class="page" id="page-lista">
+    <section class="page" id="page-terceirizacao">
+  <div class="page-head">
+    <div><h2>Terceirização</h2><div class="desc">Acompanhamento do que é produzido por terceiros (marcado na Lista Mestre, coluna <strong>Terceiro</strong>): planejado, efetivo recebido, cumprimento, atrasos e o que deve chegar. Essas linhas ficam <strong>fora dos indicadores de produção e da capacidade</strong> dos recursos internos; o consumo de insumos delas continua entrando nas necessidades e na reposição.</div></div>
+    <div class="head-actions"><button class="btn" onclick="exportTerceirizacaoCsv()">⬇ Exportar (.csv)</button></div>
+  </div>
+  <div class="grid" id="terKpis" style="grid-template-columns:repeat(5,minmax(0,1fr))"></div>
+  <div class="filters">
+    <div class="f"><label>De</label><input type="date" id="terDe" onchange="renderTerceirizacao()"></div>
+    <div class="f"><label>Até</label><input type="date" id="terAte" onchange="renderTerceirizacao()"></div>
+    <div class="f"><label>Terceiro</label><select id="terTerceiro" onchange="renderTerceirizacao()"></select></div>
+    <div class="f"><label>Status</label><select id="terStatus" onchange="renderTerceirizacao()"></select></div>
+    <div class="f"><label>Item ou pedido</label><input placeholder="buscar..." id="terItem" oninput="renderTerceirizacao()"></div>
+  </div>
+  <div class="card"><h3 style="margin:0 0 8px">Por terceiro</h3><div class="tbl-wrap"><table class="data" id="tblTerResumo" data-xf="off"></table></div></div>
+  <div class="card" style="margin-top:14px"><h3 style="margin:0 0 8px">Linhas terceirizadas</h3><div class="tbl-wrap" style="max-height:520px"><table class="data" id="tblTerceirizacao"></table></div></div>
+</section>
+
+<section class="page" id="page-lista">
       <div class="page-head">
         <div><h2>Lista Mestre de Produção</h2><div class="desc">Itens, quantidades, OP e OP granel planejados por dia. Filtre e imprima como lista mestre de produção.</div></div>
         <div class="head-actions">
           <button class="btn btn-danger" onclick="abrirParadaRapida('')">🛑 Registrar parada</button>
           <button class="btn btn-primary" onclick="abrirSolicitarOP()">📄 Solicitar ordem de produção</button>
           <button class="btn btn-primary" onclick="abrirRelatorioInsumos()">📊 Relatório de insumos</button>
+      <button class="btn" onclick="terceirizarLinhasFiltradas()" title="Marca como produção terceirizada as linhas que a Lista Mestre mostra agora">🤝 Terceirizar linhas filtradas</button>
+      <datalist id="dlTerceiros"></datalist>
           <button class="btn" onclick="doPrint()">🖨 Abrir lista para impressão</button>
         </div>
       </div>
@@ -958,7 +1018,12 @@ body.menu-recolhido #mobileTitle{font-weight:700;font-size:14px;white-space:nowr
         <div class="f"><label>Status</label><select id="lstStatus" onchange="renderLista()">
           <option value="">Todos</option><option>Planejado</option><option>Em produção</option><option>Concluído</option>
         </select></div>
-        <div class="f-actions"><button class="btn btn-ghost" onclick="clearListaFilters()">Limpar filtros</button></div>
+        <div class="f"><label>Última data efetiva — de</label><input type="date" id="lstEfDe" onchange="renderLista()" title="Data do último turno efetuado da linha"></div>
+    <div class="f"><label>Última data efetiva — até</label><input type="date" id="lstEfAte" onchange="renderLista()"></div>
+    <div class="f"><label>Data do turno — de</label><input type="date" id="lstTurDe" onchange="renderLista()" title="Linhas com produção apontada em algum turno nesta data"></div>
+    <div class="f"><label>Data do turno — até</label><input type="date" id="lstTurAte" onchange="renderLista()"></div>
+    <div class="f"><label>Turno</label><select id="lstTurno" data-unico onchange="renderLista()" title="Vale para o filtro de data do turno"><option value="">Todos</option><option value="1">1º turno</option><option value="2">2º turno</option><option value="3">3º turno</option></select></div>
+    <div class="f-actions"><button class="btn btn-ghost" onclick="clearListaFilters()">Limpar filtros</button></div>
       </div>
 
       <div class="card" style="background:#FFF9DC">
@@ -1334,7 +1399,7 @@ const fmtL = n => __nfPtBR.format(Math.round((n||0)*100)/100);
 const fmtDate = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pt-BR') : '—';
 const uid = () => Math.random().toString(36).slice(2,9);
 
-let DB = {"updatedAt":"2026-11-12","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
+let DB = {"updatedAt":"2026-11-18","items":[],"recipes":[],"resources":[],"orders":[],"plan":[],"motivosParada":[{"id":"mp01","nome":"Troca de Setup / Changeover","tipo":"Programada"},{"id":"mp02","nome":"Manutenção Preventiva","tipo":"Programada"},{"id":"mp03","nome":"Limpeza / CIP","tipo":"Programada"},{"id":"mp04","nome":"Refeição / Intervalo","tipo":"Programada"},{"id":"mp05","nome":"Reunião / Treinamento","tipo":"Programada"},{"id":"mp06","nome":"Sem Programação (ocioso)","tipo":"Programada"},{"id":"mp07","nome":"Quebra de Equipamento (Manutenção Corretiva)","tipo":"Não Programada"},{"id":"mp08","nome":"Falta de Insumo / Matéria-Prima","tipo":"Não Programada"},{"id":"mp09","nome":"Falta de Operador","tipo":"Não Programada"},{"id":"mp10","nome":"Falta de Energia / Utilidades","tipo":"Não Programada"},{"id":"mp11","nome":"Ajuste de Qualidade / Retrabalho","tipo":"Não Programada"},{"id":"mp12","nome":"Espera de Liberação de Qualidade","tipo":"Não Programada"},{"id":"mp13","nome":"Outros","tipo":"Não Programada"}],"paradas":[],"planConfirmed":false,"planConfirmedAt":null,"prioridades":[],"refugos":[],"locaisGranel":[],"comprasAbertas":[],"paramMateriais":[],"gruposReposicao":[]};
 
 // itemByCode é chamado milhares de vezes durante a renderização — um índice (Map) evita
 // refazer uma busca linear em todos os itens a cada chamada, o que ficava lento com volumes grandes.
@@ -1384,6 +1449,7 @@ const NAV = [
     {id:'plano', label:'Plano Mestre', ico:'▤'},
     {id:'visaodia', label:'Itens por Dia', ico:'▦'},
     {id:'efetuado', label:'Planejado x Efetuado', ico:'✅'},
+    {id:'terceirizacao', label:'Terceirização', ico:'🤝'},
     {id:'lista', label:'Lista Mestre', ico:'☰'},
     {id:'refugos', label:'Refugo / Perdas', ico:'♻️'},
     {id:'capacidade', label:'Capacidade dos Recursos', ico:'📊'},
@@ -1463,6 +1529,7 @@ function renderPagina(id){
     if(id==='plano'){ renderPlano(); if(planMode==='manual') renderManualClientList(); }
     if(id==='visaodia') renderVisaoDia();
     if(id==='efetuado') renderEfetuado();
+  if(id==='terceirizacao') renderTerceirizacao();
     if(id==='refugos') renderRefugos();
     if(id==='lista') renderLista();
     if(id==='capacidade') renderCapacidade();
@@ -2035,6 +2102,7 @@ function garantirEstruturas(){
   DB.relatoriosReposicao = DB.relatoriosReposicao || [];  // relatórios de reposição gerados (registro)
   DB.historicoImportacoes = DB.historicoImportacoes || [];  // registro das importações (data, hora, usuário)
   DB.aplicacoesSeguranca = DB.aplicacoesSeguranca || [];  // aplicações do estoque de segurança sugerido
+  DB.historicoAlteracoes = DB.historicoAlteracoes || []; // relatório de atualizações: o que mudou, quem e quando
   // reata as linhas do plano aos pedidos cujo id foi trocado por uma importação antiga (o que já foi planejado volta a abater o pedido)
   const reatados = reconciliarVinculosPedidos();
   if(reatados>0) setTimeout(()=>{ try{ persistDB(); showToast(`Vínculos reatados: ${reatados} linha(s) do plano voltaram a abater os pedidos (pelo número do pedido).`); }catch(e){} }, 1200);
@@ -3354,19 +3422,20 @@ function unidadesDoClienteNaLinha(p, cliente){      // cliente: um nome ou uma l
 const ehAdmin = () => !!(typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL && USUARIO_ATUAL.admin);
 // linhaProtegida: tem produção apontada → nunca é recalculada, mesclada nem alterada por ações automáticas ou em lote (vale para TODOS, inclusive administradores)
 const linhaProtegida = p => linhaTemProducao(p);
-// linhaTravada: bloqueia a EDIÇÃO DIRETA da programação (data, recurso, quantidade e exclusão): só administrador pode, com justificativa
-const linhaTravada = p => linhaTemProducao(p) && !ehAdmin();
-const MSG_TRAVA_LINHA = '🔒 Esta linha já tem produção apontada: a programação (data, recurso, quantidade e exclusão) só pode ser alterada por um administrador.\n\nPara reprogramar o que ainda falta produzir, use “↻ Reprogramar pendência” no Plano Mestre. Para corrigir um erro de lançamento, ajuste antes o apontamento na Lista Mestre.';
+// linhaTravada: bloqueia a EDIÇÃO DIRETA da programação (data, recurso, quantidade e exclusão): só administrador, ou usuário com a permissão "Alterar linhas com produção apontada", pode, com justificativa
+const podeAlterarApontadas = () => !!USUARIO_ATUAL && (!!USUARIO_ATUAL.admin || (USUARIO_ATUAL.campos||{})['*alterarApontadas']===true);   // permissão extra (como a de exceder pedido): por padrão só administrador
+const linhaTravada = p => linhaTemProducao(p) && !podeAlterarApontadas();
+const MSG_TRAVA_LINHA = '🔒 Esta linha já tem produção apontada: a programação (data, recurso, quantidade e exclusão) só pode ser alterada por um administrador ou por quem tem a permissão "Alterar linhas com produção apontada" (peça ao administrador).\n\nPara reprogramar o que ainda falta produzir, use “↻ Reprogramar pendência” no Plano Mestre. Para corrigir um erro de lançamento, ajuste antes o apontamento na Lista Mestre.';
 function barrarLinhaTravada(p){ if(!linhaTravada(p)) return false; alert(MSG_TRAVA_LINHA); return true; }
-const attrTrava = p => linhaTravada(p) ? ' disabled data-trava-prog="1" title="🔒 Linha com produção apontada — só administrador altera a programação"' : '';
-const seloLinhaProduzida = p => !linhaTemProducao(p) ? '' : (ehAdmin()
-  ? ' <span class="badge warn" title="Linha com produção apontada: só administradores alteram a programação, sempre com justificativa registrada no histórico da linha.">⚠ produção apontada — alteração só por administrador</span>'
+const attrTrava = p => linhaTravada(p) ? ' disabled data-trava-prog="1" title="🔒 Linha com produção apontada — só administrador (ou quem tem a permissão para isso) altera a programação"' : '';
+const seloLinhaProduzida = p => !linhaTemProducao(p) ? '' : (podeAlterarApontadas()
+  ? ' <span class="badge warn" title="Linha com produção apontada: só administradores (e quem recebeu a permissão) alteram a programação, sempre com justificativa registrada no histórico da linha.">⚠ produção apontada — alteração só com permissão (administrador ou liberado)</span>'
   : ' <span class="badge ok" title="Com produção apontada: data, recurso, quantidade e exclusão estão travados (só administrador altera). Os apontamentos continuam editáveis.">🔒 produção apontada — programação travada</span>');
 // Altera a programação de uma linha. Sem produção: segue o fluxo normal. COM produção: só administrador, e com justificativa obrigatória (mesmo com o plano não confirmado).
 function comAutorizacaoLinhaProduzida(p, descricao, aplicar){
   if(!p || !linhaTemProducao(p)){ aplicar(''); return; }
-  if(!ehAdmin()){ alert(MSG_TRAVA_LINHA); renderPlano(); renderLista(); return; }
-  pedirJustificativa(`${descricao}<br><span style="color:#8A4A00;font-weight:400">⚠ Esta linha já tem produção apontada — alteração restrita a administrador.</span>`, aplicar, {produzida:true});
+  if(!podeAlterarApontadas()){ alert(MSG_TRAVA_LINHA); renderPlano(); renderLista(); return; }
+  pedirJustificativa(`${descricao}<br><span style="color:#8A4A00;font-weight:400">⚠ Esta linha já tem produção apontada — alteração restrita a administrador ou a quem tem a permissão "Alterar linhas com produção apontada".</span>`, aplicar, {produzida:true});
 }
 // remove a linha do plano; se ela já tinha produção, deixa uma trilha de auditoria (quem, quando, por quê e o que existia)
 function removerLinhaDoPlano(p, just){
@@ -3802,6 +3871,7 @@ function clearVisaoDiaFiltros(){
   document.getElementById('vdCliente').value = '';
   document.getElementById('vdBuscaItem').value = '';
   document.getElementById('vdRecurso').value = '';
+  const sp = document.getElementById('vdSoPlan'); if(sp) sp.checked = true;   // volta ao padrão: só itens com planejamento no período
   renderVisaoDia();
 }
 function computeVisaoDiaMatrix(){
@@ -3852,10 +3922,19 @@ function computeVisaoDiaMatrix(){
       return { qty: linhas.reduce((s,x)=>s+x.p.batchUnits*x.f,0), litros: linhas.reduce((s,x)=>s+x.p.batchLiters*x.f,0) };
     });
 
-    return {code, name: it?it.name:code, uom: it?it.uom:'', qtyTotal, litrosTotal, faltaQty, excessoQty, porDia};
+    return {code, name: it?it.name:code, uom: it?it.uom:'', qtyTotal, litrosTotal, faltaQty, excessoQty, porDia,
+ atrasos: planLinesForItem.filter(x=>ndAtrasada(x.p)).map(x=>({data:x.p.date, pend:ndPend(x.p)*x.f, nova:x.p.novaData||'', terceiro:x.p.terceiro||''}))};   // linhas em atraso do item (para as marcas ⏰ e 📅)
   });
 
-  return {dateRange, rows};
+  // "Só itens com planejamento no período": esconde os itens com pedido em aberto que não têm nada planejado nos dias filtrados (a nova data prevista dentro do período também conta, para as marcas 📅 não sumirem)
+
+  const soPlan = !document.getElementById('vdSoPlan') || document.getElementById('vdSoPlan').checked;
+
+  const temPlano = r => r.porDia.some(d=>d.qty>0.0001 || d.litros>0.0001) || (r.atrasos||[]).some(a=>a.nova && a.nova>=de && a.nova<=ate);
+
+  const visiveis = soPlan ? rows.filter(temPlano) : rows, ocultos = rows.filter(r=>!visiveis.includes(r));
+
+  return {dateRange, rows: visiveis, semPlanoPeriodo: ocultos.length, faltaOculta: ocultos.reduce((t,r)=>t+r.faltaQty,0)};
 }
 /* =========================================================================
    PLANEJADO x EFETUADO POR DIA — matriz item x dia (Planejado | Efetuado | Pendente)
@@ -3877,6 +3956,7 @@ function computeEfetuadoMatrix(){
   const somaMapa = (m,d) => (m[d]||[]).reduce((s,x)=>s+x.qty,0);
 
   DB.plan.forEach(p=>{
+ if(ehTerceiro(p)) return;   /* terceirizado: indicador à parte */
     const it = itemByCode(p.itemCode);
     if(recursoF.length && !(it && recursoF.includes(it.resource))) return;
     let f = 1; // quando há filtro de cliente, vale só a parte dele em linhas que atendem vários clientes
@@ -4031,13 +4111,14 @@ function exportEfetuadoCsv(){
 }
 
 function renderVisaoDia(){
-  limparCachePrioridades(); vdAtualizarCarimbo();
+  limparCachePrioridades(); vdAtualizarCarimbo(); try{ vdRenderAtraso(); }catch(e){ console.warn('alerta de atraso:', e); }
   populateSelect(document.getElementById('vdRecurso'), DB.resources.map(r=>r.name), true);
   populateSelect(document.getElementById('vdCliente'), [...new Set(DB.orders.map(o=>o.customer))].sort(), true);
   document.getElementById('vdDe').value = document.getElementById('vdDe').value || DB.updatedAt;
   document.getElementById('vdAte').value = document.getElementById('vdAte').value || addDays(DB.updatedAt,13);
 
-  const {dateRange, rows} = computeVisaoDiaMatrix();
+  const {dateRange, rows, semPlanoPeriodo, faltaOculta} = computeVisaoDiaMatrix();
+  const infoOc = document.getElementById('vdSemPlano'); if(infoOc) infoOc.innerHTML = semPlanoPeriodo>0 ? `ℹ️ <strong>${semPlanoPeriodo}</strong> item(ns) com pedido em aberto <strong>não têm planejamento neste período</strong> e estão ocultos${faltaOculta>0.001 ? ` (${fmtL(faltaOculta)} unid. a programar)` : ''}. Desmarque <em>Só itens com planejamento no período</em> para vê-los.` : '';
 
   const totalPedidosL = rows.reduce((s,r)=>s+r.litrosTotal,0);
   const totalFaltaQty = rows.reduce((s,r)=>s+r.faltaQty,0);
@@ -4052,7 +4133,7 @@ function renderVisaoDia(){
 
   const table = document.getElementById('tblVisaoDiaMatrix');
   if(!rows.length){
-    table.innerHTML = `<tbody><tr><td><div class="empty">Nenhum item neste filtro. Ajuste o período ou os filtros acima.</div></td></tr></tbody>`;
+    table.innerHTML = `<tbody><tr><td><div class="empty">Nenhum item com planejamento neste filtro. Ajuste o período ou os filtros acima, ou desmarque <em>Só itens com planejamento no período</em>.</div></td></tr></tbody>`;
     return;
   }
   const theadRow1 = `<tr>
@@ -4072,15 +4153,16 @@ function renderVisaoDia(){
     const prio = getPrioridadeResumoItem(r.code);
     const prioBadge = prio ? `<div style="margin-top:3px">${prioridadeSelo(prio,{compacto:true})}</div>` : '';
     return `<tr class="${r.faltaQty>0.001?'row-danger':r.excessoQty>0.001?'row-orange':''}">
-    <td class="mono">${r.code}</td><td>${r.name}${prioBadge}</td>
+    <td class="mono">${r.code}</td><td>${r.name}${prioBadge}${vdBadgeAtraso(r)}</td>
     <td class="mono">${fmtL(r.qtyTotal)}</td><td class="mono">${fmtL(r.litrosTotal)}</td>
     <td class="mono">${saldoCell}</td>
     ${r.porDia.map((d,i)=>{
         const alt = i%2 ? ' day-alt' : '';
         const dataCol = dateRange[i];
-        return d.litros>0
-          ? `<td class="mono${alt}" style="cursor:pointer;text-decoration:underline dotted" title="Clique para editar" onclick="openDayItemEditor('${r.code}','${dataCol}')">${fmtL(d.qty)}</td><td class="mono${alt}" style="cursor:pointer" title="Clique para editar" onclick="openDayItemEditor('${r.code}','${dataCol}')">${fmtL(d.litros)}</td>`
-          : `<td class="mono${alt}" style="color:var(--muted)">—</td><td class="mono${alt}" style="color:var(--muted)">—</td>`;
+        const mk = vdMarcaDia(r, dataCol);
+ return d.litros>0
+ ? `<td class="mono${alt}" style="cursor:pointer;text-decoration:underline dotted" title="Clique para editar" onclick="openDayItemEditor('${r.code}','${dataCol}')">${fmtL(d.qty)}${mk}</td><td class="mono${alt}" style="cursor:pointer" title="Clique para editar" onclick="openDayItemEditor('${r.code}','${dataCol}')">${fmtL(d.litros)}</td>`
+ : (mk ? `<td class="mono${alt}" style="white-space:nowrap">${mk}</td><td class="mono${alt}" style="color:var(--muted)">—</td>` : `<td class="mono${alt}" style="color:var(--muted)">—</td><td class="mono${alt}" style="color:var(--muted)">—</td>`);
       }).join('')}
   </tr>`;
   }).join('');
@@ -4380,7 +4462,8 @@ function generatePlan(){
   if(travadas.length){   // linhas com produção apontada NÃO são recalculadas: ficam como estão e o resto é replanejado
     const manuais = DB.plan.filter(p=>p.manual && !linhaProtegida(p)).length;
     customConfirm(`Isso vai recalcular o plano, mas as <strong>${travadas.length} linha(s) com produção apontada ficam como estão</strong> (🔒 travadas).\nO restante${manuais?` (inclusive ${manuais} linha(s) manual(is))`:''} será refeito e a pendência dos pedidos será replanejada.\nDeseja continuar?`, ()=>{
-      DB.plan = travadas;
+      terceiroMemorizar(DB.plan.filter(p=>!linhaProtegida(p)));   // as marcas de terceiro das linhas que serão refeitas voltam nas novas
+    DB.plan = travadas;
       runGeneratePlan({ativo:true, de:'', ate:'', clientes:[], recursos:[], cliente:'', recurso:'', itemCode:'', itemTexto:''});
     });
     return;
@@ -4434,7 +4517,8 @@ function runGeneratePlan(escopo){
     openOrders = pedidosPendentesNoEscopo(escopo).map(x=> ({...x.order, qty:x.pendente}));
     // o que já está no plano ocupa capacidade e "dono" do dia (isolamento de contaminantes)
     planoAnterior.forEach(p=>{
-      const k = keyOf(p.resource, p.date);
+      if(ehTerceiro(p)) return;   // terceirizada: não consome capacidade nem contaminante dos recursos internos
+    const k = keyOf(p.resource, p.date);
       consumed[k] = (consumed[k]||0) + p.batchLiters;
       if(p.bucket && !dayOwner[k]) dayOwner[k] = p.bucket;
       const m = /^(.*)\|(.+)\|batch(\d+)$/.exec(p.id||'');
@@ -4683,9 +4767,9 @@ function runGeneratePlan(escopo){
 
   if(scoped){
     newPlan.forEach(l=>{ l.changeLog = l.changeLog || []; logMudancaPlano(l, 'Linha criada (geração por critérios)', '—', fmtL(l.batchUnits), ''); });
-    DB.plan = planoAnterior.concat(newPlan);
+    DB.plan = planoAnterior.concat(newPlan); terceiroReaplicar(newPlan);
   } else {
-    DB.plan = newPlan;
+    terceiroMemorizar(DB.plan); DB.plan = newPlan; terceiroReaplicar(newPlan);
   }
   // planos grandes começam recolhidos — desenhar milhares de linhas de uma vez deixa a tela lenta;
   // o usuário expande só o(s) recurso(s) que quiser inspecionar de cada vez
@@ -4795,7 +4879,7 @@ function renderPlano(){
       ${expandido? `<div class="grid" id="${rid}" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px">
         ${relevantDates.map(d=>{
           const cap = getCapacity(r.name,d);
-          const used = byDate[d].reduce((s,l)=>s+l.batchLiters,0);
+          const used = byDate[d].filter(l=>!ehTerceiro(l)).reduce((s,l)=>s+l.batchLiters,0);
           const pct = cap>0? Math.min(100, used/cap*100):0;
           return `<div class="card" style="margin:0;padding:12px;background:#F1F3F5">
             <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px;position:sticky;top:var(--stick-h);z-index:3;background:#F1F3F5;padding:4px 0;box-shadow:0 2px 4px rgba(0,0,0,.04)">
@@ -4872,12 +4956,12 @@ function populateListFilters(){
   populateSelect(document.getElementById('lstItem'), [...new Set(DB.plan.map(p=>p.itemCode))], true);
 }
 /* ---- filtros por coluna na linha de cabeçalho da Lista Mestre (somam-se aos filtros do topo) ---- */
-const LISTA_COL = {data:'', recurso:'', item:'', desc:'', pedido:'', lote:'', contam:'', op:'', granel:'', local:'', status:''};
+const LISTA_COL = {data:'', recurso:'', item:'', desc:'', pedido:'', lote:'', contam:'', op:'', granel:'', local:'', status:'', terceiro:''};
 function listaPassaColunas(p){
   const f = LISTA_COL, t = (v,x)=> !v || normaTxt(String(x==null?'':x)).includes(normaTxt(v));
   return (!f.data || p.date===f.data) && (!f.recurso || p.resource===f.recurso) && t(f.item,p.itemCode) && t(f.desc,(itemByCode(p.itemCode)||{}).name) &&
     t(f.pedido,p.orderNo) && t(f.lote,lotesDaLinha(p).join(' ')) && (!f.contam || (p.bucket||'limpo')===f.contam) && t(f.op,p.opNumber) && t(f.granel,p.opGranelNumber) &&
-    (!f.local || String(p.localGranelId||'')===f.local) && (!f.status || p.status===f.status);
+    (!f.local || String(p.localGranelId||'')===f.local) && (!f.status || p.status===f.status) && (!f.terceiro || (f.terceiro==='__interna' ? !ehTerceiro(p) : String(p.terceiro||'').trim()===f.terceiro));
 }
 function listaFiltrosColHtml(base){
   const v = k => acessoEsc(LISTA_COL[k]);
@@ -4890,7 +4974,7 @@ function listaFiltrosColHtml(base){
   const locais = [...new Set(base.map(p=>String(p.localGranelId||'')))].sort().map(id=>[id, id ? nomeLocalGranel(id) : '(sem local)']);
   const stt = [...new Set(base.map(p=>p.status))].sort().map(x=>[x,x]);
   const vazio = '<th></th>', ativos = Object.values(LISTA_COL).filter(Boolean).length;
-  return `<tr class="lc-filtros">${sel('data',datas)}${sel('recurso',recs)}${txt('item','filtrar')}${txt('desc','filtrar')}${txt('pedido','filtrar')}${txt('lote','filtrar')}${vazio}${vazio}${sel('contam',contam)}${txt('op','filtrar')}${txt('granel','filtrar')}${sel('local',locais)}${vazio.repeat(6)}${sel('status',stt)}<th>${ativos?`<button class="btn btn-sm" title="Limpar os filtros das colunas" onclick="listaColLimpar()">✕ ${ativos}</button>`:''}</th></tr>`;
+  return `<tr class="lc-filtros${ativos?' tem-ativo':''}">${sel('data',datas)}${sel('recurso',recs)}${txt('item','filtrar')}${txt('desc','filtrar')}${txt('pedido','filtrar')}${txt('lote','filtrar')}${vazio}${vazio}${sel('contam',contam)}${txt('op','filtrar')}${txt('granel','filtrar')}${sel('local',locais)}${vazio.repeat(6)}${sel('status',stt)}${sel('terceiro',[['__interna','Interna'],...terceirosConhecidos().map(n=>[n,n])])}<th>${ativos?`<button class="btn btn-sm" title="Limpar os filtros das colunas" onclick="listaColLimpar()">✕ ${ativos}</button>`:''}</th></tr>`;
 }
 let __lcT = null;
 function listaColSet(chave, valor, texto){
@@ -4901,7 +4985,7 @@ function listaColSet(chave, valor, texto){
 }
 function listaColLimpar(){ Object.keys(LISTA_COL).forEach(k=>LISTA_COL[k]=''); renderLista(); }
 function clearListaFilters(){
-  ['lstDe','lstAte','lstRecurso','lstItem','lstPedido','lstStatus'].forEach(id=>document.getElementById(id).value='');
+  ['lstDe','lstAte','lstRecurso','lstItem','lstPedido','lstStatus','lstEfDe','lstEfAte','lstTurDe','lstTurAte','lstTurno'].forEach(id=>{ const e = document.getElementById(id); if(e) e.value=''; });
   Object.keys(LISTA_COL).forEach(k=>LISTA_COL[k]='');   // também limpa os filtros das colunas
   renderLista();
 }
@@ -4912,8 +4996,12 @@ function getFilteredListaRows(opts){
   const item = filtroValores('lstItem');
   const ped = document.getElementById('lstPedido').value.toLowerCase();
   const stt = filtroValores('lstStatus');
+  const gv = id => { const e = document.getElementById(id); return e ? e.value : ''; }, efDe = gv('lstEfDe'), efAte = gv('lstEfAte'), tDe = gv('lstTurDe'), tAte = gv('lstTurAte'), tur = gv('lstTurno');
+  // datas de efetivo: a "última data efetiva" da linha e a data de cada turno com produção apontada (1º, 2º, 3º)
+  const passaEf = p => (!efDe || (!!p.actualDate && p.actualDate>=efDe)) && (!efAte || (!!p.actualDate && p.actualDate<=efAte));
+  const passaTur = p => !(tDe || tAte) || [1,2,3].filter(k=>!tur || String(k)===tur).some(k=>Number(p['turno'+k])>0 && (!tDe || dataEfetivaDoTurno(p,k)>=tDe) && (!tAte || dataEfetivaDoTurno(p,k)<=tAte));
   return DB.plan.filter(p=>
-    (!de || p.date>=de) && (!ate || p.date<=ate) &&
+    (!de || p.date>=de) && (!ate || p.date<=ate) && passaEf(p) && passaTur(p) &&
     (!res.length || res.includes(p.resource)) && (!item.length || item.includes(p.itemCode)) &&
     (!ped || String(p.orderNo).toLowerCase().includes(ped)) &&
     (!stt.length || stt.includes(p.status)) &&
@@ -4962,7 +5050,7 @@ function renderListaResumo(rows){
   const resumo = resumoPorRecurso(rows);
   const totalPlanejado = resumo.reduce((s,r)=>s+r.planejado,0);
   const totalEfetivo = resumo.reduce((s,r)=>s+r.efetivo,0);
-  el.innerHTML = resumo.length ? `<table class="data" id="tblListaResumo"><thead><tr><th>Recurso</th><th>Planejado (L)</th><th>Efetivo (L)</th></tr></thead>
+  el.innerHTML = resumo.length ? `<table class="data" id="tblListaResumo" data-xf="off"><thead><tr><th>Recurso</th><th>Planejado (L)</th><th>Efetivo (L)</th></tr></thead>
     <tbody>${resumo.map(r=>`<tr><td>${r.resource}</td><td class="mono">${fmtL(r.planejado)}</td><td class="mono">${r.efetivo?fmtL(r.efetivo):'—'}</td></tr>`).join('')}
     <tr style="font-weight:700"><td>Total</td><td class="mono">${fmtL(totalPlanejado)}</td><td class="mono">${totalEfetivo?fmtL(totalEfetivo):'—'}</td></tr>
     </tbody></table>` : `<div class="empty">Nenhuma linha planejada neste filtro.</div>`;
@@ -5001,7 +5089,7 @@ function renderListaCore(){
 
   document.getElementById('tblLista').innerHTML = `<thead><tr>
     <th>Data</th><th>Recurso</th><th>Item</th><th>Descrição</th><th>Pedido</th><th>Lote(s)</th><th>Qtd. (L)</th><th>Qtd. (unid.)</th><th>Contaminante</th>
-    <th>Nº OP</th><th>Nº OP Granel</th><th>Localização do Granel</th><th>1º turno</th><th>2º turno</th><th>3º turno</th><th>Tempo total</th><th>Qtd. efetiva total</th><th>Última data efetiva</th><th>Status</th><th></th></tr>${listaFiltrosColHtml(rowsBase)}</thead>
+    <th>Nº OP</th><th>Nº OP Granel</th><th>Localização do Granel</th><th>1º turno</th><th>2º turno</th><th>3º turno</th><th>Tempo total</th><th>Qtd. efetiva total</th><th>Última data efetiva</th><th>Status</th><th>Terceiro</th><th></th></tr>${listaFiltrosColHtml(rowsBase)}</thead>
     <tbody>${rows.length? rows.map(p=>{
       const __cab = cabecalhoGranel(p);
       const gTxtP = String(p.opGranelNumber||'').trim(), gP = gTxtP ? gmap.get(normaTxt(gTxtP)) : null, granelMulti = !!(gP && gP.itens.size>1);
@@ -5030,7 +5118,8 @@ function renderListaCore(){
               <option ${p.status==='Em produção'?'selected':''}>Em produção</option>
               <option ${p.status==='Concluído'?'selected':''}>Concluído</option>
             </select></td>
-        <td style="white-space:nowrap">${linhaTemProducao(p)?`<span style="cursor:help;margin-right:4px" title="${ehAdmin()?'Linha com produção apontada: só administradores alteram a programação (com justificativa registrada).':'Linha com produção apontada: data, recurso, quantidade e exclusão estão travados (só administrador altera). Os apontamentos continuam editáveis.'}">${ehAdmin()?'⚠':'🔒'}</span>`:''}${botaoObsHtml(p)}<button class="icon-btn" title="${refs.length?`Refugo / perdas apontados nesta linha: ${fmtL(refTxt)} (${refs.length} apontamento(s))`:'Apontar refugo / perdas desta linha'}" onclick="abrirRefugoLinha('${p.id}')" style="${refs.length?'color:#B8590A;font-weight:800':''}">♻${refs.length?` ${refs.length}`:''}</button><button class="icon-btn" ${linhaTravada(p)?'disabled data-trava-prog="1" title="🔒 Linha com produção apontada — não pode ser removida"':'title="Remover esta linha"'} onclick="deleteListaLine('${p.id}')">✕</button></td>
+        <td><input list="dlTerceiros" value="${acessoEsc(p.terceiro||'')}" placeholder="Interna" style="width:130px${ehTerceiro(p)?';font-weight:700;background:#FFF2AB':''}"${attrTrava(p)} onchange="updateListaTerceiro('${p.id}', this.value)" title="Produção terceirizada: nome do terceiro. Vazio = produção interna (conta nos indicadores de produção e na capacidade)."></td>
+        <td style="white-space:nowrap">${linhaTemProducao(p)?`<span style="cursor:help;margin-right:4px" title="${podeAlterarApontadas()?'Linha com produção apontada: só administradores (e quem recebeu a permissão) alteram a programação (com justificativa registrada).':'Linha com produção apontada: data, recurso, quantidade e exclusão estão travados (só administrador, ou quem tem a permissão, altera). Os apontamentos continuam editáveis.'}">${podeAlterarApontadas()?'⚠':'🔒'}</span>`:''}${botaoObsHtml(p)}<button class="icon-btn" title="${refs.length?`Refugo / perdas apontados nesta linha: ${fmtL(refTxt)} (${refs.length} apontamento(s))`:'Apontar refugo / perdas desta linha'}" onclick="abrirRefugoLinha('${p.id}')" style="${refs.length?'color:#B8590A;font-weight:800':''}">♻${refs.length?` ${refs.length}`:''}</button><button class="icon-btn" ${linhaTravada(p)?'disabled data-trava-prog="1" title="🔒 Linha com produção apontada — não pode ser removida"':'title="Remover esta linha"'} onclick="deleteListaLine('${p.id}')">✕</button></td>
       </tr>`;
     }).join('') : `<tr><td colspan="20"><div class="empty">Nenhuma linha planejada para este filtro. Gere o plano mestre na aba correspondente.</div></td></tr>`}
     ${ocultas>0 ? `<tr><td colspan="20" style="text-align:center;padding:12px">
@@ -6492,7 +6581,7 @@ function capAbrirNaLista(rec, dia){
   renderLista();
 }
 function abrirCapacidadeDetalhe(rec, dia){
-  const linhas = DB.plan.filter(p=>p.resource===rec && p.date===dia); if(!linhas.length) return;
+  const linhas = DB.plan.filter(p=>p.resource===rec && p.date===dia && !ehTerceiro(p)); if(!linhas.length) return;
   const capBase = getCapacityBase(rec, dia), perdida = capacityLostByParadas(rec, dia), cap = getCapacity(rec, dia);
   const usado = linhas.reduce((t,p)=>t+(p.batchLiters||0),0), pct = cap>0 ? usado/cap*100 : 0, saldo = cap-usado;
   const porItem = new Map();
@@ -6536,7 +6625,7 @@ function renderCapacidade(){
   // agrega o usado por recurso+dia a partir do plano — sem filtro de data mostra TODOS os dias que têm produção
   const porResourceDate = {};
   DB.plan.forEach(p=>{
-    if(res.length && !res.includes(p.resource)) return;
+    if(ehTerceiro(p)) return;   /* não ocupa capacidade interna */ if(res.length && !res.includes(p.resource)) return;
     if(de && p.date<de) return;
     if(ate && p.date>ate) return;
     const key = p.resource+'|'+p.date;
@@ -6637,6 +6726,7 @@ function dashBase(){
   const dias = ate>=de ? buildDateRange(de, ate) : [];
   const plan = [], efet = [], tempos = [], linhasPlan = [];
   DB.plan.forEach(p=>{
+ if(ehTerceiro(p)) return;   /* terceirizado: não entra no indicador de produção (tem indicador à parte) */
     const it = itemByCode(p.itemCode), uom = it ? (it.uom||'—') : '—', lpu = it ? (it.litersPerUnit||1) : 1, grupo = it ? (it.group||'') : '';
     if(resF.length && !resF.includes(p.resource)) return;
     if(grpF.length && !grpF.includes(grupo)) return;
@@ -6976,6 +7066,7 @@ function vdAtualizarCarimbo(){
 }
 async function persistDB(imediato){
   try{ carimbarAtualizacaoDados(); }catch(e){ console.warn('carimbo:', e); }
+  try{ jrnAgendar(); }catch(e){ console.warn('histórico:', e); }   // relatório de atualizações: compara com o estado anterior (agrupa gravações seguidas)
   limparCachePrioridades();
   if(ONLINE){ syncAgendar(imediato===true); return; }   // modo online: o motor de sincronização envia as diferenças ao servidor
   if(!storageDisponivel) return;
@@ -7210,6 +7301,7 @@ const CATALOGO_CAMPOS = {
   visaodia: [
     {id:'solicitarop', label:'Solicitar ordem de produção',        acoes:['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']},
     {id:'desmarcarop', label:'Desmarcar OP solicitada (tirar o selo da linha)', acoes:['desmarcarSolicitacaoOPLinha']},
+    {id:'novadata', label:'Informar nova data de produção (atraso)', acoes:['abrirNovaDataAtraso','salvarNovasDatasAtraso']},
     {id:'*', oculto:true, label:'Abrir o editor do dia',          acoes:['openDayItemEditor']},
     {id:'data',      label:'Data de produção da linha',           acoes:[['updatePlanLineFieldAndRefreshDay',1,'date'],['updatePlanLineField',1,'date']]},
     {id:'quantidade',label:'Quantidade da linha',                 acoes:[['updatePlanLineFieldAndRefreshDay',1,'batchUnits'],['updatePlanLineField',1,'batchUnits']]},
@@ -7224,6 +7316,7 @@ const CATALOGO_CAMPOS = {
     {id:'turnos',    label:'Quantidades, datas e horários dos turnos (apontamento)', acoes:['updateTurno','updateTurnoData','updateTurnoHora']},
     {id:'quantidade',label:'Quantidade da linha',                 acoes:['updateListaQtd']},
     {id:'data',      label:'Data de produção da linha',           acoes:['updateListaData']},
+    {id:'terceiro', label:'Marcar produção terceirizada (coluna Terceiro e marcação em lote)', acoes:['updateListaTerceiro','terceirizarLinhasFiltradas','aplicarTerceirizacaoLote']},
     {id:'recurso',   label:'Recurso da linha',                    acoes:['updateListaRecurso']},
     {id:'op',        label:'Nº OP e OP Granel',                   acoes:[['updatePlanField',1,'opNumber'],['updatePlanField',1,'opGranelNumber']]},
     {id:'lote',      label:'Lote(s) da linha',                    acoes:['updateLoteLinha','restaurarLoteLinha']},
@@ -7320,7 +7413,7 @@ function exigirAdmin(){ if(!USUARIO_ATUAL || !USUARIO_ATUAL.admin){ avisoSemPerm
 function semGuarda(fn){ __bypassGuarda++; try{ return fn(); } finally{ __bypassGuarda--; } }
 
 // toda função que altera dados passa por esta verificação (vale para botões, campos e chamadas internas)
-const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData','salvarDepositos','setGruposPorSubgrupo','setConsiderarProcesso','abrirSugestaoSeguranca','esegAplicar'];
+const FUNCOES_QUE_ALTERAM = ['restaurarBackup','updateLoteLinha','restaurarLoteLinha','abrirRefugoLinha','addRefugo','deleteRefugo','updateLocalGranel','updateTurnoHora','addLocalGranel','deleteLocalGranel','executeAlterarProgramacao','reprogramarPendencia','reprogramarPendenciaCore','abrirParadaRapida','addItem','addMotivoParada','addOrder','addOverride','addParada','addPrioridade','addRecipe','addResource','adicionarLinhaListaMestre','atualizarDataVigencia','confirmarPlano','deleteItem','deleteListaLine','deleteMotivoParada','deleteOrder','deleteParada','deletePlanLine','deletePrioridade','deleteRecipe','deleteResource','executeClearPlan','generatePlan','gerarPlanoPorEscopo','limparDadosSalvos','moveEntireDay','openDayItemEditor','planejarPedidoLinha','planejarPedidoLinhaCore','reabrirPlanoComoRascunho','removeOverride','runGeneratePlan','runImport','salvarCapacidadesManualmente','updateItemMaxBatch','updateListaQtd','updateListaRecurso','updatePlanField','updatePlanLineField','updatePlanLineFieldAndRefreshDay','updatePrioridadeInicio','updatePrioridadeQty','updateResourceCapacity','updateTurno','updateTurnoData','gerarSolicitacaoOP','cancelarSolicitacaoOP','desmarcarSolicitacaoOPLinha','salvarObsLinha','limparObsLinha','toggleClienteLoteMax','abrirRelatorioInsumos','gerarRelatorioInsumos','abrirRelatorioReposicao','gerarRelatorioReposicao','updateListaData','salvarDepositos','setGruposPorSubgrupo','abrirNovaDataAtraso','salvarNovasDatasAtraso','updateListaTerceiro','terceirizarLinhasFiltradas','aplicarTerceirizacaoLote','setConsiderarProcesso','abrirSugestaoSeguranca','esegAplicar'];
 // só abrem painéis/formulários de edição: bloqueados na interface para leitura, sem precisar de guarda
 const FUNCOES_SO_INTERFACE = ['toggleClearPanel','toggleMovePanel','toggleAddLinhaLista','toggleAlterPanel','abrirSolicitarOP'];
 function instalarGuardas(){
@@ -7385,7 +7478,7 @@ function aplicarModoLeitura(){
   }
   destravarTudo();
   if(!ro && !parcial) return;
-  const alvos = [...page.querySelectorAll('button, input, select, textarea, [onclick]')].filter(el=>!el.closest('.filters, .tabbar, .frz-bar') && !el.classList.contains('cb-input'));
+  const alvos = [...page.querySelectorAll('button, input, select, textarea, [onclick]')].filter(el=>!el.closest('.filters, .tabbar, .frz-bar, .xf-bar') && !el.classList.contains('cb-input'));
   if(ro){
     alvos.forEach(el=>{ const h = handlerDe(el); const ehCampo = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName); if(REGEX_ALTERA.test(h) || (ehCampo && !h.trim())) travarElemento(el); });
     return;
@@ -7732,6 +7825,7 @@ function abrirPermissoes(id){
       <button class="btn btn-sm btn-ghost" onclick="aplicarPresetPermissoes('nenhum')">Limpar</button></div>
     <div class="am-scroll"><table class="data am-matrix" id="pmMatriz"><thead><tr><th>Tela</th><th class="am-c">Sem acesso</th><th class="am-c">Somente leitura</th><th class="am-c">Edição</th></tr></thead><tbody>${linhas}</tbody></table></div>
     <label class="am-admin" style="margin-top:10px"><input type="checkbox" id="pmExcesso" ${(u.campos||{})['*excederPedido']===true?'checked':''}> <strong>Pode planejar quantidade acima do pedido em aberto</strong> — por padrão só administradores; marque para liberar este usuário</label>
+ <label class="am-admin" style="margin-top:6px"><input type="checkbox" id="pmApontadas" ${(u.campos||{})['*alterarApontadas']===true?'checked':''}> <strong>Pode alterar linhas com produção apontada</strong> (data, recurso, quantidade e exclusão na Lista Mestre e no Plano Mestre, sempre com justificativa registrada) — por padrão só administradores; marque para liberar este usuário</label>
     ${visaoPermissoesHtml(u)}
     <div class="am-travas" id="pmTravas">
       <h4>🔒 Travar filtros (opcional)</h4>
@@ -7783,6 +7877,7 @@ function salvarPermissoes(id){
   });
   if(erroCampos && !virarAdmin){ erro.textContent = erroCampos; return; }
   const exc = document.getElementById('pmExcesso'); if(!virarAdmin && exc && exc.checked) campos['*excederPedido'] = true;   // permissão extra: planejar acima do pedido em aberto
+  const apt = document.getElementById('pmApontadas'); if(!virarAdmin && apt && apt.checked) campos['*alterarApontadas'] = true;   // permissão extra: alterar linhas com produção apontada
   const travas = {};
   DIMENSOES_TRAVA.forEach(d=>{ const sl = document.getElementById('pmTrava_'+d.id); const v = sl && sl.__cbGet ? sl.__cbGet() : []; if(v.length) travas[d.id] = v; });
   u.admin = virarAdmin; u.permissoes = virarAdmin ? {} : perm; u.campos = virarAdmin ? {} : campos; u.travas = virarAdmin ? {} : travas; u.visao = virarAdmin ? {} : visaoLerPermissoes(); const resVisao = visaoResumoTexto(u.visao);
@@ -7908,6 +8003,7 @@ function init(){
     }catch(e){ console.warn('Falha ao gerar o plano inicial:', e); }
   }
   APP_INICIADO = true;
+  try{ jrnInjetarBotoes(); jrnRebase(); }catch(e){ console.warn('histórico:', e); }   // botão 🕒 Atualizações em cada tela + instantâneo inicial (só vale o que mudar daqui para frente)
 }
 /*ONLINE_START*/
 /* =========================================================================
@@ -8012,7 +8108,9 @@ function init(){
   function projetarMateriais(entrada){
     const E = entrada || {};
     const hoje = E.hoje, opc = E.opcoes || {};
-  const comProc = !!opc.considerarProcesso, stk = i => num(i.stock) + (comProc ? num(i.stockProc) : 0);   // estoque que conta nos cálculos (com ou sem o "em processo")
+  const comProc = !!opc.considerarProcesso, stk = i => num(i.stock) + (comProc ? num(i.stockProc) : 0);
+  /* cenário por material (só análise): opc.processoPorMaterial = {chaveInterna: true|false} sobrepõe o botão geral SÓ para aquele item/grupo */
+  const procOv = opc.processoPorMaterial || {}, temOv = k => Object.prototype.hasOwnProperty.call(procOv, k), procDe = k => temOv(k) ? !!procOv[k] : comProc, stkP = (i, p) => num(i.stock) + (p ? num(i.stockProc) : 0);   // estoque que conta nos cálculos (com ou sem o "em processo")
     if(!hoje) throw new Error('projetarMateriais: informe "hoje" (AAAA-MM-DD).');
     const plano = E.plano || [], receitas = E.receitas || [], itens = E.itens || [], compras = E.compras || [];
     const avisos = [];
@@ -8074,13 +8172,13 @@ function init(){
 
     // 4) materiais a analisar: os que têm consumo, mais os que já estão abaixo do estoque de segurança
     const codigos = new Set(consumo.keys());
-    const estoqueGrupo = g => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? stk(i) : 0); }, 0);
+    const estoqueGrupo = (g, p) => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? stkP(i, p) : 0); }, 0);
   const somaGrupo = (g, f) => g.itens.reduce((t,c)=>{ const i = itemPor.get(K(c)); return t + (i ? num(f(i)) : 0); }, 0);
-    itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && stk(i) < s.valor) codigos.add('I:'+K(i.code)); });
-    grupos.forEach(g=>{ if(num(g.seguranca) > 0 && estoqueGrupo(g) < num(g.seguranca)) codigos.add('G:'+g.chave); });
+    itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const s = segDe(i.code, i.group); if(s && s.valor > 0 && stkP(i, procDe('I:'+K(i.code))) < s.valor) codigos.add('I:'+K(i.code)); });
+    grupos.forEach(g=>{ if(num(g.seguranca) > 0 && estoqueGrupo(g, procDe('G:'+g.chave)) < num(g.seguranca)) codigos.add('G:'+g.chave); });
     if(opc.incluirExcesso){          // tela de reposição: também analisa quem está acima do estoque máximo (mesmo sem consumo no plano)
-      itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const m = maxDe(i.code, i.group); if(m && m.valor > 0 && stk(i) > m.valor) codigos.add('I:'+K(i.code)); });
-      grupos.forEach(g=>{ if(num(g.maximo) > 0 && estoqueGrupo(g) > num(g.maximo)) codigos.add('G:'+g.chave); });
+      itens.forEach(i=>{ if(grupoDe.has(K(i.code))) return; const m = maxDe(i.code, i.group); if(m && m.valor > 0 && stkP(i, procDe('I:'+K(i.code))) > m.valor) codigos.add('I:'+K(i.code)); });
+      grupos.forEach(g=>{ if(num(g.maximo) > 0 && estoqueGrupo(g, procDe('G:'+g.chave)) > num(g.maximo)) codigos.add('G:'+g.chave); });
     }
 
     const materiais = [];
@@ -8088,7 +8186,7 @@ function init(){
       const ehGrupo = chaveInterna.startsWith('G:'), cod = chaveInterna.slice(2);
       const grp = ehGrupo ? grupoPor.get(cod) : null, it = ehGrupo ? null : itemPor.get(cod);
       const membros = ehGrupo ? grp.itens.map(c=>{ const i = itemPor.get(K(c)); return i ? i.code : String(c).trim(); }) : null;
-      const estoque = ehGrupo ? estoqueGrupo(grp) : (it ? stk(it) : 0);
+      const cp = procDe(chaveInterna), estoque = ehGrupo ? estoqueGrupo(grp, cp) : (it ? stkP(it, cp) : 0);
       const estFisico = ehGrupo ? somaGrupo(grp, i=>i.stock) : (it ? num(it.stock) : 0), emProc = ehGrupo ? somaGrupo(grp, i=>i.stockProc) : (it ? num(it.stockProc) : 0);
       const seg = ehGrupo ? { valor:num(grp.seguranca), origem:'grupo de reposição' } : segDe(cod, it && it.group);
       const prz = ehGrupo ? (grp.prazo === undefined || grp.prazo === null || grp.prazo === '' ? null : { valor:num(grp.prazo), origem:'grupo de reposição' }) : prazoDe(cod, it && it.group);
@@ -8126,7 +8224,7 @@ function init(){
       materiais.push({
         id: ehGrupo ? chaveInterna : 'I:'+codExibe, tipo: ehGrupo ? 'grupo' : 'item', membros: membros,
         codigo:codExibe, nome: ehGrupo ? (grp.nome || ('Grupo '+cod)) : (it ? it.name : '(item sem cadastro)'), grupo: it ? (it.group||'') : (ehGrupo ? (grp.grupoCad||'') : ''), uom: ehGrupo ? umGrupo : (it ? (it.uom||'') : ''), cadastrado: ehGrupo ? true : !!it,
-        estoqueAtual:arred(estoque), estoqueFisico:arred(estFisico), emProcesso:arred(emProc), consideraProcesso:comProc, seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
+        estoqueAtual:arred(estoque), estoqueFisico:arred(estFisico), emProcesso:arred(emProc), consideraProcesso:cp, processoCenario:temOv(chaveInterna), chaveProc:chaveInterna, seguranca:arred(seguranca), segurancaOrigem: seg ? seg.origem : null,
         prazoDias:prazo, prazoOrigem: prz ? prz.origem : null, semPrazo: prazo === null,
         consumoTotal:arred(consTot), entradasTotal:arred(entTot), saldoFinal:arred(saldo), minSaldo:arred(minSaldo), dataMinSaldo:dataMin,
         primeiraFalta, dataGatilho:gatilho, situacao, acao, dataLimitePedido:dataLimite, atrasoDias, chegadaMaisCedo, rupturaDias,
@@ -8394,10 +8492,30 @@ const dSemana = iso => ['dom','seg','ter','qua','qui','sex','sáb'][new Date(iso
 const reposCat = (s, es, mx) => s < -0.005 ? 'rp-falta' : (s < es - 0.005 ? 'rp-abaixo' : ((mx > 0 && s > mx + 0.005) ? 'rp-exc' : 'rp-ok'));
 const REPOS_CAT_TXT = {'rp-falta':'Não atende (falta)', 'rp-abaixo':'Atende, mas abaixo do estoque de segurança', 'rp-exc':'Acima do estoque máximo (excesso)', 'rp-ok':'Atende'};
 
+/* CENÁRIO POR MATERIAL: em cada item (ou grupo) do Plano de Reposição, um seletor "considerar o estoque em processo" só para ele, para analisar o cenário.
+   Vale só nesta tela e nesta sessão (não é gravado nem entra no relatório); o botão geral continua valendo para os demais. REPOS_PROC guarda só o que DIFERE do botão geral. */
+let REPOS_PROC = new Map();
+function reposProcCheck(m){
+  const tem = (m.emProcesso||0) > 0, cen = !!m.processoCenario;
+  return `<label class="rp-proc" style="cursor:${tem?'pointer':'not-allowed'}" title="${tem ? 'Considerar o estoque em processo ('+fmtL(m.emProcesso)+') SÓ neste material, para analisar o cenário. O botão geral continua valendo para os demais.' : 'Este material não tem estoque em processo.'}"><input type="checkbox" ${m.consideraProcesso?'checked':''} ${tem?'':'disabled'} data-pk="${acessoEsc(m.chaveProc||'')}" onchange="reposProcessoMaterial(this.dataset.pk, this.checked)"></label>${cen?' <span class="badge warn" style="cursor:default" title="Cenário próprio deste material (diferente do botão geral)">cenário</span>':''}`;
+}
+function reposProcessoMaterial(chave, v){
+  const g = !!DB.considerarEmProcesso; if(!!v === g) REPOS_PROC.delete(chave); else REPOS_PROC.set(chave, !!v);
+  reposRefazerMantendoRolagem();
+}
+function reposLimparCenarios(){ REPOS_PROC = new Map(); reposRefazerMantendoRolagem(); }
+function reposRefazerMantendoRolagem(){
+  const ws = () => [...document.querySelectorAll('#page-reposicao .tbl-wrap')], st = ws().map(w=>[w.scrollTop, w.scrollLeft]);
+  renderReposicao(); ws().forEach((w,i)=>{ if(st[i]){ w.scrollTop = st[i][0]; w.scrollLeft = st[i][1]; } });
+}
+function reposAtualizarCenarioInfo(){
+  const el = document.getElementById('rpCenarioInfo'); if(!el) return;
+  el.innerHTML = REPOS_PROC.size ? `🧪 <strong>${REPOS_PROC.size}</strong> material(is) com cenário próprio de "em processo" (só nesta tela) · <a href="javascript:void(0)" onclick="reposLimparCenarios()">↺ limpar cenários</a>` : '';
+}
 function reposEntrada(){
   const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const ciclo = Number(String(val('rpCiclo')).replace(',','.'));
-  return materiaisEntrada({ fim: val('rpFim') || undefined, pedidoAtrasado: val('rpAtrasados') || 'hoje', ciclo: ciclo > 0 ? ciclo : 20, incluirExcesso: true });
+  return materiaisEntrada({ fim: val('rpFim') || undefined, pedidoAtrasado: val('rpAtrasados') || 'hoje', ciclo: ciclo > 0 ? ciclo : 20, incluirExcesso: true, processoPorMaterial: Object.fromEntries(REPOS_PROC) });   // os cenários por material valem só nesta tela (o relatório usa só o botão geral)
 }
 /* o material entra se ALGUMA célula dele (estoque atual ou qualquer dia do horizonte) tiver uma das cores escolhidas; usa o mesmo saldo que a grade mostra (com ou sem o plano) */
 function reposTemLegenda(m, leg, comPlano){ if(!leg || !leg.length) return true; if(leg.includes(reposCat(m.estoqueAtual, m.seguranca, m.maximo))) return true; const campo = comPlano ? 'saldoPlano' : 'saldo'; return (m.serie||[]).some(s=>leg.includes(reposCat(s[campo], m.seguranca, m.maximo))); }
@@ -8426,7 +8544,7 @@ function clearReposFiltros(){
 }
 
 function renderReposicao(){
-  renderOpcaoProcesso();
+  renderOpcaoProcesso(); reposAtualizarCenarioInfo();
   const pg = document.getElementById('page-reposicao'); if(!pg || !pg.classList.contains('active')) return;
   const r = MateriaisMotor.projetarMateriais(reposEntrada()); REPOS_ULTIMO = r;
   populateSelectSeguro(document.getElementById('rpGrupo'), [...new Set((DB.items||[]).map(i=>i.group).filter(Boolean))].sort((a,b)=>a.localeCompare(b)), true);
@@ -8457,10 +8575,10 @@ function renderReposGrade(f, r){
   const dias = r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [];
   document.getElementById('rpCountGrade').textContent = `— ${f.length} de ${r.materiais.length}` + (f.length>LIM ? ` (mostrando os ${LIM} primeiros: refine os filtros)` : '');
   const campo = com ? 'saldoPlano' : 'saldo';
-  const head = `<thead><tr><th class="rp-fix">Material</th><th>UM</th><th>Estoque</th><th>Em processo</th><th>Segurança</th><th>Máximo</th>${dias.map(d=>`<th>${dmCurto(d)}<div style="font-weight:400">${dSemana(d)}</div></th>`).join('')}</tr></thead>`;
+  const head = `<thead><tr><th class="rp-fix">Material</th><th>UM</th><th>Estoque</th><th>Em processo</th><th title="Considerar o estoque em processo só neste material (cenário de análise, só nesta tela)">Cons. proc.</th><th>Segurança</th><th>Máximo</th>${dias.map(d=>`<th>${dmCurto(d)}<div style="font-weight:400">${dSemana(d)}</div></th>`).join('')}</tr></thead>`;
   const corpo = vis.length ? vis.map((m,i)=>{ const a = REPOS_ACAO[m.plano.acao];
-    return `<tr data-id="${acessoEsc(m.id)}"><td class="rp-fix"><strong class="mono">${acessoEsc(m.codigo)}</strong> <span class="badge ${a.cls}">${a.rot}</span><div style="font-size:11px;color:var(--muted)">${acessoEsc(m.nome)}${m.tipo==='grupo'?` · grupo de ${m.membros.length}`:''}</div></td>
-      <td class="rp-ref">${acessoEsc(m.uom)}</td><td class="${reposCat(m.estoqueAtual, m.seguranca, m.maximo)}" title="${m.consideraProcesso?'Estoque físico; a cor considera o em processo':'Estoque físico'}">${fmtL(m.estoqueFisico!==undefined?m.estoqueFisico:m.estoqueAtual)}</td><td class="rp-ref">${m.emProcesso?fmtL(m.emProcesso):'—'}</td><td class="rp-ref">${fmtL(m.seguranca)}</td><td class="rp-ref">${m.maximo>0?fmtL(m.maximo):'—'}</td>
+    return `<tr data-id="${acessoEsc(m.id)}"><td class="rp-fix" data-xf="${acessoEsc(m.codigo)}"><strong class="mono">${acessoEsc(m.codigo)}</strong> <span class="badge ${a.cls}">${a.rot}</span><div style="font-size:11px;color:var(--muted)">${acessoEsc(m.nome)}${m.tipo==='grupo'?` · grupo de ${m.membros.length}`:''}</div></td>
+      <td class="rp-ref">${acessoEsc(m.uom)}</td><td class="${reposCat(m.estoqueAtual, m.seguranca, m.maximo)}" title="${m.consideraProcesso?'Estoque físico; a cor considera o em processo':'Estoque físico'}">${fmtL(m.estoqueFisico!==undefined?m.estoqueFisico:m.estoqueAtual)}</td><td class="rp-ref">${m.emProcesso?fmtL(m.emProcesso):'—'}</td><td class="rp-ref" style="white-space:nowrap" onclick="event.stopPropagation()">${reposProcCheck(m)}</td><td class="rp-ref">${fmtL(m.seguranca)}</td><td class="rp-ref">${m.maximo>0?fmtL(m.maximo):'—'}</td>
       ${m.serie.map((s,j)=>`<td data-i="${i}" data-j="${j}" class="${reposCat(s[campo], m.seguranca, m.maximo)}${com && (s.recEmergencial>0 || s.recPedido>0) ? ' rp-rec' : (s.entradas>0 ? ' rp-ent' : '')}">${fmtL(s[campo])}</td>`).join('')}</tr>`; }).join('')
     : `<tr><td colspan="${5+dias.length}"><div class="empty">Nenhum material para este filtro.</div></td></tr>`;
   t.innerHTML = head + '<tbody>' + corpo + '</tbody>';
@@ -8521,14 +8639,14 @@ function reposLinhas(f){
 }
 const r_hoje = () => (REPOS_ULTIMO && REPOS_ULTIMO.hoje) || todayISO();
 function reposTabelaLinhas(L, comMaterial){
-  return `<thead><tr><th>Data da ação</th><th>Ação</th>${comMaterial?'<th>Material</th><th>UM</th>':''}<th>Quantidade</th><th>Emitir até</th><th>Chegada necessária</th><th>Saldo antes</th><th>Saldo após</th><th>Segurança</th><th>Máximo</th><th>Observação</th></tr></thead><tbody>${
+  return `<thead><tr><th>Data da ação</th><th>Ação</th>${comMaterial?'<th>Material</th><th>UM</th><th title="Considerar o estoque em processo só neste material (cenário, só nesta tela)">Cons. proc.</th>':''}<th>Quantidade</th><th>Emitir até</th><th>Chegada necessária</th><th>Saldo antes</th><th>Saldo após</th><th>Segurança</th><th>Máximo</th><th>Observação</th></tr></thead><tbody>${
     L.length ? L.map(x=>{ const tp = REPOS_TIPO[x.tipo], m = x.m, hoje = x.tipo==='pedido' && x.emitir <= r_hoje();
       return `<tr style="cursor:pointer" data-id="${acessoEsc(m.id)}" onclick="abrirDetalheRepos(this.dataset.id)"><td class="mono">${x.data ? (hoje?'<strong>HOJE</strong> · ':'')+fmtDate(x.data) : '—'}</td><td><span class="badge ${tp.cls}">${tp.rot}</span></td>
-        ${comMaterial?`<td><strong class="mono">${acessoEsc(m.codigo)}</strong><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(m.nome)}</div></td><td>${acessoEsc(m.uom)}</td>`:''}
+        ${comMaterial?`<td><strong class="mono">${acessoEsc(m.codigo)}</strong><div style="font-size:11px;color:var(--muted);white-space:normal;max-width:260px">${acessoEsc(m.nome)}</div></td><td>${acessoEsc(m.uom)}</td><td style="white-space:nowrap" onclick="event.stopPropagation()">${reposProcCheck(m)}</td>`:''}
         <td class="mono" style="font-weight:700">${fmtL(x.qtd)}</td><td class="mono">${x.emitir ? fmtDate(x.emitir) : '—'}</td><td class="mono">${x.chegada ? fmtDate(x.chegada) : '—'}</td>
         <td class="mono">${x.antes===null?'—':fmtL(x.antes)}</td><td class="mono">${x.apos===null?'—':fmtL(x.apos)}</td><td class="mono">${fmtL(m.seguranca)}</td><td class="mono">${m.maximo>0?fmtL(m.maximo):'—'}</td>
         <td style="white-space:normal;min-width:260px;font-size:12px">${acessoEsc(x.obs)}</td></tr>`; }).join('')
-    : `<tr><td colspan="${comMaterial?12:10}"><div class="empty">Nenhuma ação para este filtro.</div></td></tr>`}</tbody>`;
+    : `<tr><td colspan="${comMaterial?13:10}"><div class="empty">Nenhuma ação para este filtro.</div></td></tr>`}</tbody>`;
 }
 function renderReposLista(f){
   const acoesSel = filtroValores('rpAcao'), L = reposLinhas(f).filter(l=>reposLinhaPassa(l, acoesSel));
@@ -8544,7 +8662,8 @@ function abrirDetalheRepos(id, manter){
   const a = REPOS_ACAO[m.plano.acao];
   document.getElementById('rpDetalheTitulo').innerHTML = `${acessoEsc(m.codigo)} — ${acessoEsc(m.nome)} <span class="badge ${a.cls}">${a.rot}</span>`;
   document.getElementById('rpDetalheSub').innerHTML = `Estoque hoje <strong>${fmtL(m.estoqueAtual)} ${acessoEsc(m.uom)}</strong> · segurança <strong>${fmtL(m.seguranca)}</strong> · máximo <strong>${m.maximo>0?fmtL(m.maximo):'não cadastrado'}</strong> · prazo <strong>${m.prazoDias===null?'não cadastrado':m.prazoDias+' dia(s) corridos'}</strong> · nível alvo do pedido <strong>${fmtL(m.plano.alvo)}</strong> (${acessoEsc(m.plano.alvoOrigem)}) · total a repor no horizonte <strong>${fmtL(m.plano.totalRepor)}</strong>`
-    + (m.membros ? `<br>Códigos somados neste grupo: <span class="mono">${acessoEsc(m.membros.join(', '))}</span>` : '');
+    + (m.membros ? `<br>Códigos somados neste grupo: <span class="mono">${acessoEsc(m.membros.join(', '))}</span>` : '')
+    + `<br><span style="font-size:12.5px">Estoque em processo neste material: <strong>${fmtL(m.emProcesso||0)}</strong> · considerar nos cálculos: ${reposProcCheck(m)}${m.processoCenario?'':' <span style="color:var(--muted)">(segue o botão geral)</span>'}</span>`;
   const ds = [ {label:'Saldo sem novos pedidos', color:'#C10016', data:m.serie.map(s=>s.saldo)}, {label:'Saldo com o plano', color:'#7030A0', data:m.serie.map(s=>s.saldoPlano)}, {label:'Estoque de segurança', color:'#B8590A', data:m.serie.map(()=>m.seguranca)} ];
   if(m.maximo > 0) ds.push({label:'Estoque máximo', color:'#2E7D32', data:m.serie.map(()=>m.maximo)});
   svgLineChart('chartReposSaldo', m.serie.map(s=>fmtDate(s.data)), ds);
@@ -9308,7 +9427,14 @@ function rrepPrefill(){
   acoes = acoes.filter(a=>RREP_ACOES.some(x=>x[0]===a));
   return {acoes: acoes.length ? acoes : RREP_ACOES.map(x=>x[0]), legendas: legs.filter(x=>RREP_LEGENDAS.some(l=>l[0]===x)), tipo:v('rpTipo'), grupo:grp.length===1?String(grp[0]):'', grupos:grp.length>1?grp.map(String):[], busca:v('rpBusca'), atrasados:v('rpAtrasados')||'hoje', fim:v('rpFim'), ciclo:v('rpCiclo')||'20'};
 }
-function rrepEntrada(f){ const c = Number(String(f.ciclo).replace(',','.')); return materiaisEntrada({ fim:f.fim||undefined, pedidoAtrasado:f.atrasados||'hoje', ciclo:c>0?c:20, incluirExcesso:true }); }
+/* CENÁRIOS DE "EM PROCESSO" POR MATERIAL (definidos na tela do Plano de Reposição): o relatório os usa quando a caixa "Usar os cenários da tela" está marcada; os demais materiais seguem o botão geral */
+function rrepCenariosAtivos(f){ return (f && f.cenarios && typeof REPOS_PROC!=='undefined') ? [...REPOS_PROC] : []; }
+function rrepCenariosTxt(){
+  const mats = (typeof REPOS_ULTIMO!=='undefined' && REPOS_ULTIMO && REPOS_ULTIMO.materiais) || [];
+  return rrepCenariosAtivos({cenarios:true}).map(([k,v])=>{ const m = mats.find(x=>x.chaveProc===k); return `${m ? m.codigo : k.replace(/^[IG]:/,'')} (${v ? 'considera' : 'sem'} em processo)`; }).join(', ');
+}
+function rrepAvisoCenarios(f){ const n = rrepCenariosAtivos(f).length; return n ? [`🧪 Estoque em processo: ${n} material(is) com cenário próprio, vindo da tela do Plano de Reposição — ${rrepCenariosTxt()}. Os demais seguem o botão geral (${DB.considerarEmProcesso ? 'considerando' : 'sem considerar'} o estoque em processo).`] : []; }
+function rrepEntrada(f){ const c = Number(String(f.ciclo).replace(',','.')); return materiaisEntrada({ fim:f.fim||undefined, pedidoAtrasado:f.atrasados||'hoje', ciclo:c>0?c:20, incluirExcesso:true, processoPorMaterial: f.cenarios ? Object.fromEntries(REPOS_PROC) : undefined }); }
 function rrepFiltrar(lista, f, hoje){
   const busca = normaTxt(String(f.busca||'').trim());
   return lista.filter(m=> reposMaterialPassa(m, f.acoes, hoje) && reposTemLegenda(m, f.legendas, false) && (!f.grupo || m.grupo===f.grupo) && (!f.grupos || !f.grupos.length || f.grupos.includes(m.grupo)) && (!f.tipo || m.tipo===f.tipo) &&
@@ -9345,7 +9471,7 @@ function rrepCalcular(f, excl){
   const lin = todasLin.filter(x=>!ex.has(x.chave));
   const resumo = new Map(); todasLin.forEach(l=>{ const a = resumo.get(l.mid) || {inc:0}; if(!ex.has(l.chave)) a.inc++; resumo.set(l.mid, a); });
   const mats = todos.filter(m=>{ const a = resumo.get(m.id); return !a || a.inc>0; });   // o material só sai da grade quando TODAS as linhas dele foram tiradas   // só entram as linhas dos tipos escolhidos em "Ação do plano"
-  return {r, todos, mats, lista:lin, listaTodas:todasLin, kpis:rrepKpis(lin, r.materiais.length), avisos:rrepAvisos(r), dias:r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [], hoje};
+  return {r, todos, mats, lista:lin, listaTodas:todasLin, kpis:rrepKpis(lin, r.materiais.length), avisos:rrepAvisos(r).concat(rrepAvisoCenarios(f)), dias:r.materiais.length ? r.materiais[0].serie.map(s=>s.data) : [], hoje};
 }
 
 /* ---------- tabelas ---------- */
@@ -9410,7 +9536,7 @@ function rrepLerFiltros(){
   const v = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const el = document.getElementById('rrAcoes');
   const lg = document.getElementById('rrLegendas');
-  return {acoes: el ? [...el.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : RREP_ACOES.map(x=>x[0]), legendas: lg ? [...lg.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : [], tipo:v('rrTipo'), grupo:v('rrGrupo'), grupos:RREP_GRUPOS.slice(), busca:v('rrBusca'), atrasados:v('rrAtrasados')||'hoje', fim:v('rrFim'), ciclo:v('rrCiclo')||'20'};
+  return {acoes: el ? [...el.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : RREP_ACOES.map(x=>x[0]), legendas: lg ? [...lg.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked).map(c=>c.value) : [], tipo:v('rrTipo'), grupo:v('rrGrupo'), grupos:RREP_GRUPOS.slice(), busca:v('rrBusca'), atrasados:v('rrAtrasados')||'hoje', fim:v('rrFim'), ciclo:v('rrCiclo')||'20', cenarios:!!(document.getElementById('rrCenarios') && document.getElementById('rrCenarios').checked)};
 }
 function abrirRelatorioReposicao(){
   const f = rrepPrefill(); RREP_EXCL = new Set(); RREP_ABA = 'lista'; RREP_CTX = 'previa'; RREP_GRUPOS = (f.grupos||[]).slice(); RREP_QTD = new Map();
@@ -9430,6 +9556,7 @@ function abrirRelatorioReposicao(){
         <div class="f"><label>Pedidos de compra atrasados</label><select id="rrAtrasados" onchange="rrepAtualizar()"><option value="hoje" ${f.atrasados==='hoje'?'selected':''}>Considerar chegando hoje</option><option value="ignorar" ${f.atrasados==='ignorar'?'selected':''}>Ignorar</option></select></div>
         <div class="f"><label>Horizonte até</label><input type="date" id="rrFim" value="${f.fim}" onchange="rrepAtualizar()"></div>
         <div class="f"><label>Ciclo de reposição (dias)</label><input type="number" id="rrCiclo" min="1" step="1" value="${acessoEsc(f.ciclo)}" onchange="rrepAtualizar()"></div>
+    ${(typeof REPOS_PROC!=='undefined' && REPOS_PROC.size) ? `<div class="f"><label>Estoque em processo</label><label style="font-size:12.5px;cursor:pointer;font-weight:400;text-transform:none"><input type="checkbox" id="rrCenarios" checked onchange="rrepAtualizar()"> Usar os <strong>${REPOS_PROC.size}</strong> cenário(s) por material da tela</label></div>` : ''}
       </div>
       <div id="rrAviso"></div><div id="rrKpis"></div>
       <div id="rrAbas" style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 6px"></div><div id="rrPreview"></div>
@@ -9460,7 +9587,7 @@ function rrepToggleMaterial(mid){ const ch = (RREP_PREVIA ? RREP_PREVIA.c.listaT
 function rrepRestaurar(){ RREP_EXCL = new Set(); rrepAtualizar(); }
 
 /* ---------- registrar (guardada por permissão) ---------- */
-function rrepFiltrosTxt(f){ f = f||{}; const a = (f.acoes||[]); return [a.length && a.length<RREP_ACOES.length ? 'Ações: '+a.map(x=>(RREP_ACOES.find(y=>y[0]===x)||[0,x])[1]).join(', ') : 'Todas as ações', (f.legendas&&f.legendas.length?'Legenda: '+f.legendas.map(x=>(RREP_LEGENDAS.find(l=>l[0]===x)||[0,x])[1]).join(', '):''), f.tipo==='grupo'?'Só grupos':(f.tipo==='item'?'Só itens':''), f.grupo?`Grupo: ${f.grupo}`:'', (f.grupos&&f.grupos.length)?`Grupos: ${f.grupos.join(', ')}`:'', f.busca?`Material: ${f.busca}`:'', f.fim?`Horizonte até ${fmtDate(f.fim)}`:'', `Pedidos atrasados: ${f.atrasados==='ignorar'?'ignorar':'chegando hoje'}`, `Ciclo ${f.ciclo} dia(s)`].filter(Boolean).join(' · '); }
+function rrepFiltrosTxt(f){ f = f||{}; const a = (f.acoes||[]); return [a.length && a.length<RREP_ACOES.length ? 'Ações: '+a.map(x=>(RREP_ACOES.find(y=>y[0]===x)||[0,x])[1]).join(', ') : 'Todas as ações', (f.legendas&&f.legendas.length?'Legenda: '+f.legendas.map(x=>(RREP_LEGENDAS.find(l=>l[0]===x)||[0,x])[1]).join(', '):''), f.tipo==='grupo'?'Só grupos':(f.tipo==='item'?'Só itens':''), f.grupo?`Grupo: ${f.grupo}`:'', (f.grupos&&f.grupos.length)?`Grupos: ${f.grupos.join(', ')}`:'', f.busca?`Material: ${f.busca}`:'', f.fim?`Horizonte até ${fmtDate(f.fim)}`:'', `Pedidos atrasados: ${f.atrasados==='ignorar'?'ignorar':'chegando hoje'}`, `Ciclo ${f.ciclo} dia(s)`, (f.cenarios && f.cenariosTxt) ? 'Em processo por material (cenário da tela): '+f.cenariosTxt : ''].filter(Boolean).join(' · '); }
 function gerarRelatorioReposicao(){
   const f = rrepLerFiltros(), secs = rrepSecoesLer(); if(!secs.length){ alert('Marque ao menos uma seção para incluir no relatório.'); return; }
   const c = rrepCalcular(f, RREP_EXCL); if(!c.mats.length){ alert('Nenhum material dentro destes filtros (ou todas as linhas foram tiradas).'); return; }
@@ -9469,7 +9596,7 @@ function gerarRelatorioReposicao(){
     const maxN = DB.relatoriosReposicao.reduce((m,s)=>Math.max(m, parseInt(String(s.numero).replace(/\D/g,''),10)||0), 0);
     const ts = new Date().toISOString(), id = 'rrp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     const numero = 'RREP-'+String(maxN+1).padStart(4,'0'), usuario = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? USUARIO_ATUAL.usuario : '';
-    DB.relatoriosReposicao.push({id, numero, ts, usuario, filtros:{...f}, secoes:secs, kpis:{...c.kpis}, nMateriais:c.mats.length, excluidos:RREP_EXCL.size, exclPor:'linha', lista:secs.includes('lista')?c.lista.map(x=>({...x})):[], avisos:secs.includes('avisos')?c.avisos.slice():[]});
+    DB.relatoriosReposicao.push({id, numero, ts, usuario, filtros:{...f, cenariosTxt:f.cenarios ? rrepCenariosTxt() : ''}, emProcessoGeral:!!DB.considerarEmProcesso, secoes:secs, kpis:{...c.kpis}, nMateriais:c.mats.length, excluidos:RREP_EXCL.size, exclPor:'linha', lista:secs.includes('lista')?c.lista.map(x=>({...x})):[], avisos:secs.includes('avisos')?c.avisos.slice():[]});
     RREP_ULTIMO = {id, c, hoje:c.hoje}; RREP_QTD = new Map();   // depois de gerar, as quantidades editadas ficam só no relatório: não entram mais em nenhum cálculo
     persistDB(); showToast(`📄 Relatório ${numero} registrado: ${c.lista.length} ação(ões), ${c.kpis.materiais} material(is).`);
     rrepVer(id);
@@ -9631,7 +9758,7 @@ const SELO_REGRAS = [
   [/Baseado no Plano Mestre|Baseado nos pedidos em aberto/i, (m)=>{ const plano = /Plano Mestre/i.test(m[0]);
     return {oque: plano ? 'A necessidade de insumos foi calculada sobre as linhas do Plano Mestre (o que está programado).' : 'Não há plano de produção: a necessidade foi calculada sobre os pedidos em aberto, sem data de produção.', resumo:[['Linhas no plano',(DB.plan||[]).length],['Pedidos em aberto',(DB.orders||[]).length]], acao: plano ? 'Nenhuma ação: a base é o plano atual.' : 'Gere o Plano Mestre para ver a necessidade por data.', it:'IT-PCP-003'}; }],
   [/produção apontada/i, (m,c)=>{ const n = (DB.plan||[]).filter(p=>linhaTemProducao(p));
-    return {oque:'A linha já tem produção apontada. Por isso data, recurso, quantidade e exclusão ficam travados: só administrador altera, sempre com justificativa registrada no histórico da linha.', resumo:[['Linhas com produção apontada',n.length]], itens:seloTabelaItens(n), acao:'Para mudar a programação, peça a um administrador. Os apontamentos continuam editáveis.', it:'IT-PCP-007 e IT-PCP-010'}; }],
+    return {oque:'A linha já tem produção apontada. Por isso data, recurso, quantidade e exclusão ficam travados: só administrador (ou quem recebeu a permissão "Alterar linhas com produção apontada") altera, sempre com justificativa registrada no histórico da linha.', resumo:[['Linhas com produção apontada',n.length]], itens:seloTabelaItens(n), acao:'Para mudar a programação, peça a um administrador (ou peça a ele a permissão "Alterar linhas com produção apontada"). Os apontamentos continuam editáveis.', it:'IT-PCP-007 e IT-PCP-010'}; }],
   [/editado manualmente/i, ()=>{ const n = (DB.plan||[]).filter(p=>p.manual||p.qtdFixa);
     return {oque:'A linha foi ajustada à mão (data, recurso ou quantidade). Ela é preservada e sinalizada para não se perder numa nova geração automática do plano.', resumo:[['Linhas ajustadas manualmente',n.length]], itens:seloTabelaItens(n), acao:'Confira se o ajuste ainda vale. Para devolver à geração automática, apague a linha e gere o plano de novo.', it:'IT-PCP-007'}; }],
   [/data vencida/i, ()=>{ const hoje = todayISO(), v = (DB.comprasAbertas||[]).filter(x=>x.data && x.data<hoje);
@@ -9778,6 +9905,7 @@ const VISAO_TABELAS = [
    "UM",
    "Estoque",
    "Em processo",
+   "Cons. proc.",
    "Segurança",
    "Máximo",
    "Colunas de dias"
@@ -10024,7 +10152,8 @@ const VISAO_TABELAS = [
    "Tempo total",
    "Qtd. efetiva total",
    "Última data efetiva",
-   "Status"
+   "Status",
+   "Terceiro"
   ],
   "dias": false
  },
@@ -10226,13 +10355,52 @@ const VISAO_TABELAS = [
    "Paradas (h)"
   ],
   "dias": false
+ },
+ {
+  "key": "tblTerResumo",
+  "tela": "Terceirização",
+  "titulo": "Por terceiro",
+  "colunas": [
+   "Terceiro",
+   "Linhas",
+   "Planejado (L)",
+   "Efetivo (L)",
+   "Cumprimento",
+   "Concluídas",
+   "Atrasadas",
+   "Em atraso (L)",
+   "A receber em 7 dias (L)"
+  ],
+  "dias": false
+ },
+ {
+  "key": "tblTerceirizacao",
+  "tela": "Terceirização",
+  "titulo": "Linhas terceirizadas",
+  "colunas": [
+   "Terceiro",
+   "Data prevista",
+   "Item",
+   "Descrição",
+   "Pedido",
+   "Nº OP",
+   "Planejado (un.)",
+   "Efetivo (un.)",
+   "Saldo (un.)",
+   "Planejado (L)",
+   "Efetivo (L)",
+   "Última entrega",
+   "Status",
+   "Atraso (d)"
+  ],
+  "dias": false
  }
 ];
 
 // botões de ação: [id, rótulo, funções chamadas pelo botão] — um botão escondido também fica bloqueado
 const VISAO_BOTOES = [
  {tela:'Plano Mestre', itens:[['gerar_plano','Gerar plano automaticamente',['generatePlan']],['confirmar_plano','Salvar / Confirmar plano',['confirmarPlano']],['reabrir_plano','Reabrir plano como rascunho',['reabrirPlanoComoRascunho']],['alterar_prog','Alterar programação (painel e aplicar)',['toggleAlterPanel','executeAlterarProgramacao']],['limpar_plano','Limpar plano (painel e executar)',['toggleClearPanel','executeClearPlan']],['mover_dia','Alterar a data de um dia inteiro',['toggleMovePanel','moveEntireDay']],['planejar_pedido','Planejar pedido na montagem manual',['planejarPedidoLinha']],['reprogramar','Reprogramar pendência',['reprogramarPendencia']]]},
- {tela:'Lista Mestre', itens:[['solicitar_op','Solicitar ordem de produção (abrir, gerar e cancelar)',['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']],['sol_saidas','Solicitação de OP: imprimir e exportar CSV',['solOpImprimir','solOpCsv']],['rel_insumos','Relatório de insumos (abrir e gerar)',['abrirRelatorioInsumos','gerarRelatorioInsumos']],['rel_insumos_saidas','Relatório de insumos: Excel, PDF e CSV',['rinsExcel','rinsImprimir','rinsCsv']],['add_linha','Adicionar linha direto na Lista',['adicionarLinhaListaMestre']],['excluir_linha','Excluir linha da Lista',['deleteListaLine']],['parada_rapida','Registrar parada pela Lista',['abrirParadaRapida']],['imprimir_lista','Abrir lista para impressão',['doPrint']],['exportar_linhas','Exportar relatório de linhas (.csv)',['exportReport']]]},
+ {tela:'Itens por Dia', itens:[['nova_data','Informar nova data de produção (atraso)',['abrirNovaDataAtraso']],['rel_datas','Relatório de datas ajustadas (abrir, CSV, Excel e PDF)',['abrirRelatorioDatasAtraso','ndrCsv','ndrExcel','ndrImprimir']]]}, {tela:'Lista Mestre', itens:[['solicitar_op','Solicitar ordem de produção (abrir, gerar e cancelar)',['abrirSolicitarOP','gerarSolicitacaoOP','cancelarSolicitacaoOP']],['sol_saidas','Solicitação de OP: imprimir e exportar CSV',['solOpImprimir','solOpCsv']],['rel_insumos','Relatório de insumos (abrir e gerar)',['abrirRelatorioInsumos','gerarRelatorioInsumos']],['rel_insumos_saidas','Relatório de insumos: Excel, PDF e CSV',['rinsExcel','rinsImprimir','rinsCsv']],['add_linha','Adicionar linha direto na Lista',['adicionarLinhaListaMestre']],['excluir_linha','Excluir linha da Lista',['deleteListaLine']],['parada_rapida','Registrar parada pela Lista',['abrirParadaRapida']],['imprimir_lista','Abrir lista para impressão',['doPrint']],['exportar_linhas','Exportar relatório de linhas (.csv)',['exportReport']],['terceirizar','Terceirizar linhas filtradas (marcação em lote)',['terceirizarLinhasFiltradas','aplicarTerceirizacaoLote']]]},
  {tela:'Materiais e Reposição', itens:[['rel_reposicao','Relatório de reposição (abrir e gerar)',['abrirRelatorioReposicao','gerarRelatorioReposicao']],['rel_reposicao_saidas','Relatório de reposição: Excel, PDF e CSV',['rrepExcel','rrepImprimir','rrepCsv']],['rel_compras','Relatório de compras',['abrirRelatorioCompras','imprimirRelatorioCompras']],['sugestao_seg','Sugestão de estoque de segurança (abrir e aplicar)',['abrirSugestaoSeguranca','esegAplicar']],['sugestao_seg_saidas','Sugestão de estoque de segurança: Excel e CSV',['esegExcel','esegCsv']]]},
  {tela:'Importação e backup', itens:[['importar','Importar dados (todas as importações)',['runImport']],['modelos','Baixar modelos de importação (.csv)',['downloadTemplate']],['depositos','Classificar depósitos (Estoque / Em processo)',['salvarDepositos']],['gruposub','Montar grupos pelo Subgrupo (liga/desliga)',['setGruposPorSubgrupo']],['considerar_processo','Opção: considerar o estoque em processo nos cálculos',['setConsiderarProcesso']],['hist_imp_saidas','Histórico de importações: exportar CSV e Excel dos erros',['exportHistoricoImportacoes','exportDetalhesImportacaoExcel','exportDetalhesImportacaoCsv']],['backup_exp','Exportar backup (.json)',['exportarBackup']],['backup_rest','Restaurar backup',['restaurarBackup']],['limpar_dados','Limpar dados salvos',['limparDadosSalvos']]]},
  {tela:'Cadastros e capacidade', itens:[['salvar_cap','Salvar capacidades e configurações',['salvarCapacidadesManualmente']],['recursos','Adicionar recurso e ajuste do dia',['addResource','addOverride','removeOverride']],['itens_cad','Adicionar e excluir itens',['addItem','deleteItem']],['receitas','Adicionar e excluir receitas',['addRecipe','deleteRecipe']],['pedidos_cad','Adicionar e excluir pedidos',['addOrder','deleteOrder']],['locais','Locais de granel',['addLocalGranel','deleteLocalGranel']],['prioridades_cad','Adicionar e excluir prioridades',['addPrioridade','deletePrioridade']]]},
@@ -10394,6 +10562,7 @@ function opcaoProcessoHtml(){ return `<label class="opcao-processo" style="displ
 function renderOpcaoProcesso(){ document.querySelectorAll('.opcao-processo-host').forEach(h=>{ h.innerHTML = opcaoProcessoHtml(); }); }
 function setConsiderarProcesso(v){
   DB.considerarEmProcesso = !!v; persistDB();
+  if(typeof REPOS_PROC!=='undefined') [...REPOS_PROC].forEach(([k,x])=>{ if(x===!!v) REPOS_PROC.delete(k); });   // cenário igual ao novo geral deixa de ser cenário
   document.querySelectorAll('.chk-considerar-processo').forEach(c=>{ c.checked = !!v; });
   showToast(v ? '🏭 O estoque em processo passou a SOMAR ao estoque nos cálculos de insumos.' : '🏭 O estoque em processo deixou de contar nos cálculos (só o Estoque).');
   try{ renderNecessidades(); }catch(e){} try{ renderNecessidadesGrupo(); }catch(e){}
@@ -10621,6 +10790,454 @@ function esegCsv(){
 }
 
 /* =========================================================================
+   TERCEIRIZAÇÃO — linhas do plano produzidas por terceiros
+   A marca é feita LINHA A LINHA na Lista Mestre (coluna "Terceiro"; vazio = produção interna) ou em lote nas linhas filtradas. A linha terceirizada continua sendo controlada como as
+   outras (data, quantidade, lote, pedido, OP, status, apontamento efetivo, justificativas), mas:
+     · NÃO entra nos indicadores de produção (Dashboards, Planejado x Efetuado) nem ocupa a capacidade dos recursos internos (Capacidade, Plano Mestre, geração do plano);
+     · tem um indicador À PARTE (tela "Terceirização"): planejado, efetivo recebido, % de cumprimento, atrasos e o que deve chegar.
+   O CONSUMO DE INSUMOS das linhas terceirizadas continua entrando nas necessidades e na reposição (o material é enviado ao terceiro).
+   Dado: p.terceiro = nome do terceiro (texto). Ao refazer o plano, as marcas são reaplicadas às linhas novas do mesmo item e pedido.
+   ========================================================================= */
+const ehTerceiro = p => !!(p && String(p.terceiro==null ? '' : p.terceiro).trim());
+function terceirosConhecidos(){ return [...new Set((DB.plan||[]).filter(ehTerceiro).map(p=>String(p.terceiro).trim()))].sort((a,b)=>a.localeCompare(b)); }
+function terceiroDefinir(p, nome){ const novo = String(nome==null ? '' : nome).trim(), ant = String(p.terceiro||'').trim(); if(novo===ant) return false; if(novo) p.terceiro = novo; else delete p.terceiro; try{ logMudancaPlano(p, 'Produção terceirizada', ant||'Interna', novo||'Interna', ''); }catch(e){} return true; }
+function updateListaTerceiro(id, nome){
+  const p = (DB.plan||[]).find(x=>x.id===id); if(!p) return;
+  if(barrarLinhaTravada(p)){ renderLista(); return; }       // linha com produção apontada: mesma regra das demais mudanças de programação
+  if(terceiroDefinir(p, nome)){ persistDB(); renderLista(); try{ renderTerceirizacao(); }catch(e){} }
+}
+/* marcação em lote: todas as linhas que a Lista Mestre mostra agora (filtros do topo e das colunas) */
+function terceirizarLinhasFiltradas(){
+  const linhas = getFilteredListaRows(); if(!linhas.length){ alert('Não há linhas na Lista Mestre com os filtros atuais.'); return; }
+  const trav = linhas.filter(linhaTravada).length, ok = linhas.length - trav;
+  let o = document.getElementById('terOverlay'); if(o) o.remove();
+  o = document.createElement('div'); o.id = 'terOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:99000;display:flex;align-items:center;justify-content:center;padding:12px';
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;max-width:520px;width:100%;padding:18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <h3 style="margin:0 0 6px">🤝 Produção terceirizada nas linhas filtradas</h3>
+    <div class="card-sub" style="margin:0 0 10px">Vai marcar <strong>${ok}</strong> linha(s) da Lista Mestre (as que estão na tela agora)${trav?`; <strong>${trav}</strong> com produção apontada ficam de fora (só quem tem a permissão altera)`:''}. Deixe o nome em branco para voltar a <strong>produção interna</strong>.</div>
+    <div class="form-field"><label>Terceiro</label><input id="terNome" list="dlTerceiros" placeholder="nome do terceiro (vazio = interna)" autocomplete="off" style="width:100%"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn btn-ghost" onclick="document.getElementById('terOverlay').remove()">Cancelar</button><button class="btn btn-primary" id="terAplicar" onclick="aplicarTerceirizacaoLote(document.getElementById('terNome').value)">Aplicar</button></div></div>`;
+  document.body.appendChild(o); const inp = document.getElementById('terNome'); if(inp) inp.focus();
+}
+function aplicarTerceirizacaoLote(nome){
+  const linhas = getFilteredListaRows().filter(p=>!linhaTravada(p)); let n = 0;
+  linhas.forEach(p=>{ if(terceiroDefinir(p, nome)) n++; });
+  const o = document.getElementById('terOverlay'); if(o) o.remove();
+  persistDB(); renderLista(); try{ renderTerceirizacao(); }catch(e){}
+  showToast(String(nome||'').trim() ? `🤝 ${n} linha(s) marcada(s) como produzidas por ${String(nome).trim()}.` : `${n} linha(s) voltaram a produção interna.`);
+}
+/* as marcas sobrevivem a refazer o plano: guarda (item + pedidos) das linhas que serão refeitas e reaplica às novas */
+let TERC_MEMORIA = [];
+function terceiroMemorizar(linhas){ TERC_MEMORIA = (linhas||[]).filter(ehTerceiro).map(p=>({item:p.itemCode, pedidos:(p.orders||[]).map(o=>String(o.orderNo)), terceiro:String(p.terceiro).trim()})); }
+function terceiroReaplicar(novas){
+  if(!TERC_MEMORIA.length) return 0; let n = 0;
+  (novas||[]).forEach(l=>{ const ped = (l.orders||[]).map(o=>String(o.orderNo)), m = TERC_MEMORIA.find(x=>x.item===l.itemCode && x.pedidos.some(o=>ped.includes(o))); if(m){ l.terceiro = m.terceiro; n++; } });
+  TERC_MEMORIA = []; return n;
+}
+/* ---------- indicador à parte ---------- */
+const TER_STATUS = ['Concluída','Em andamento','A receber','Atrasada'];
+function terceirizacaoCalcular(f){
+  f = f || {}; const hoje = todayISO(), prox = addDays(hoje, 7), busca = normaTxt(String(f.item||'').trim());
+  const linhas = (DB.plan||[]).filter(ehTerceiro).filter(p=>(!f.de || p.date>=f.de) && (!f.ate || p.date<=f.ate) && (!(f.terceiros||[]).length || f.terceiros.includes(String(p.terceiro).trim())) &&
+      (!busca || normaTxt(p.itemCode+' '+((itemByCode(p.itemCode)||{}).name||'')+' '+(p.orderNo||'')).includes(busca))).map(p=>{
+    const it = itemByCode(p.itemCode) || {}, lpu = it.litersPerUnit || 1, plan = Number(p.batchUnits)||0, efet = Number(p.actualQtyUnits)||0, saldo = Math.max(0, plan-efet);
+    let st = 'A receber'; if((plan>0 && efet>=plan-0.0001) || p.status==='Concluído') st = 'Concluída'; else if(p.date<hoje) st = 'Atrasada'; else if(efet>0 || p.status==='Em produção') st = 'Em andamento';
+    return {id:p.id, terceiro:String(p.terceiro).trim(), data:p.date, ultima:p.actualDate||'', item:p.itemCode, desc:it.name||'', uom:it.uom||'', pedido:p.orderNo||'', op:p.opNumber||'', plan, efet, saldo, litros:plan*lpu, litrosEfet:efet*lpu, litrosSaldo:saldo*lpu, status:st, atraso:st==='Atrasada' ? Math.max(0, Math.round((new Date(hoje+'T00:00:00')-new Date(p.date+'T00:00:00'))/86400000)) : 0, aReceber7:(st!=='Concluída' && p.date>=hoje && p.date<=prox) ? saldo*lpu : 0};
+  }).filter(l=>!(f.status||[]).length || f.status.includes(l.status)).sort((a,b)=>a.data.localeCompare(b.data) || a.terceiro.localeCompare(b.terceiro) || a.item.localeCompare(b.item));
+  const soma = (arr,k)=>arr.reduce((t,x)=>t+x[k],0), cumpr = arr => { const p = soma(arr,'litros'); return p>0 ? arr.reduce((t,x)=>t+Math.min(x.litrosEfet,x.litros),0)/p*100 : 0; };
+  const porTer = new Map(); linhas.forEach(l=>{ if(!porTer.has(l.terceiro)) porTer.set(l.terceiro, []); porTer.get(l.terceiro).push(l); });
+  const resumo = [...porTer.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([t,ls])=>({terceiro:t, linhas:ls.length, litros:soma(ls,'litros'), litrosEfet:soma(ls,'litrosEfet'), pct:cumpr(ls), concluidas:ls.filter(x=>x.status==='Concluída').length, atrasadas:ls.filter(x=>x.status==='Atrasada').length, litrosAtrasados:ls.filter(x=>x.status==='Atrasada').reduce((s,x)=>s+x.litrosSaldo,0), aReceber7:soma(ls,'aReceber7')}));
+  const atr = linhas.filter(l=>l.status==='Atrasada');
+  return {linhas, resumo, kpis:{linhas:linhas.length, litros:soma(linhas,'litros'), litrosEfet:soma(linhas,'litrosEfet'), pct:cumpr(linhas), atrasadas:atr.length, litrosAtrasados:soma(atr,'litrosSaldo'), aReceber7:soma(linhas,'aReceber7'), terceiros:resumo.length}, hoje};
+}
+function terceirizacaoLerFiltros(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+  return {de:g('terDe'), ate:g('terAte'), terceiros:filtroValores('terTerceiro'), item:g('terItem'), status:filtroValores('terStatus')};
+}
+function renderTerceirizacao(){
+  const dl = document.getElementById('dlTerceiros'); if(dl) dl.innerHTML = terceirosConhecidos().map(n=>`<option value="${acessoEsc(n)}"></option>`).join('');
+  const sel = document.getElementById('terTerceiro'); if(sel && !sel.__povoado){ populateSelect(sel, terceirosConhecidos(), true); }
+  if(sel){ const atuais = terceirosConhecidos().join('|'); if(sel.__nomes !== atuais){ sel.__nomes = atuais; populateSelect(sel, terceirosConhecidos(), true); sel.__povoado = true; } }
+  const st = document.getElementById('terStatus'); if(st && !st.options.length) populateSelect(st, TER_STATUS, true);
+  const r = terceirizacaoCalcular(terceirizacaoLerFiltros()), k = r.kpis, f = v => fmtL(Math.round(v*100)/100);
+  const card = (rot, val, sub, cor) => `<div class="card kpi" style="${cor?'border-left:4px solid '+cor:''}"><div class="kpi-label">${rot}</div><div class="kpi-value">${val}</div><div class="kpi-sub">${sub||''}</div></div>`;
+  document.getElementById('terKpis').innerHTML = card('Linhas terceirizadas', k.linhas, `${k.terceiros} terceiro(s)`) + card('Planejado (L)', f(k.litros), 'no filtro') + card('Efetivo recebido (L)', f(k.litrosEfet), `${f(k.pct)}% de cumprimento`) + card('Atrasadas', k.atrasadas, k.atrasadas ? `${f(k.litrosAtrasados)} L a receber em atraso` : 'nenhuma', k.atrasadas?'#B71C1C':'') + card('A receber em 7 dias (L)', f(k.aReceber7), 'saldo com data até 7 dias');
+  document.getElementById('tblTerResumo').innerHTML = `<thead><tr><th>Terceiro</th><th>Linhas</th><th>Planejado (L)</th><th>Efetivo (L)</th><th>Cumprimento</th><th>Concluídas</th><th>Atrasadas</th><th>Em atraso (L)</th><th>A receber em 7 dias (L)</th></tr></thead><tbody>${
+    r.resumo.length ? r.resumo.map(x=>`<tr><td><strong>${acessoEsc(x.terceiro)}</strong></td><td class="mono">${x.linhas}</td><td class="mono">${f(x.litros)}</td><td class="mono">${f(x.litrosEfet)}</td><td class="mono">${f(x.pct)}%</td><td class="mono">${x.concluidas}</td><td class="mono" style="${x.atrasadas?'color:#B71C1C;font-weight:700':''}">${x.atrasadas}</td><td class="mono">${f(x.litrosAtrasados)}</td><td class="mono">${f(x.aReceber7)}</td></tr>`).join('') : '<tr><td colspan="9"><div class="empty">Nenhuma linha terceirizada. Marque na Lista Mestre, coluna <strong>Terceiro</strong>.</div></td></tr>'}</tbody>`;
+  const cls = s => ({'Concluída':'ok','Atrasada':'danger','Em andamento':'info','A receber':'warn'}[s]||'');
+  document.getElementById('tblTerceirizacao').innerHTML = `<thead><tr><th>Terceiro</th><th>Data prevista</th><th>Item</th><th>Descrição</th><th>Pedido</th><th>Nº OP</th><th>Planejado (un.)</th><th>Efetivo (un.)</th><th>Saldo (un.)</th><th>Planejado (L)</th><th>Efetivo (L)</th><th>Última entrega</th><th>Status</th><th>Atraso (d)</th></tr></thead><tbody>${
+    r.linhas.length ? r.linhas.map(l=>`<tr><td><strong>${acessoEsc(l.terceiro)}</strong></td><td class="mono">${fmtDate(l.data)}</td><td class="mono">${acessoEsc(l.item)}</td><td style="white-space:normal;max-width:260px;font-size:12px">${acessoEsc(l.desc)}</td><td class="mono">${acessoEsc(l.pedido)}</td><td class="mono">${acessoEsc(l.op)}</td><td class="mono">${f(l.plan)}</td><td class="mono">${f(l.efet)}</td><td class="mono">${f(l.saldo)}</td><td class="mono">${f(l.litros)}</td><td class="mono">${f(l.litrosEfet)}</td><td class="mono">${l.ultima?fmtDate(l.ultima):'—'}</td><td><span class="badge ${cls(l.status)}" style="cursor:default">${l.status}</span></td><td class="mono">${l.atraso||'—'}</td></tr>`).join('') : '<tr><td colspan="14"><div class="empty">Nenhuma linha com estes filtros.</div></td></tr>'}</tbody>`;
+}
+function exportTerceirizacaoCsv(){
+  const r = terceirizacaoCalcular(terceirizacaoLerFiltros()), n = v => String(Math.round(v*100)/100).replace('.',',');
+  const cab = ['Terceiro','Data prevista','Item','Descrição','UM','Pedido','Nº OP','Planejado (un.)','Efetivo (un.)','Saldo (un.)','Planejado (L)','Efetivo (L)','Última entrega','Status','Atraso (dias)'];
+  const lin = r.linhas.map(l=>[l.terceiro,l.data,l.item,l.desc,l.uom,l.pedido,l.op,n(l.plan),n(l.efet),n(l.saldo),n(l.litros),n(l.litrosEfet),l.ultima,l.status,l.atraso]);
+  const csv = '\uFEFF' + [cab,...lin].map(a=>a.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'})); e.download = 'terceirizacao.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
+}
+
+/* =========================================================================
+   RELATÓRIO DE ATUALIZAÇÕES POR TELA — o que mudou, quem mudou e quando
+   A cada gravação a ferramenta compara os dados com o estado anterior e anota, para cada registro criado, alterado ou removido: data e hora, usuário, tela onde a pessoa estava, tipo,
+   o registro (ex.: "10/11/2026 · BHT · pedido 17438"), o campo e os valores ANTES e DEPOIS. Mudanças que chegam de OUTROS usuários (sincronização) só atualizam o instantâneo: não são
+   atribuídas a quem está com a tela aberta. Uma ação que mexe em muitos registros de uma vez (importação, geração do plano) vira UM lançamento-resumo.
+   Dado: DB.historicoAlteracoes [{id, ts, usuario, nome, tela, tipo:'criado'|'alterado'|'removido'|'em lote', colecao, chave, rotulo, campo, antes, depois}] — guarda os últimos 90 dias (até 5.000 lançamentos).
+   Só vale a partir da ativação: o que foi alterado antes não tem detalhe registrado.
+   ========================================================================= */
+const JRN_DIAS = 90, JRN_MAX = 5000, JRN_LOTE = 60, JRN_CAMPOS_MAX = 8;
+const jrnD = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v||'')); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v||''); };
+const JRN_COLS = {
+  plan:{nome:'Plano / Lista Mestre', rot:r=>`${jrnD(r.date)} · ${r.itemCode||''}${r.orderNo?' · pedido '+r.orderNo:''}${r.opNumber?' · OP '+r.opNumber:''}`, ign:['id','changeLog','originalDate','sequence','bucket','viavel','manual','aplicacao','dueDate','orders','orderId','lotes','loteManual','solicitacaoOP','novaDataMotivo','novaDataPor','novaDataEm'], lab:{date:'Data',resource:'Recurso',itemCode:'Item',batchUnits:'Quantidade (unid.)',batchLiters:'Quantidade (L)',status:'Status',opNumber:'Nº OP',opGranelNumber:'Nº OP Granel',localGranelId:'Local. do granel',turno1:'1º turno',turno2:'2º turno',turno3:'3º turno',actualQtyUnits:'Qtd. efetiva total',actualDate:'Última data efetiva',terceiro:'Terceiro',obs:'Observação',orderNo:'Pedido(s)',qtdFixa:'Quantidade fixada (manual)',novaData:'Nova data prevista (atraso)'}},
+  orders:{nome:'Pedidos', rot:r=>`Pedido ${r.orderNo||''} · ${r.customer||''} · ${r.itemCode||''}`, ign:['id','lotes'], lab:{qty:'Quantidade',dueDate:'Data de entrega',status:'Status',customer:'Cliente',itemCode:'Item',orderNo:'Nº do pedido',obs:'Observação'}},
+  items:{nome:'Cadastro de itens', rot:r=>`Item ${r.code||''} · ${r.name||''}`, ign:['code'], lab:{name:'Descrição',uom:'UM',litersPerUnit:'Litros por unidade',group:'Grupo',subgroup:'Subgrupo',application:'Aplicação',maxBatchLiters:'Capacidade máx. do lote (L)',resource:'Recurso',stock:'Estoque',stockProc:'Estoque em processo',stockPorDeposito:'Estoque por depósito'}},
+  recipes:{nome:'Receitas', rot:r=>`Receita ${r.product||''} ← ${r.material||''}`, ign:['id','product','material'], lab:{qtyPerUnit:'Qtd. por unidade'}},
+  resources:{nome:'Recursos', rot:r=>`Recurso ${r.name||''}`, ign:['name'], lab:{capacityBase:'Capacidade base (L/dia)',overrides:'Capacidade por dia'}},
+  paradas:{nome:'Paradas', rot:r=>`Parada ${r.resource||''} · ${jrnD(r.date)}`, ign:['id'], lab:{date:'Data',resource:'Recurso',motivo:'Motivo',tipo:'Tipo',inicio:'Início',fim:'Fim',minutos:'Minutos',obs:'Observação'}},
+  refugos:{nome:'Refugo / Perdas', rot:r=>`Refugo ${r.itemCode||''} · ${jrnD(r.date)}`, ign:['id'], lab:{date:'Data',itemCode:'Item',qty:'Quantidade',motivo:'Motivo',obs:'Observação',linhaId:'Linha'}},
+  prioridades:{nome:'Prioridades', rot:r=>`Prioridade ${r.batchNum||''} · ${r.itemCode||r.item||''}`, ign:['id'], lab:{}},
+  comprasAbertas:{nome:'Pedidos de compra em aberto', rot:r=>`Compra ${r.pedido||''} · ${r.itemCode||''}`, ign:['id'], lab:{qty:'Quantidade',data:'Data prevista',pedido:'Pedido',fornecedor:'Fornecedor',itemCode:'Item'}},
+  paramMateriais:{nome:'Estoque de segurança e prazo', rot:r=>`Parâmetro do item ${r.item||''}`, ign:['id','item'], lab:{seguranca:'Estoque de segurança',prazo:'Prazo de entrega (dias)',maximo:'Estoque máximo'}},
+  gruposReposicao:{nome:'Grupos de reposição', rot:r=>`Grupo ${r.chave||''}`, ign:['id','chave'], lab:{itens:'Itens do grupo',seguranca:'Estoque de segurança',prazo:'Prazo de entrega (dias)',maximo:'Estoque máximo'}},
+  locaisGranel:{nome:'Locais de granel', rot:r=>`Local de granel ${r.nome||r.name||r.id||''}`, ign:['id'], lab:{}},
+  motivosParada:{nome:'Motivos de parada', rot:r=>`Motivo de parada ${r.nome||r.name||r.id||''}`, ign:['id'], lab:{}},
+  solicitacoesOP:{nome:'Solicitações de OP', rot:r=>`Solicitação ${r.numero||r.id||''}`, ign:['id'], lab:{}}
+};
+/* valor que a ferramenta assume quando a configuração ainda não foi gravada (a 1ª mudança parte dele) */
+const JRN_PADRAO = {considerarEmProcesso:false, gruposPorSubgrupo:true, planConfirmed:false};
+const jrnEsc = k => DB[k]===undefined ? JRN_PADRAO[k] : DB[k];
+const JRN_ESCALARES = {considerarEmProcesso:'Considerar o estoque em processo nos cálculos', gruposPorSubgrupo:'Montar grupos de reposição pelo Subgrupo', planConfirmed:'Plano confirmado', depositos:'Classificação dos depósitos', clientesLoteMax:'Máximo de clientes por lote'};
+/* quais dados cada tela mostra (o relatório da tela lista as mudanças desses dados, de onde vierem) */
+const JRN_TELA_COLS = {necessidades:['orders','plan','recipes','items'], necgrupo:['orders','plan','items'], materiais:['paramMateriais','gruposReposicao','comprasAbertas','items','config'], reposicao:['paramMateriais','gruposReposicao','comprasAbertas','items','config'],
+  plano:['plan','orders'], visaodia:['plan','orders'], efetuado:['plan'], terceirizacao:['plan'], lista:['plan'], refugos:['refugos'], capacidade:['resources','paradas'], prioridades:['prioridades'], paradas:['paradas','resources'],
+  cadastros:['items','recipes','resources','locaisGranel','motivosParada'], importacao:[...Object.keys(JRN_COLS),'config'], dash:['plan','orders'], leadtime:['orders','plan']};
+const JRN = {snap:null, timer:null, pend:null, ultimaPoda:0};
+const jrnEst = v => (typeof syncEstavel==='function') ? syncEstavel(v) : JSON.stringify(v);
+const jrnChave = (col, r) => (typeof syncChave==='function') ? String(syncChave(col, r)) : String(r.id);
+function jrnVal(v){
+  if(v===undefined || v===null || v==='') return '—'; if(typeof v==='boolean') return v ? 'Sim' : 'Não';
+  if(typeof v==='number') return String(Math.round(v*1000)/1000).replace('.',',');
+  if(typeof v==='string') return jrnD(v).slice(0,140);
+  if(Array.isArray(v)) return v.map(x=>typeof x==='object' ? JSON.stringify(x) : jrnVal(x)).join('; ').slice(0,140);
+  try{ return JSON.stringify(v).slice(0,140); }catch(e){ return String(v).slice(0,140); }
+}
+const jrnHumano = k => String(k).replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,' ').replace(/^./, c=>c.toUpperCase());
+function jrnRebase(){
+  const m = new Map();
+  Object.keys(JRN_COLS).forEach(col=>(DB[col]||[]).forEach(r=>{ if(r) m.set(col+'\u0001'+jrnChave(col,r), jrnEst(r)); }));
+  Object.keys(JRN_ESCALARES).forEach(k=>{ if(jrnEsc(k)!==undefined) m.set('config\u0001'+k, jrnEst(jrnEsc(k))); });
+  JRN.snap = m;
+}
+/* mudança vinda de outro usuário (sincronização): só atualiza o instantâneo, sem lançar nada */
+function jrnRemoto(col, key){
+  if(!JRN.snap) return; const k = col+'\u0001'+key;
+  if(col==='config'){ if(jrnEsc(key)===undefined) JRN.snap.delete(k); else JRN.snap.set(k, jrnEst(jrnEsc(key))); return; }
+  if(!JRN_COLS[col]) return; const r = (DB[col]||[]).find(x=>jrnChave(col,x)===key); if(r) JRN.snap.set(k, jrnEst(r)); else JRN.snap.delete(k);
+}
+function jrnQuem(){ const u = (typeof USUARIO_ATUAL!=='undefined') ? USUARIO_ATUAL : null; return {usuario:u ? u.usuario : '(sem login)', nome:u ? (u.nome||u.usuario) : ''}; }
+function jrnTela(){ try{ const id = paginaAtivaId(), it = NAV.flatMap(g=>g.items).find(i=>i.id===id); return it ? it.label : 'Sistema'; }catch(e){ return 'Sistema'; } }
+function jrnNovoId(){ return 'h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function jrnDiferencas(col, antes, depois){
+  const cfg = JRN_COLS[col], ign = new Set(cfg.ign||[]), chaves = [...new Set([...Object.keys(antes||{}), ...Object.keys(depois||{})])].filter(k=>!ign.has(k)), out = [];
+  chaves.forEach(k=>{ if(jrnEst(antes[k])!==jrnEst(depois[k])) out.push({campo:(cfg.lab&&cfg.lab[k])||jrnHumano(k), antes:jrnVal(antes[k]), depois:jrnVal(depois[k])}); });
+  return out;
+}
+/* compara os dados com o instantâneo e registra as diferenças (chamada depois de cada gravação) */
+function jrnComparar(ctx){
+  if(!JRN.snap){ jrnRebase(); return 0; }
+  const ts = new Date().toISOString(), q = ctx.quem, tela = ctx.tela, novas = [], atual = new Map();
+  Object.keys(JRN_COLS).forEach(col=>{
+    const cfg = JRN_COLS[col], criados = [], alterados = [], removidos = [], vistos = new Set();
+    (DB[col]||[]).forEach(r=>{ if(!r) return; const key = jrnChave(col,r), id = col+'\u0001'+key, s = jrnEst(r); vistos.add(id); atual.set(id, s); const ant = JRN.snap.get(id);
+      if(ant===undefined) criados.push({key, r}); else if(ant!==s){ let a = {}; try{ a = JSON.parse(ant); }catch(e){} const d = jrnDiferencas(col, a, r); if(d.length) alterados.push({key, r, d}); } });
+    JRN.snap.forEach((s,id)=>{ if(id.startsWith(col+'\u0001') && !vistos.has(id)){ let a = {}; try{ a = JSON.parse(s); }catch(e){} removidos.push({key:id.slice(col.length+1), r:a}); } });
+    const total = criados.length + alterados.length + removidos.length; if(!total) return;
+    const base = {ts, usuario:q.usuario, nome:q.nome, tela, colecao:col};
+    if(total>JRN_LOTE){ novas.push({...base, id:jrnNovoId(), tipo:'em lote', chave:'', rotulo:`${total} registro(s) de ${cfg.nome}`, campo:'', antes:'', depois:`${criados.length} criado(s), ${alterados.length} alterado(s), ${removidos.length} removido(s)`}); return; }
+    criados.forEach(x=>novas.push({...base, id:jrnNovoId(), tipo:'criado', chave:x.key, rotulo:cfg.rot(x.r), campo:'', antes:'', depois:'Registro criado'}));
+    removidos.forEach(x=>novas.push({...base, id:jrnNovoId(), tipo:'removido', chave:x.key, rotulo:cfg.rot(x.r), campo:'', antes:'Registro existia', depois:''}));
+    alterados.forEach(x=>{ const rot = cfg.rot(x.r); x.d.slice(0,JRN_CAMPOS_MAX).forEach(d=>novas.push({...base, id:jrnNovoId(), tipo:'alterado', chave:x.key, rotulo:rot, campo:d.campo, antes:d.antes, depois:d.depois})); if(x.d.length>JRN_CAMPOS_MAX) novas.push({...base, id:jrnNovoId(), tipo:'alterado', chave:x.key, rotulo:rot, campo:`… e mais ${x.d.length-JRN_CAMPOS_MAX} campo(s)`, antes:'', depois:''}); });
+  });
+  Object.keys(JRN_ESCALARES).forEach(k=>{ const id = 'config\u0001'+k, v = jrnEsc(k); if(v===undefined) return;
+    const s = jrnEst(v); atual.set(id, s); const ant = JRN.snap.get(id);
+    if(ant!==undefined && ant!==s){ let a; try{ a = JSON.parse(ant); }catch(e){} novas.push({ts, usuario:q.usuario, nome:q.nome, tela, colecao:'config', id:jrnNovoId(), tipo:'alterado', chave:k, rotulo:'Configuração', campo:JRN_ESCALARES[k], antes:jrnVal(a), depois:jrnVal(v)}); } });
+  atual.forEach((s,id)=>JRN.snap.set(id,s)); [...JRN.snap.keys()].forEach(id=>{ if(!atual.has(id)) JRN.snap.delete(id); });
+  if(!novas.length) return 0;
+  DB.historicoAlteracoes = DB.historicoAlteracoes || []; novas.forEach(n=>DB.historicoAlteracoes.push(n)); jrnPodar();
+  persistDB(); return novas.length;
+}
+function jrnPodar(){
+  const lim = new Date(Date.now() - JRN_DIAS*86400000).toISOString(); let h = DB.historicoAlteracoes || [];
+  if(h.some(x=>x.ts<lim) || h.length>JRN_MAX){ h = h.filter(x=>x.ts>=lim); if(h.length>JRN_MAX) h = h.sort((a,b)=>String(a.ts).localeCompare(String(b.ts))).slice(h.length-JRN_MAX); DB.historicoAlteracoes = h; }
+}
+/* chamada por persistDB(): agrupa várias gravações seguidas e guarda quem/onde estava quando a primeira aconteceu */
+function jrnAgendar(){
+  if(!JRN.snap) return; if(!JRN.pend) JRN.pend = {quem:jrnQuem(), tela:jrnTela()};
+  clearTimeout(JRN.timer); JRN.timer = setTimeout(jrnExecutar, 350);
+}
+function jrnExecutar(){ const ctx = JRN.pend; JRN.pend = null; JRN.timer = null; if(!ctx) return 0; try{ return jrnComparar(ctx); }catch(e){ console.warn('Histórico de alterações:', e); return 0; } }
+/* ---------- tela do relatório ---------- */
+let JRN_PAGINA = '';
+function jrnTelaNome(id){ const it = NAV.flatMap(g=>g.items).find(i=>i.id===id); return it ? it.label : id; }
+function abrirAtualizacoes(pagina){
+  jrnExecutar(); JRN_PAGINA = pagina || paginaAtivaId() || ''; let o = document.getElementById('atuOverlay'); if(o) o.remove();
+  o = document.createElement('div'); o.id = 'atuOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:98000;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow:auto';
+  const nome = JRN_PAGINA ? jrnTelaNome(JRN_PAGINA) : 'todas as telas';
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;width:min(1280px,100%);padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><h3 style="margin:0">🕒 Atualizações — ${acessoEsc(nome)}</h3><div class="card-sub" style="margin:4px 0 0">O que mudou, quem mudou e quando (antes e depois). Vale a partir da ativação deste relatório; guarda os últimos ${JRN_DIAS} dias. Para buscar por registro, campo ou valor, use a barra acima da tabela.</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" onclick="atuCsv()">⬇ Exportar (.csv)</button><button class="btn" onclick="atuImprimir()">🖨 Imprimir</button><button class="btn btn-ghost" onclick="document.getElementById('atuOverlay').remove()">✕ Fechar</button></div></div>
+    <div class="filters" style="margin-top:10px">
+      <div class="f"><label>Mostrar</label><select id="atuModo" onchange="renderAtualizacoes()"><option value="dados">Mudanças nos dados desta tela</option><option value="feito">Feitas dentro desta tela</option><option value="tudo">Todas as telas</option></select></div>
+      <div class="f"><label>De</label><input type="date" id="atuDe" onchange="renderAtualizacoes()"></div>
+      <div class="f"><label>Até</label><input type="date" id="atuAte" onchange="renderAtualizacoes()"></div>
+      <div class="f"><label>Usuário</label><select id="atuUsuario" onchange="renderAtualizacoes()"></select></div>
+      <div class="f"><label>Tipo</label><select id="atuTipo" onchange="renderAtualizacoes()"><option value="">Todos</option><option value="criado">Criado</option><option value="alterado">Alterado</option><option value="removido">Removido</option><option value="em lote">Em lote (resumo)</option></select></div></div>
+    <div id="atuResumo" class="card-sub" style="margin:6px 0"></div><div class="tbl-wrap" style="max-height:60vh"><table class="data" id="tblAtualizacoes"></table></div></div>`;
+  document.body.appendChild(o); if(!JRN_PAGINA) document.getElementById('atuModo').value = 'tudo'; renderAtualizacoes();
+}
+function atuFiltrar(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value : ''; }, modo = g('atuModo') || 'dados', de = g('atuDe'), ate = g('atuAte'), us = g('atuUsuario'), tp = g('atuTipo'), q = normaTxt(g('atuBusca')), cols = JRN_TELA_COLS[JRN_PAGINA] || null, nomeTela = JRN_PAGINA ? jrnTelaNome(JRN_PAGINA) : '';
+  const todas = (DB.historicoAlteracoes||[]).slice().sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
+  const lista = todas.filter(x=>(modo==='tudo' || !JRN_PAGINA || (modo==='feito' ? x.tela===nomeTela : (!cols || cols.includes(x.colecao)))) && (!de || x.ts.slice(0,10)>=de) && (!ate || x.ts.slice(0,10)<=ate) && (!us || x.usuario===us) && (!tp || x.tipo===tp) && (!q || normaTxt([x.rotulo,x.campo,x.antes,x.depois,x.tela,x.nome,x.usuario].join(' ')).includes(q)));
+  return {todas, lista};
+}
+function atuDH(ts){ const d = new Date(ts); return isNaN(d) ? String(ts) : d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function renderAtualizacoes(){
+  const r = atuFiltrar(), us = document.getElementById('atuUsuario'), atual = us.value, nomes = [...new Set(r.todas.map(x=>x.usuario))].sort();
+  if(us.__nomes !== nomes.join('|')){ us.__nomes = nomes.join('|'); us.innerHTML = '<option value="">Todos</option>'+nomes.map(n=>`<option value="${acessoEsc(n)}" ${n===atual?'selected':''}>${acessoEsc(n)}</option>`).join(''); }
+  const LIM = 1000, vis = r.lista.slice(0,LIM), cls = {criado:'ok',alterado:'info',removido:'danger','em lote':'warn'};
+  document.getElementById('atuResumo').innerHTML = r.lista.length ? `<strong>${r.lista.length}</strong> lançamento(s)${r.lista.length>LIM?` (mostrando os ${LIM} mais recentes: refine os filtros)`:''} · último: <strong>${atuDH(r.lista[0].ts)}</strong> por <strong>${acessoEsc(r.lista[0].nome||r.lista[0].usuario)}</strong>` : 'Nenhum lançamento com estes filtros.';
+  document.getElementById('tblAtualizacoes').innerHTML = `<thead><tr><th>Data e hora</th><th>Usuário</th><th>Tela</th><th>Tipo</th><th>Registro</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody>${
+    vis.length ? vis.map(x=>`<tr><td class="mono" style="white-space:nowrap">${atuDH(x.ts)}</td><td>${acessoEsc(x.nome||x.usuario)}</td><td>${acessoEsc(x.tela)}</td><td><span class="badge ${cls[x.tipo]||''}" style="cursor:default">${acessoEsc(x.tipo)}</span></td><td style="white-space:normal;min-width:220px">${acessoEsc(x.rotulo)}</td><td>${acessoEsc(x.campo)}</td><td style="white-space:normal;max-width:240px">${acessoEsc(x.antes)}</td><td style="white-space:normal;max-width:240px">${acessoEsc(x.depois)}</td></tr>`).join('') : '<tr><td colspan="8"><div class="empty">Nenhuma atualização registrada para este filtro. O registro começa a partir da ativação deste relatório.</div></td></tr>'}</tbody>`;
+}
+function atuCsv(){
+  const r = atuFiltrar(), cab = ['Data e hora','Usuário','Nome','Tela','Tipo','Registro','Campo','Antes','Depois'];
+  const csv = '\uFEFF'+[cab,...r.lista.map(x=>[atuDH(x.ts),x.usuario,x.nome||'',x.tela,x.tipo,x.rotulo,x.campo,x.antes,x.depois])].map(a=>a.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); e.download = 'atualizacoes.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
+}
+function atuImprimir(){
+  const r = atuFiltrar(); const w = window.open('', '_blank'); if(!w){ alert('O navegador bloqueou a janela de impressão. Libere pop-ups para esta página.'); return; }
+  w.document.write(`<html><head><meta charset="utf-8"><title>Atualizações</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:14px}h2{margin:0 0 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:3px 5px;text-align:left;vertical-align:top}th{background:#eee}@page{size:landscape;margin:10mm}</style></head><body><h2>Atualizações — ${acessoEsc(JRN_PAGINA ? jrnTelaNome(JRN_PAGINA) : 'todas as telas')}</h2><div>${r.lista.length} lançamento(s) · gerado em ${new Date().toLocaleString('pt-BR')}</div><table><thead><tr><th>Data e hora</th><th>Usuário</th><th>Tela</th><th>Tipo</th><th>Registro</th><th>Campo</th><th>Antes</th><th>Depois</th></tr></thead><tbody>${r.lista.slice(0,3000).map(x=>`<tr><td>${atuDH(x.ts)}</td><td>${acessoEsc(x.nome||x.usuario)}</td><td>${acessoEsc(x.tela)}</td><td>${acessoEsc(x.tipo)}</td><td>${acessoEsc(x.rotulo)}</td><td>${acessoEsc(x.campo)}</td><td>${acessoEsc(x.antes)}</td><td>${acessoEsc(x.depois)}</td></tr>`).join('')}</tbody></table></body></html>`);
+  w.document.close(); try{ w.focus(); w.print(); }catch(e){}
+}
+/* botão "🕒 Atualizações" no cabeçalho de cada tela e atalho na linha "Última atualização" de Itens por Dia */
+function jrnInjetarBotoes(){
+  Object.keys(JRN_TELA_COLS).forEach(id=>{ const pg = document.getElementById('page-'+id); if(!pg) return; let ha = pg.querySelector(':scope > .page-head .head-actions'); if(!ha){ const ph = pg.querySelector(':scope > .page-head'); if(!ph) return; ha = document.createElement('div'); ha.className = 'head-actions'; ph.appendChild(ha); }
+    if(ha.querySelector('.btn-atualizacoes')) return; const b = document.createElement('button'); b.className = 'btn btn-atualizacoes'; b.type = 'button'; b.textContent = '🕒 Atualizações'; b.title = 'O que mudou nesta tela: quem alterou, quando, o campo e os valores antes e depois'; b.addEventListener('click', ()=>abrirAtualizacoes(id)); ha.appendChild(b); });
+}
+(function(){ const orig = (typeof vdAtualizarCarimbo==='function') ? vdAtualizarCarimbo : null; if(!orig) return;
+  vdAtualizarCarimbo = function(){ orig.apply(this, arguments); const el = document.getElementById('vdAtualizacao'); if(el && !el.querySelector('.atu-link')) el.insertAdjacentHTML('beforeend', ' &nbsp;·&nbsp; <a class="atu-link" href="javascript:void(0)" onclick="abrirAtualizacoes(\'visaodia\')" title="Ver o que foi alterado, por quem e quando">ver o que mudou</a>'); }; })();
+
+/* =========================================================================
+   NOVA DATA POR ATRASO — informar aos interessados quando o item atrasado será produzido, SEM mudar a data do plano
+   A data do plano (base do Planejado x Efetuado) continua como está. A nova data é só informativa: fica gravada na própria linha com o motivo ("Atraso"), quem informou e quando, e aparece
+   no relatório de datas ajustadas. Dado na linha do plano: p.novaData (AAAA-MM-DD), p.novaDataMotivo, p.novaDataPor, p.novaDataEm.
+   Linha em atraso = data do plano anterior a hoje, com quantidade pendente (planejado − efetivo) e status diferente de Concluído.
+   ========================================================================= */
+const ND_MOTIVO = 'Atraso';
+const ndPend = p => Math.max(0, (Number(p.batchUnits)||0) - (Number(p.actualQtyUnits)||0));
+const ndAtrasada = (p, hoje) => String(p.date) < (hoje || todayISO()) && ndPend(p) > 0.0001 && p.status !== 'Concluído';
+const ndDias = (a, b) => Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+function ndClientes(p){ const ids = new Set((p.orders||[]).map(o=>o.orderId)); return [...new Set((DB.orders||[]).filter(o=>ids.has(o.id)).map(o=>o.customer).filter(Boolean))]; }
+function ndPedidos(p){ const l = [...new Set((p.orders||[]).map(o=>o.orderNo).filter(Boolean).map(String))]; return l.length ? l : (p.orderNo ? String(p.orderNo).split(',').map(x=>x.trim()).filter(Boolean) : []); }
+function ndLinha(p, hoje){
+  const it = itemByCode(p.itemCode) || {}, pend = ndPend(p);
+  return {id:p.id, item:p.itemCode, desc:it.name||'', uom:it.uom||'', pedidos:ndPedidos(p), clientes:ndClientes(p), data:p.date, planejado:Number(p.batchUnits)||0, efetivo:Number(p.actualQtyUnits)||0, pendente:pend,
+    atrasoDias:Math.max(0, ndDias(p.date, hoje)), novaData:p.novaData||'', motivo:p.novaDataMotivo||'', por:p.novaDataPor||'', em:p.novaDataEm||'', vencida:!!p.novaData && p.novaData<hoje && pend>0.0001, terceiro:p.terceiro||'', resource:p.resource||''};
+}
+/* os mesmos filtros de cliente, item e recurso da tela Itens por Dia (o atraso é do passado: o período da tela não conta) */
+function ndFiltroTela(){ const v = id => { const e = document.getElementById(id); return e ? e.value : ''; }; return {clientes:filtroValores('vdCliente'), busca:normaTxt(v('vdBuscaItem')), recursos:filtroValores('vdRecurso')}; }
+function ndPassa(l, f){ return (!f.clientes.length || l.clientes.some(c=>f.clientes.includes(c))) && (!f.recursos.length || f.recursos.includes(l.resource)) && (!f.busca || normaTxt(l.item+' '+l.desc).includes(f.busca)); }
+function ndAtrasadas(f){ f = f || ndFiltroTela(); const hoje = todayISO(); return (DB.plan||[]).filter(p=>ndAtrasada(p,hoje)).map(p=>ndLinha(p,hoje)).filter(l=>ndPassa(l,f)).sort((a,b)=>a.data.localeCompare(b.data) || a.item.localeCompare(b.item)); }
+/* alerta no topo do Itens por Dia */
+function vdRenderAtraso(){
+  const el = document.getElementById('vdAtrasoAviso'); if(!el) return;
+  const lin = ndAtrasadas(), hoje = todayISO(), informadas = (DB.plan||[]).filter(p=>p.novaData && ndPend(p)>0.0001).length;
+  if(!lin.length && !informadas){ el.innerHTML = ''; return; }
+  const sem = lin.filter(l=>!l.novaData).length, com = lin.length - sem, venc = lin.filter(l=>l.vencida).length, un = lin.reduce((t,l)=>t+l.pendente,0), itens = new Set(lin.map(l=>l.item)).size;
+  const msg = lin.length ? `⚠ <strong>${lin.length}</strong> linha(s) em <strong>atraso</strong> (${itens} item(ns) · ${fmtL(un)} unid. pendentes): <strong>${sem}</strong> sem nova data${com ? ` · ${com} com nova data informada` : ''}${venc ? ` · <strong style="color:#B71C1C">${venc} com a nova data vencida</strong>` : ''}. A data do plano não muda.`
+    : `📅 <strong>${informadas}</strong> linha(s) com nova data informada.`;
+  el.innerHTML = `<div class="card" style="margin:0 0 12px;padding:10px 14px;border-left:4px solid ${sem||venc?'#B71C1C':'#2F7D46'};display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="flex:1;min-width:260px;font-size:13px">${msg}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${lin.length ? '<button class="btn btn-primary btn-sm" id="ndBtnInformar" onclick="abrirNovaDataAtraso()">📅 Informar nova data</button>' : ''}<button class="btn btn-sm" id="ndBtnRelatorio" onclick="abrirRelatorioDatasAtraso()">📄 Relatório de datas ajustadas</button></div></div>`;
+}
+/* janela: informar a nova data de cada linha em atraso */
+function abrirNovaDataAtraso(){
+  const hoje = todayISO(), lin = ndAtrasadas(); if(!lin.length){ alert('Não há linhas em atraso com os filtros atuais.'); return; }
+  let o = document.getElementById('ndOverlay'); if(o) o.remove();
+  o = document.createElement('div'); o.id = 'ndOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:98000;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow:auto';
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;width:min(1180px,100%);padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <h3 style="margin:0">📅 Informar a nova data de produção (atraso)</h3>
+    <div class="card-sub" style="margin:4px 0 10px">A <strong>data do plano não muda</strong> (ela continua sendo a base do Planejado x Efetuado). A nova data é só para informar os interessados: aparece no <strong>relatório de datas ajustadas</strong> com o motivo <strong>${ND_MOTIVO}</strong>, quem informou e quando.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px"><div class="form-field" style="margin:0"><label>Aplicar a todas as linhas SEM nova data</label><div style="display:flex;gap:6px"><input type="date" id="ndTodas" min="${hoje}"><button class="btn btn-sm" onclick="ndAplicarTodas()">Aplicar</button></div></div>
+      <label style="font-size:12.5px;cursor:pointer;padding-bottom:6px"><input type="checkbox" id="ndSoSem" onchange="ndFiltrarSem()"> Mostrar só as sem nova data</label><span style="flex:1"></span><span class="card-sub" id="ndInfo" style="margin:0"></span></div>
+    <div class="tbl-wrap" style="max-height:56vh"><table class="data" id="tblNovaData"><thead><tr><th>Data do plano</th><th>Atraso (dias)</th><th>Item</th><th>Descrição</th><th>Pedido(s)</th><th>Cliente(s)</th><th>Planejado</th><th>Efetuado</th><th>Pendente</th><th>Nova data prevista</th></tr></thead><tbody>${
+      lin.map(l=>`<tr data-id="${acessoEsc(l.id)}" data-sem="${l.novaData?'':'1'}" style="${l.novaData?'background:#F4FBF6':''}"><td class="mono">${fmtDate(l.data)}</td><td class="mono" style="color:#B71C1C;font-weight:700">${l.atrasoDias}</td><td class="mono">${acessoEsc(l.item)}${l.terceiro?' <span title="Produção terceirizada: '+acessoEsc(l.terceiro)+'">🤝</span>':''}</td><td style="white-space:normal;max-width:240px;font-size:12px">${acessoEsc(l.desc)}</td><td class="mono" style="white-space:normal;max-width:130px">${acessoEsc(l.pedidos.join(', '))}</td><td style="white-space:normal;max-width:170px;font-size:12px">${acessoEsc(l.clientes.join(', '))}</td><td class="mono">${fmtL(l.planejado)} ${acessoEsc(l.uom)}</td><td class="mono">${fmtL(l.efetivo)}</td><td class="mono" style="font-weight:700">${fmtL(l.pendente)}</td>
+        <td style="white-space:nowrap"><input type="date" class="nd-in" data-id="${acessoEsc(l.id)}" value="${acessoEsc(l.novaData)}" min="${hoje}" ${l.vencida?'style="border-color:#B71C1C"':''}> <button class="icon-btn" title="Tirar a nova data desta linha" onclick="this.previousElementSibling.value=''">✕</button>${l.vencida?'<div style="font-size:11px;color:#B71C1C">nova data vencida</div>':''}</td></tr>`).join('')}</tbody></table></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost" onclick="document.getElementById('ndOverlay').remove()">Cancelar</button><button class="btn btn-primary" id="ndSalvar" onclick="salvarNovasDatasAtraso()">💾 Salvar datas</button></div></div>`;
+  document.body.appendChild(o); document.getElementById('ndInfo').textContent = `${lin.length} linha(s) em atraso`;
+}
+function ndAplicarTodas(){ const d = document.getElementById('ndTodas').value; if(!d){ alert('Escolha a data a aplicar.'); return; } document.querySelectorAll('#tblNovaData input.nd-in').forEach(i=>{ if(!i.value) i.value = d; }); }
+function ndFiltrarSem(){ const so = document.getElementById('ndSoSem').checked; document.querySelectorAll('#tblNovaData tbody tr').forEach(tr=>{ tr.style.display = (so && tr.dataset.sem!=='1') ? 'none' : ''; }); }
+function salvarNovasDatasAtraso(){
+  const hoje = todayISO(), ins = [...document.querySelectorAll('#tblNovaData input.nd-in')], u = (typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? (USUARIO_ATUAL.nome || USUARIO_ATUAL.usuario) : '';
+  const ruins = ins.filter(i=>{ const p = DB.plan.find(x=>x.id===i.dataset.id); return i.value && (!p || i.value!==(p.novaData||'')) && i.value<hoje; });
+  if(ruins.length){ alert(`${ruins.length} linha(s) com nova data anterior a hoje. A nova data precisa ser hoje ou depois.`); return; }
+  let n = 0, lim = 0; const ts = new Date().toISOString();
+  ins.forEach(i=>{ const p = DB.plan.find(x=>x.id===i.dataset.id); if(!p) return; const v = i.value || '';
+    if(v && v!==(p.novaData||'')){ p.novaData = v; p.novaDataMotivo = ND_MOTIVO; p.novaDataPor = u; p.novaDataEm = ts; n++; }
+    else if(!v && p.novaData){ delete p.novaData; delete p.novaDataMotivo; delete p.novaDataPor; delete p.novaDataEm; lim++; } });
+  const o = document.getElementById('ndOverlay'); if(o) o.remove();
+  if(n || lim){ persistDB(); showToast(`📅 ${n ? n+' nova(s) data(s) informada(s)' : ''}${n && lim ? ' · ' : ''}${lim ? lim+' retirada(s)' : ''}. A data do plano não mudou.`); } else showToast('Nenhuma data foi alterada.');
+  try{ renderVisaoDia(); }catch(e){}
+}
+/* relatório de datas ajustadas */
+function ndrDados(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value : ''; }, hoje = todayISO(), modo = g('ndrModo') || 'pend', de = g('ndrDe'), ate = g('ndrAte'), cli = g('ndrCliente'), q = normaTxt(g('ndrBusca'));
+  const todas = (DB.plan||[]).filter(p=>p.novaData).map(p=>ndLinha(p,hoje));
+  const lin = todas.filter(l=>(modo==='todas' || l.pendente>0.0001) && (!de || l.novaData>=de) && (!ate || l.novaData<=ate) && (!cli || l.clientes.includes(cli)) && (!q || normaTxt(l.item+' '+l.desc+' '+l.pedidos.join(' ')+' '+l.clientes.join(' ')).includes(q)))
+    .map(l=>Object.assign(l, {atrasoInformado:Math.max(0, ndDias(l.data, l.novaData)), situacao:l.pendente<=0.0001 ? 'Produzido' : (l.vencida ? 'Nova data vencida' : 'Dentro da nova data')}))
+    .sort((a,b)=>a.clientes.join(', ').localeCompare(b.clientes.join(', ')) || a.novaData.localeCompare(b.novaData) || a.item.localeCompare(b.item));
+  return {todas, lin, hoje, clientes:[...new Set(todas.flatMap(l=>l.clientes))].sort()};
+}
+function ndrLinhasTxt(l){ return [l.clientes.join(', '), l.item, l.desc, l.pedidos.join(', '), l.uom, l.pendente, fmtDate(l.data), fmtDate(l.novaData), l.atrasoInformado, l.motivo||ND_MOTIVO, l.situacao, l.por, l.em ? atuDH(l.em) : '']; }
+const NDR_CAB = ['Cliente(s)','Item','Descrição','Pedido(s)','UM','Qtd. pendente','Data do plano','Nova data prevista','Atraso informado (dias)','Motivo','Situação','Informado por','Informado em'];
+function abrirRelatorioDatasAtraso(){
+  let o = document.getElementById('ndrOverlay'); if(o) o.remove();
+  o = document.createElement('div'); o.id = 'ndrOverlay'; o.style.cssText = 'position:fixed;inset:0;background:rgba(20,22,26,.55);z-index:98000;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow:auto';
+  o.innerHTML = `<div style="background:var(--surface,#fff);color:var(--text,#222);border-radius:12px;width:min(1280px,100%);padding:16px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><h3 style="margin:0">📄 Relatório de datas de produção ajustadas (atraso)</h3><div class="card-sub" style="margin:4px 0 0">As datas informadas aos interessados para os itens em atraso, com o motivo. A data do plano <strong>não foi alterada</strong> (ela segue como base do Planejado x Efetuado).</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" onclick="ndrCsv()">⬇ CSV</button><button class="btn" onclick="ndrExcel()">📗 Excel</button><button class="btn" onclick="ndrImprimir()">🖨 PDF / Imprimir</button><button class="btn btn-ghost" onclick="document.getElementById('ndrOverlay').remove()">✕ Fechar</button></div></div>
+    <div class="filters" style="margin-top:10px"><div class="f"><label>Formato</label><select id="ndrFormato" data-unico onchange="renderRelatorioDatasAtraso()"><option value="lista">Lista (uma linha por atraso)</option><option value="matriz">Matriz por dia (formato do Itens por Dia)</option></select></div><div class="f" id="ndrFModo"><label>Mostrar</label><select id="ndrModo" onchange="renderRelatorioDatasAtraso()"><option value="pend">Só o que ainda falta produzir</option><option value="todas">Também o já produzido</option></select></div>
+      <div class="f"><label id="ndrLblDe">Nova data de</label><input type="date" id="ndrDe" onchange="renderRelatorioDatasAtraso()"></div><div class="f"><label id="ndrLblAte">até</label><input type="date" id="ndrAte" onchange="renderRelatorioDatasAtraso()"></div>
+      <div class="f"><label>Cliente</label><select id="ndrCliente" onchange="renderRelatorioDatasAtraso()"></select></div><div class="f"><label>Item ou pedido</label><input id="ndrBusca" placeholder="buscar…" oninput="renderRelatorioDatasAtraso()"></div><div class="f" id="ndrFAjust" style="display:none"><label>&nbsp;</label><label style="font-weight:400;cursor:pointer;text-transform:none"><input type="checkbox" id="ndrSoAjust" onchange="renderRelatorioDatasAtraso()"> Só itens com atraso ajustado</label></div></div>
+    <div id="ndrResumo" class="card-sub" style="margin:6px 0"></div><div class="tbl-wrap" style="max-height:58vh"><table class="data" id="tblNdr"></table></div></div>`;
+  document.body.appendChild(o); renderRelatorioDatasAtraso();
+}
+function renderRelatorioDatasAtraso(){
+  if(ndrAplicarFormato()) return;   // formato "matriz por dia": desenha a matriz no lugar da lista
+  const r = ndrDados(), cs = document.getElementById('ndrCliente'), atual = cs.value;
+  if(cs.__n !== r.clientes.join('|')){ cs.__n = r.clientes.join('|'); cs.innerHTML = '<option value="">Todos</option>'+r.clientes.map(c=>`<option value="${acessoEsc(c)}" ${c===atual?'selected':''}>${acessoEsc(c)}</option>`).join(''); }
+  const venc = r.lin.filter(l=>l.situacao==='Nova data vencida').length;
+  document.getElementById('ndrResumo').innerHTML = r.lin.length ? `<strong>${r.lin.length}</strong> linha(s) com data ajustada · <strong>${r.lin.reduce((t,l)=>t+l.pendente,0).toLocaleString('pt-BR')}</strong> unid. pendentes${venc ? ` · <strong style="color:#B71C1C">${venc} com a nova data vencida</strong>` : ''}` : 'Nenhuma linha com nova data informada para este filtro. Informe as datas em <strong>Itens por Dia → 📅 Informar nova data</strong>.';
+  document.getElementById('tblNdr').innerHTML = `<thead><tr>${NDR_CAB.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.lin.length ? r.lin.map(l=>`<tr><td style="white-space:normal;max-width:190px">${acessoEsc(l.clientes.join(', '))}</td><td class="mono">${acessoEsc(l.item)}</td><td style="white-space:normal;max-width:240px;font-size:12px">${acessoEsc(l.desc)}</td><td class="mono" style="white-space:normal;max-width:130px">${acessoEsc(l.pedidos.join(', '))}</td><td>${acessoEsc(l.uom)}</td><td class="mono" style="font-weight:700">${fmtL(l.pendente)}</td><td class="mono">${fmtDate(l.data)}</td><td class="mono" style="font-weight:700;background:#F4FBF6">${fmtDate(l.novaData)}</td><td class="mono">${l.atrasoInformado}</td><td>${acessoEsc(l.motivo||ND_MOTIVO)}</td><td><span class="badge ${l.situacao==='Nova data vencida'?'danger':(l.situacao==='Produzido'?'ok':'info')}" style="cursor:default">${l.situacao}</span></td><td>${acessoEsc(l.por)}</td><td class="mono">${l.em ? atuDH(l.em) : ''}</td></tr>`).join('') : `<tr><td colspan="${NDR_CAB.length}"><div class="empty">Nenhuma linha com nova data informada para este filtro.</div></td></tr>`}</tbody>`;
+}
+function ndrCsv(){
+  if(ndrFormato()==='matriz') return ndrMatrizCsv();
+  const r = ndrDados(), n = v => typeof v==='number' ? String(v).replace('.',',') : v;
+  const csv = '\uFEFF'+[NDR_CAB,...r.lin.map(l=>ndrLinhasTxt(l).map(n))].map(a=>a.map(c=>{ c = String(c==null?'':c); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); e.download = 'datas_de_producao_ajustadas.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
+}
+function ndrExcel(){
+  if(ndrFormato()==='matriz') return ndrMatrizExcel();
+  if(typeof XLSX === 'undefined'){ showToast('A biblioteca do Excel não carregou (sem internet?). Use o CSV.', 'error'); return null; }
+  const r = ndrDados(), wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet([NDR_CAB,...r.lin.map(ndrLinhasTxt)]); ws['!cols'] = [30,16,36,18,6,14,14,16,14,10,20,22,20].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, ws, 'Datas ajustadas');
+  const par = XLSX.utils.aoa_to_sheet([['Relatório','Datas de produção ajustadas (atraso)'],['Gerado em',new Date().toLocaleString('pt-BR')],['Gerado por',(typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? (USUARIO_ATUAL.nome||USUARIO_ATUAL.usuario) : ''],['Observação','A data do plano não foi alterada: ela segue como base do Planejado x Efetuado. A nova data é a informada aos interessados.']]); par['!cols'] = [20,100].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, par, 'Parâmetros');
+  try{ XLSX.writeFile(wb, 'datas_de_producao_ajustadas.xlsx'); }catch(e){ console.warn('Download indisponível:', e); }
+  return wb;
+}
+function ndrImprimir(){
+  if(ndrFormato()==='matriz') return ndrMatrizImprimir();
+  const r = ndrDados(), w = window.open('', '_blank'); if(!w){ alert('O navegador bloqueou a janela de impressão. Libere pop-ups para esta página.'); return; }
+  w.document.write(`<html><head><meta charset="utf-8"><title>Datas de produção ajustadas</title><style>body{font-family:Arial,sans-serif;font-size:11px;margin:14px}h2{margin:0 0 4px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:3px 5px;text-align:left;vertical-align:top}th{background:#eee}.n{font-weight:700;background:#F1F8F3}@page{size:landscape;margin:10mm}</style></head><body><h2>Datas de produção ajustadas — motivo: ${ND_MOTIVO}</h2><div>${r.lin.length} linha(s) · gerado em ${new Date().toLocaleString('pt-BR')}</div><div style="margin:4px 0 8px">A data do plano não foi alterada (segue como base do Planejado x Efetuado). A coluna <strong>Nova data prevista</strong> é a informada aos interessados.</div>
+    <table><thead><tr>${['Cliente(s)','Item','Descrição','Pedido(s)','UM','Qtd. pendente','Data do plano','Nova data prevista','Atraso (dias)','Motivo','Situação'].map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${r.lin.map(l=>`<tr><td>${acessoEsc(l.clientes.join(', '))}</td><td>${acessoEsc(l.item)}</td><td>${acessoEsc(l.desc)}</td><td>${acessoEsc(l.pedidos.join(', '))}</td><td>${acessoEsc(l.uom)}</td><td>${fmtL(l.pendente)}</td><td>${fmtDate(l.data)}</td><td class="n">${fmtDate(l.novaData)}</td><td>${l.atrasoInformado}</td><td>${acessoEsc(l.motivo||ND_MOTIVO)}</td><td>${l.situacao}</td></tr>`).join('')}</tbody></table></body></html>`);
+  w.document.close(); try{ w.focus(); w.print(); }catch(e){}
+}
+/* ---------- identificação no Itens por Dia: etiquetas do item e marcas nas células dos dias ---------- */
+function vdBadgeAtraso(r){
+  const a = r.atrasos || []; if(!a.length) return '';
+  const un = a.reduce((t,x)=>t+x.pend,0), sem = a.filter(x=>!x.nova), porNova = new Map(); a.filter(x=>x.nova).forEach(x=>porNova.set(x.nova, (porNova.get(x.nova)||0)+x.pend));
+  const novas = [...porNova.entries()].sort((x,y)=>x[0].localeCompare(y[0])), mais = novas.length>3 ? ` +${novas.length-3}` : '';
+  return `<div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap"><span class="badge danger" style="cursor:help" title="Linhas com a data do plano anterior a hoje e quantidade ainda pendente (a data do plano não muda)">⏰ Em atraso: ${a.length} linha(s) · ${fmtL(un)} unid.</span>`
+    + (sem.length ? `<span class="badge warn" style="cursor:help" title="Linhas em atraso sem nova data informada">sem nova data: ${sem.length}</span>` : '')
+    + novas.slice(0,3).map(([d,q])=>`<span class="badge info" style="cursor:help" title="Nova data prevista informada aos interessados">📅 nova data prevista: ${fmtDiaMes(d)} (${fmtL(q)} unid.)</span>`).join('') + (mais ? `<span class="badge info">${mais}</span>` : '') + '</div>';
+}
+function vdMarcaDia(r, dia){
+  const a = (r.atrasos||[]).filter(x=>x.data===dia), n = (r.atrasos||[]).filter(x=>x.nova===dia); let h = '';
+  if(a.length){ const pend = a.reduce((t,x)=>t+x.pend,0), novas = [...new Set(a.map(x=>x.nova).filter(Boolean))].sort();
+    h += `<span class="vd-atr" title="ATRASO: ${fmtL(pend)} unid. pendentes (data do plano ${fmtDate(dia)}). ${novas.length ? 'Nova data prevista: '+novas.map(fmtDate).join(', ') : 'Sem nova data informada.'}">⏰${novas.length ? '' : '!'}</span>`; }
+  if(n.length){ const q = n.reduce((t,x)=>t+x.pend,0); h += `<span class="vd-nova" title="NOVA DATA PREVISTA: ${fmtL(q)} unid. em atraso do plano de ${[...new Set(n.map(x=>fmtDate(x.data)))].join(', ')}">📅 +${fmtL(q)}</span>`; }
+  return h;
+}
+/* ---------- relatório no FORMATO DA TELA (matriz por dia), com os itens atrasados ajustados nas novas datas ----------
+   Mesma matriz do Itens por Dia (item × dia, Qtd. e Litros). Para cada linha em atraso COM nova data, a quantidade PENDENTE sai do dia do plano e aparece no dia da nova data; o que já foi
+   efetuado fica no dia do plano. Linhas em atraso SEM nova data ficam na data do plano. A data do plano não é alterada: é só uma visão para divulgar. */
+const ndrFormato = () => { const e = document.getElementById('ndrFormato'); return e ? e.value : 'lista'; };
+function ndrAplicarFormato(){
+  const mat = ndrFormato()==='matriz', set = (id, v) => { const e = document.getElementById(id); if(e) e.style.display = v; };
+  set('ndrFModo', mat ? 'none' : ''); set('ndrFAjust', mat ? '' : 'none');
+  const l1 = document.getElementById('ndrLblDe'), l2 = document.getElementById('ndrLblAte'); if(l1) l1.textContent = mat ? 'Dias de' : 'Nova data de'; if(l2) l2.textContent = 'até';
+  if(!mat) return false;
+  const cs = document.getElementById('ndrCliente'), atual = cs.value, todos = [...new Set((DB.orders||[]).filter(o=>o.status==='Aberto').map(o=>o.customer).filter(Boolean))].sort();
+  if(cs.__n !== 'M:'+todos.join('|')){ cs.__n = 'M:'+todos.join('|'); cs.innerHTML = '<option value="">Todos</option>'+todos.map(c=>`<option value="${acessoEsc(c)}" ${c===atual?'selected':''}>${acessoEsc(c)}</option>`).join(''); }
+  renderRelatorioMatriz(); return true;
+}
+function ndMatrizDados(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value : ''; }, hoje = todayISO(), de = g('ndrDe') || hoje; let ate = g('ndrAte') || addDays(de, 13); if(ate < de) ate = de; if(ndDias(de, ate) > 90) ate = addDays(de, 90);
+  const cli = g('ndrCliente'), q = normaTxt(g('ndrBusca')), soAj = !!(document.getElementById('ndrSoAjust') && document.getElementById('ndrSoAjust').checked), dateRange = buildDateRange(de, ate), clienteF = cli ? [cli] : [];
+  let abertos = (DB.orders||[]).filter(o=>o.status==='Aberto'); if(clienteF.length) abertos = abertos.filter(o=>clienteF.includes(o.customer));
+  let codes = [...new Set(abertos.map(o=>o.itemCode))]; if(q) codes = codes.filter(c=>{ const it = itemByCode(c)||{}; return normaTxt(c+' '+(it.name||'')).includes(q); }); codes.sort((a,b)=>a.localeCompare(b));
+  const rows = codes.map(code=>{
+    const it = itemByCode(code)||{}, ordens = abertos.filter(o=>o.itemCode===code), qtyTotal = ordens.reduce((s,o)=>s+o.qty,0), litrosTotal = qtyTotal*(it.litersPerUnit||0);
+    const linhas = (DB.plan||[]).filter(p=>p.itemCode===code).map(p=>{ let f = 1; if(clienteF.length){ const qq = unidadesDoClienteNaLinha(p, clienteF); f = p.batchUnits>0 ? qq/p.batchUnits : 0; } return {p, f}; }).filter(x=>x.f>0);
+    const saldo = qtyTotal - linhas.reduce((s,x)=>s+x.p.batchUnits*x.f, 0), cel = {};
+    const add = (d, qty, lit, mov, saiu, orig)=>{ if(d<de || d>ate) return; const c = cel[d] || (cel[d] = {qty:0, litros:0, mov:0, saiu:0, orig:[], semNova:0}); c.qty += qty; c.litros += lit; c.mov += mov; c.saiu += saiu; if(orig) c.orig.push(orig); };
+    let movido = 0, movLinhas = 0, semNovaUn = 0;
+    linhas.forEach(({p, f})=>{
+      const lpu = p.batchUnits>0 ? p.batchLiters/p.batchUnits : (it.litersPerUnit||1); let qO = p.batchUnits*f, lO = p.batchLiters*f, saiu = 0;
+      if(ndAtrasada(p, hoje)){
+        if(p.novaData){ const pend = ndPend(p)*f; qO -= pend; lO -= pend*lpu; saiu = pend; add(p.novaData, pend, pend*lpu, pend, 0, p.date); movido += pend; movLinhas++; }
+        else { const pend = ndPend(p)*f; semNovaUn += pend; if(p.date>=de && p.date<=ate){ add(p.date, 0, 0, 0, 0, null); cel[p.date].semNova += pend; } }
+      }
+      add(p.date, qO, lO, 0, saiu, null);
+    });
+    return {code, name:it.name||code, uom:it.uom||'', qtyTotal, litrosTotal, faltaQty:Math.max(0,saldo), excessoQty:Math.max(0,-saldo), cel, movido, movLinhas, semNovaUn};
+  }).filter(r=>dateRange.some(d=>r.cel[d] && (r.cel[d].qty>0.0001 || r.cel[d].mov>0 || r.cel[d].semNova>0)) && (!soAj || r.movido>0));
+  return {dateRange, rows, de, ate, movido:rows.reduce((t,r)=>t+r.movido,0), movLinhas:rows.reduce((t,r)=>t+r.movLinhas,0), semNovaUn:rows.reduce((t,r)=>t+r.semNovaUn,0)};
+}
+function ndMatrizCelula(r, d){
+  const c = r.cel[d]; if(!c || (c.qty<=0.0001 && !c.mov && !c.semNova && !c.saiu)) return null;
+  let marca = '', fundo = '';
+  if(c.mov>0){ fundo = 'background:#E8F5E9;'; marca += ` <span class="vd-nova" title="NOVA DATA PREVISTA: inclui ${fmtL(c.mov)} unid. em atraso do plano de ${[...new Set(c.orig.map(fmtDate))].join(', ')}">📅 +${fmtL(c.mov)}</span>`; }
+  if(c.saiu>0) marca += ` <span class="vd-atr" title="Atraso: ${fmtL(c.saiu)} unid. pendentes foram para a nova data (o que já foi efetuado fica neste dia)">⏰→</span>`;
+  if(c.semNova>0) marca += ` <span class="vd-atr" title="Atraso SEM nova data: ${fmtL(c.semNova)} unid. pendentes continuam nesta data">⏰!</span>`;
+  return {qty:c.qty, litros:c.litros, marca, fundo, mov:c.mov, saiu:c.saiu, semNova:c.semNova};
+}
+function renderRelatorioMatriz(){
+  const m = ndMatrizDados();
+  document.getElementById('ndrResumo').innerHTML = m.rows.length ? `<strong>${m.rows.length}</strong> item(ns) no período ${fmtDate(m.de)} a ${fmtDate(m.ate)} · <strong>${fmtL(m.movido)}</strong> unid. em atraso ajustadas para as novas datas (${m.movLinhas} linha(s))${m.semNovaUn>0.0001 ? ` · <strong style="color:#B71C1C">${fmtL(m.semNovaUn)} unid. em atraso SEM nova data</strong> (ficam na data do plano)` : ''}. <span style="color:var(--muted)">📅 = quantidade atrasada na nova data · ⏰→ = atraso que saiu deste dia · ⏰! = atraso sem nova data</span>` : 'Nenhum item neste período e filtro. Ajuste os dias, o cliente ou desmarque "Só itens com atraso ajustado".';
+  const h1 = `<tr><th rowspan="2">Nº do item</th><th rowspan="2">Descrição</th><th colspan="2">Total em Pedidos</th><th rowspan="2">Falta / Excesso (Qtd.)</th>${m.dateRange.map((d,i)=>`<th colspan="2" class="${i%2?'day-alt':''}">${fmtDate(d)}</th>`).join('')}</tr>`, h2 = `<tr><th>Qtd.</th><th>Litros</th>${m.dateRange.map((d,i)=>`<th class="${i%2?'day-alt':''}">Qtd.</th><th class="${i%2?'day-alt':''}">Litros</th>`).join('')}</tr>`;
+  const corpo = m.rows.map(r=>`<tr class="${r.faltaQty>0.001?'row-danger':r.excessoQty>0.001?'row-orange':''}"><td class="mono">${acessoEsc(r.code)}</td><td>${acessoEsc(r.name)}${r.movido>0?` <span class="badge info" style="cursor:default">📅 ${fmtL(r.movido)} unid. ajustadas</span>`:''}</td><td class="mono">${fmtL(r.qtyTotal)}</td><td class="mono">${fmtL(r.litrosTotal)}</td><td class="mono">${r.faltaQty>0.001?`▾ FALTA ${fmtL(r.faltaQty)}`:(r.excessoQty>0.001?`▲ EXCEDENTE ${fmtL(r.excessoQty)}`:'—')}</td>${m.dateRange.map((d,i)=>{ const alt = i%2?' day-alt':'', c = ndMatrizCelula(r, d); return c ? `<td class="mono${alt}" style="${c.fundo}white-space:nowrap">${c.qty>0.0001 ? fmtL(c.qty) : '—'}${c.marca}</td><td class="mono${alt}" style="${c.fundo}">${c.litros>0.0001 ? fmtL(c.litros) : '—'}</td>` : `<td class="mono${alt}" style="color:var(--muted)">—</td><td class="mono${alt}" style="color:var(--muted)">—</td>`; }).join('')}</tr>`).join('');
+  document.getElementById('tblNdr').innerHTML = `<thead>${h1}${h2}</thead><tbody>${corpo || `<tr><td colspan="${5+m.dateRange.length*2}"><div class="empty">Nenhum item neste período.</div></td></tr>`}</tbody>`;
+}
+function ndMatrizAoa(m){
+  const cab = ['Nº do item','Descrição','UM','Total em pedidos (Qtd.)','Total em pedidos (Litros)','Falta / Excesso (Qtd.)', ...m.dateRange.flatMap(d=>[fmtDate(d)+' Qtd.', fmtDate(d)+' Litros']), 'Atraso ajustado para novas datas (Qtd.)'];
+  const arr = (v)=>Math.round(v*1000)/1000;
+  return [cab, ...m.rows.map(r=>[r.code, r.name, r.uom, arr(r.qtyTotal), arr(r.litrosTotal), r.faltaQty>0.001 ? 'FALTA '+arr(r.faltaQty) : (r.excessoQty>0.001 ? 'EXCEDENTE '+arr(r.excessoQty) : ''), ...m.dateRange.flatMap(d=>{ const c = ndMatrizCelula(r,d); return c ? [arr(c.qty), arr(c.litros)] : ['','']; }), arr(r.movido)])];
+}
+function ndrMatrizCsv(){
+  const m = ndMatrizDados(), n = v => typeof v==='number' ? String(v).replace('.',',') : v;
+  const csv = '\uFEFF'+ndMatrizAoa(m).map(a=>a.map(c=>{ c = String(n(c)==null?'':n(c)); return /[;"\n]/.test(c) ? '"'+c.replace(/"/g,'""')+'"' : c; }).join(';')).join('\r\n');
+  try{ const e = document.createElement('a'); e.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); e.download = 'itens_por_dia_datas_ajustadas.csv'; document.body.appendChild(e); e.click(); e.remove(); }catch(err){ console.warn('Download indisponível:', err); }
+  return csv;
+}
+function ndrMatrizExcel(){
+  if(typeof XLSX === 'undefined'){ showToast('A biblioteca do Excel não carregou (sem internet?). Use o CSV.', 'error'); return null; }
+  const m = ndMatrizDados(), wb = XLSX.utils.book_new(), aoa = ndMatrizAoa(m), ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = aoa[0].map((c,i)=>({wch:i===1?38:(i===0?16:11)})); XLSX.utils.book_append_sheet(wb, ws, 'Itens por dia (ajustado)');
+  const par = XLSX.utils.aoa_to_sheet([['Relatório','Itens por dia com os atrasos ajustados nas novas datas'],['Período',`${fmtDate(m.de)} a ${fmtDate(m.ate)}`],['Gerado em',new Date().toLocaleString('pt-BR')],['Gerado por',(typeof USUARIO_ATUAL!=='undefined' && USUARIO_ATUAL) ? (USUARIO_ATUAL.nome||USUARIO_ATUAL.usuario) : ''],['Observação','A quantidade pendente das linhas em atraso com nova data informada aparece no dia da nova data (motivo: Atraso). A data do plano não foi alterada. Linhas em atraso sem nova data ficam na data do plano.']]); par['!cols'] = [20,110].map(w=>({wch:w})); XLSX.utils.book_append_sheet(wb, par, 'Parâmetros');
+  try{ XLSX.writeFile(wb, 'itens_por_dia_datas_ajustadas.xlsx'); }catch(e){ console.warn('Download indisponível:', e); }
+  return wb;
+}
+function ndrMatrizImprimir(){
+  const m = ndMatrizDados(), w = window.open('', '_blank'); if(!w){ alert('O navegador bloqueou a janela de impressão. Libere pop-ups para esta página.'); return; }
+  const h1 = `<tr><th rowspan="2">Nº do item</th><th rowspan="2">Descrição</th><th colspan="2">Total em Pedidos</th><th rowspan="2">Falta / Excesso</th>${m.dateRange.map(d=>`<th colspan="2">${fmtDate(d)}</th>`).join('')}</tr>`, h2 = `<tr><th>Qtd.</th><th>Litros</th>${m.dateRange.map(()=>'<th>Qtd.</th><th>Litros</th>').join('')}</tr>`;
+  const corpo = m.rows.map(r=>`<tr><td>${acessoEsc(r.code)}</td><td>${acessoEsc(r.name)}</td><td>${fmtL(r.qtyTotal)}</td><td>${fmtL(r.litrosTotal)}</td><td>${r.faltaQty>0.001?'FALTA '+fmtL(r.faltaQty):(r.excessoQty>0.001?'EXCED. '+fmtL(r.excessoQty):'—')}</td>${m.dateRange.map(d=>{ const c = ndMatrizCelula(r,d); return c ? `<td class="${c.mov?'n':''}">${fmtL(c.qty)}${c.mov?' 📅':''}${c.semNova?' ⏰!':''}</td><td class="${c.mov?'n':''}">${fmtL(c.litros)}</td>` : '<td>—</td><td>—</td>'; }).join('')}</tr>`).join('');
+  w.document.write(`<html><head><meta charset="utf-8"><title>Itens por dia — datas ajustadas</title><style>body{font-family:Arial,sans-serif;font-size:9px;margin:10px}h2{margin:0 0 4px;font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:2px 3px;text-align:left;vertical-align:top}th{background:#eee}.n{background:#E8F5E9;font-weight:700}@page{size:landscape;margin:8mm}</style></head><body><h2>Itens por dia — atrasos ajustados nas novas datas (motivo: ${ND_MOTIVO})</h2><div>Período ${fmtDate(m.de)} a ${fmtDate(m.ate)} · ${m.rows.length} item(ns) · ${fmtL(m.movido)} unid. em atraso ajustadas · gerado em ${new Date().toLocaleString('pt-BR')}</div><div style="margin:3px 0 6px">📅 = quantidade atrasada na nova data prevista (célula verde) · ⏰! = atraso sem nova data (fica na data do plano). A data do plano não foi alterada.</div><table><thead>${h1}${h2}</thead><tbody>${corpo}</tbody></table></body></html>`);
+  w.document.close(); try{ w.focus(); w.print(); }catch(e){}
+}
+
+/* =========================================================================
    MENU LATERAL RECOLHÍVEL — em telas médias o menu de 236 px come espaço das tabelas. Abaixo de 1400 px ele recolhe sozinho e vira uma gaveta (☰ no alto);
    o botão do próprio menu ("◀ Recolher o menu" / "📌 Manter o menu aberto") guarda a escolha da pessoa neste navegador. Reaproveita a gaveta do celular (nav-open).
    Até 900 px continua valendo o modo celular de antes.
@@ -10812,6 +11429,187 @@ iniciarCongelamento();
 })();
 
 /* =========================================================================
+   FILTRO DAS TABELAS — um filtro INDEPENDENTE em cada coluna (telas e janelas de relatório)
+   Cada título de coluna (em tabelas com 6 linhas ou mais, ou com filtro ativo) tem um ▾ discreto que abre a lista de valores DAQUELA coluna (marque quantos itens quiser, pesquise), com
+   ordenar e filtros por condição; filtros de colunas diferentes se somam. Acima da tabela fica uma barra enxuta: "Buscar em todas as colunas" (várias palavras ao mesmo tempo, sem diferenciar acento
+   nem maiúscula), as etiquetas dos filtros ativos e "limpar tudo". Condições do painel de cada coluna: ordenar, filtros por condição (texto: contém, não contém, igual, começa/termina com · número:
+   igual, diferente, maior, menor, entre · data: igual, antes, depois, entre), pesquisa na lista e valores marcáveis com a contagem. Os filtros ativos viram etiquetas na barra
+   (clique para editar, ✕ para tirar). Clicar no título da coluna ordena (▴ ▾). Os filtros das colunas se somam (a lista de valores de cada coluna só mostra o que passa nos
+   filtros das OUTRAS colunas, como no Excel), valem na tela (não mudam os dados nem o que as exportações calculam) e continuam quando a tabela é redesenhada.
+   Cabeçalhos de duas linhas (matrizes por dia) têm título clicável só nas colunas simples da esquerda. Marque <table data-xf="off"> para excluir uma tabela.
+   ========================================================================= */
+const XF = {estado:new WeakMap(), pop:null, tabelas:new WeakSet()};
+const XF_MIN = 6;   // tabelas com menos linhas não ganham a barra (a menos que haja filtro ou ordem ativos)
+const xfNorm = s => String(s==null ? '' : s).replace(/\s+/g,' ').trim();
+const XF_RE_DATA = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+function xfEstado(tbl){ let e = XF.estado.get(tbl); if(!e){ e = {cols:{}, sort:null, busca:''}; XF.estado.set(tbl, e); } return e; }
+function xfNum(v){ const t = xfNorm(v).replace(/\s*%$/,''); if(!/^-?(\d{1,3}(\.\d{3})+|\d+)(,\d+)?$/.test(t)) return null; return Number(t.replace(/\./g,'').replace(',','.')); }
+function xfDataIso(v){ const m = XF_RE_DATA.exec(xfNorm(v)); return m ? `${m[3]}-${m[2]}-${m[1]}` : null; }
+function xfValor(td){
+  if(!td) return ''; const ov = td.getAttribute && td.getAttribute('data-xf'); if(ov!=null && ov!=='') return xfNorm(ov);
+  const sel = td.querySelector('select'); if(sel) return xfNorm(sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : sel.value);
+  const inp = td.querySelector('input:not([type=hidden]):not([type=button])');
+  if(inp){ if(inp.type==='checkbox' || inp.type==='radio') return inp.checked ? 'Sim' : 'Não'; if(inp.type==='date' && /^\d{4}-\d{2}-\d{2}$/.test(inp.value)) return inp.value.slice(8,10)+'/'+inp.value.slice(5,7)+'/'+inp.value.slice(0,4); return xfNorm(inp.value); }
+  return xfNorm(td.textContent);
+}
+/* linhas filtráveis: as do corpo que têm uma célula por coluna (linhas de grupo/aviso com colspan ficam como estão) */
+function xfLinhas(tbl){ const out = []; [...tbl.tBodies].forEach(tb=>[...tb.rows].forEach(tr=>{ if(tr.cells.length>=2 || (tr.cells.length===1 && (tr.cells[0].colSpan||1)===1)) out.push(tr); })); return out; }
+function xfColunas(tbl){
+  if(!tbl.tHead || !tbl.tHead.rows.length) return []; const ref = xfLinhas(tbl)[0]; if(!ref) return [];
+  const mapa0 = new Map(); let col = 0; [...tbl.tHead.rows[0].cells].forEach(cel=>{ mapa0.set(col, cel); col += cel.colSpan||1; });   // só a 1ª linha do cabeçalho (barato mesmo em tabelas grandes)
+  const maxC = parseInt(tbl.getAttribute('data-xf-colunas'),10) || Infinity, out = [];   // tabelas com dezenas de colunas de dias: só as primeiras colunas
+  for(let c=0; c<Math.min(ref.cells.length, maxC); c++){   // nas matrizes por dia as subcolunas (Qtd./Litros) não ganham botão
+    const th = mapa0.get(c); if(th && (th.colSpan||1)===1 && xfNorm(th.textContent)) out.push({c, th});
+  }
+  return out;
+}
+function xfTipoColuna(valores){
+  const v = valores.filter(x=>x!==''); if(!v.length) return 'texto'; const k = Math.ceil(v.length*0.9);
+  if(v.filter(x=>xfDataIso(x)).length>=k) return 'data'; if(v.filter(x=>xfNum(x)!==null).length>=k) return 'numero'; return 'texto';
+}
+function xfCmp(tipo){ return (a,b)=>{ if(tipo==='numero'){ const x = xfNum(a), y = xfNum(b); if(x===null && y===null) return 0; if(x===null) return 1; if(y===null) return -1; return x-y; } if(tipo==='data'){ const x = xfDataIso(a)||'', y = xfDataIso(b)||''; if(!x && !y) return 0; if(!x) return 1; if(!y) return -1; return x<y ? -1 : (x>y ? 1 : 0); } if(a==='' && b!=='') return 1; if(b==='' && a!=='') return -1; return a.localeCompare(b, 'pt-BR', {numeric:true, sensitivity:'base'}); }; }
+function xfCondOk(v, f, tipo){
+  const c = f.cond; if(!c) return true; const t = String(v).toLowerCase(), a = String(c.a==null?'':c.a).toLowerCase(), b = String(c.b==null?'':c.b).toLowerCase();
+  if(tipo==='numero'){ const x = xfNum(v), A = xfNum(c.a), B = xfNum(c.b); if(x===null) return false; switch(c.op){ case 'eq': return x===A; case 'ne': return x!==A; case 'gt': return A!==null && x>A; case 'ge': return A!==null && x>=A; case 'lt': return A!==null && x<A; case 'le': return A!==null && x<=A; case 'between': return A!==null && B!==null && x>=Math.min(A,B) && x<=Math.max(A,B); } return true; }
+  if(tipo==='data'){ const x = xfDataIso(v), A = c.a || '', B = c.b || ''; if(!x) return false; switch(c.op){ case 'eq': return x===A; case 'ne': return x!==A; case 'before': return !!A && x<A; case 'after': return !!A && x>A; case 'between': return !!A && !!B && x>=(A<B?A:B) && x<=(A<B?B:A); } return true; }
+  switch(c.op){ case 'contains': return t.includes(a); case 'notcontains': return !t.includes(a); case 'eq': return t===a; case 'ne': return t!==a; case 'starts': return t.startsWith(a); case 'ends': return t.endsWith(a); } return true;
+}
+/* aplica busca, filtros e ordenação do estado atual; idempotente (não mexe no DOM se nada mudou) */
+function xfAplicar(tbl){
+  const e = xfEstado(tbl), linhas = xfLinhas(tbl), ativos = Object.entries(e.cols).filter(([c,f])=>f && (f.sel || f.cond)), tipos = {}, termos = normaTxt(e.busca||'').split(/\s+/).filter(Boolean);
+  let ocultas = 0;
+  ativos.forEach(([c])=>{ tipos[c] = xfTipoColuna(linhas.map(r=>xfValor(r.cells[c]))); });
+  linhas.forEach(tr=>{
+    let ok = true; for(const [c,f] of ativos){ const v = xfValor(tr.cells[c]); if((f.sel && !f.sel.has(v)) || !xfCondOk(v, f, tipos[c])){ ok = false; break; } }
+    if(ok && termos.length){ const t = normaTxt([...tr.cells].map(xfValor).join(' ')); ok = termos.every(x=>t.includes(x)); }
+    if(tr.hasAttribute('data-xf-oculta') === ok){ if(ok) tr.removeAttribute('data-xf-oculta'); else tr.setAttribute('data-xf-oculta','1'); } if(!ok) ocultas++;
+  });
+  const corpoUnico = tbl.tBodies.length===1 ? tbl.tBodies[0] : null, ordenavel = !!corpoUnico && linhas.length===corpoUnico.rows.length;
+  if(e.sort && ordenavel){
+    // guarda a ORDEM ORIGINAL (a que a tela desenhou) antes de ordenar, para poder voltar a ela; depois de um redesenho (linhas novas) ela é guardada de novo
+    if(!tbl.__xfOrdem || tbl.__xfOrdem.length!==linhas.length || !tbl.__xfOrdem.every(r=>r.parentNode===corpoUnico)) tbl.__xfOrdem = [...corpoUnico.rows];
+    const c = e.sort.c, tipo = xfTipoColuna(linhas.map(r=>xfValor(r.cells[c]))), cmp = xfCmp(tipo), pares = linhas.map((tr,i)=>({tr, v:xfValor(tr.cells[c]), i}));
+    pares.sort((p,q)=>{ const r = cmp(p.v,q.v); return (e.sort.dir==='desc' ? -r : r) || p.i-q.i; });
+    const atual = [...corpoUnico.rows]; if(pares.some((p,i)=>p.tr!==atual[i])) pares.forEach(p=>corpoUnico.appendChild(p.tr));
+  } else if(!e.sort && tbl.__xfOrdem){
+    if(corpoUnico && tbl.__xfOrdem.length===corpoUnico.rows.length && tbl.__xfOrdem.every(r=>r.parentNode===corpoUnico)){ const atual = [...corpoUnico.rows]; if(tbl.__xfOrdem.some((r,i)=>r!==atual[i])) tbl.__xfOrdem.forEach(r=>corpoUnico.appendChild(r)); }   // tirou a ordenação: volta à ordem original
+    tbl.__xfOrdem = null;
+  }
+  xfBarra(tbl, ativos.length, ocultas, linhas.length);
+}
+const xfRot = th => xfNorm(th.textContent);
+const xfBr = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v||'')); return m ? `${m[3]}/${m[2]}/${m[1]}` : String(v||''); };
+function xfResumoFiltro(f, tipo){
+  if(f.cond){ const o = (XF_OPS[tipo]||XF_OPS.texto).find(x=>x[0]===f.cond.op), ar = tipo==='data' ? xfBr(f.cond.a||'') : (f.cond.a||''), br = tipo==='data' ? xfBr(f.cond.b||'') : (f.cond.b||''); return `${o?o[1]:''} ${ar}${f.cond.op==='between' ? ' e '+br : ''}`.trim() + (f.sel ? ' + valores' : ''); }
+  const v = [...f.sel]; return v.length===1 ? (v[0]===''?'(vazias)':v[0]) : `${v.length} valores`;
+}
+/* a barra única da tabela: busca em todas as colunas + botão Filtros + etiquetas dos filtros ativos */
+function xfBarra(tbl, nAtivos, ocultas, total){
+  const e = xfEstado(tbl), busca = String(e.busca||'').trim(), temEstado = nAtivos>0 || !!e.sort || !!busca, wrap = tbl.closest('.tbl-wrap') || tbl.parentElement; if(!wrap || !wrap.parentNode) return;
+  let bar = tbl.__xfBar;
+  if(total<XF_MIN && !temEstado){ if(bar && bar.isConnected) bar.style.display = 'none'; xfMarcarTitulos(tbl, false); return; }
+  if(!bar || !bar.isConnected){
+    // quando a tela RECRIA a tabela dentro da mesma moldura (innerHTML da .tbl-wrap), a barra da tabela antiga ficaria para trás: remove as barras órfãs desta moldura antes de criar a nova
+    [...wrap.parentNode.children].forEach(e=>{ if(e.classList && e.classList.contains('xf-bar') && e.__wrap===wrap) e.remove(); });
+    bar = tbl.__xfBar = document.createElement('div'); bar.className = 'xf-bar'; bar.__wrap = wrap;
+    bar.innerHTML = '<input class="xf-q" type="search" placeholder="🔎 Buscar em todas as colunas…" autocomplete="off" aria-label="Buscar em todas as colunas"><span class="xf-chips"></span><a class="xf-avancado" href="javascript:void(0)" style="display:none"></a><span class="xf-info"></span>';
+    const antes = (wrap.previousElementSibling && wrap.previousElementSibling.classList.contains('frz-bar')) ? wrap.previousElementSibling : wrap;   // fica ACIMA da chave "❄ Colunas fixas", que continua logo acima da tabela
+    wrap.parentNode.insertBefore(bar, antes);
+    const q = bar.querySelector('.xf-q'); let t = null;
+    q.addEventListener('input', ()=>{ xfEstado(tbl).busca = q.value; clearTimeout(t); t = setTimeout(()=>xfAplicar(tbl), 180); });   // o texto entra no estado NA HORA (um redesenho no meio não o apaga); só a aplicação espera a pausa da digitação
+    const av = bar.querySelector('.xf-avancado'); av.addEventListener('click', ()=>{ tbl.classList.toggle('lc-mostrar'); av.textContent = tbl.classList.contains('lc-mostrar') ? '▴ ocultar filtros que mudam os totais' : '▾ filtros que mudam os totais'; });
+  }
+  bar.style.display = '';
+  const q = bar.querySelector('.xf-q'); if(document.activeElement !== q && q.value !== (e.busca||'')) q.value = e.busca||'';
+  const cols = xfColunas(tbl), tipoDe = c => xfTipoColuna(xfLinhas(tbl).map(r=>xfValor(r.cells[c]))), rotDe = c => { const x = cols.find(y=>y.c===c); return x ? xfRot(x.th) : 'Coluna '+(c+1); };
+  const chips = Object.entries(e.cols).filter(([c,f])=>f && (f.sel || f.cond)).map(([c,f])=>`<span class="xf-chip" data-c="${c}" title="Clique para editar este filtro">${acessoEsc(rotDe(Number(c)))}: ${acessoEsc(xfResumoFiltro(f, tipoDe(Number(c))))} <b class="xf-x" data-c="${c}" title="Tirar este filtro">✕</b></span>`)
+    .concat(e.sort ? [`<span class="xf-chip" data-ord="1" title="Ordenação (clique no título da coluna para trocar)">Ordem: ${acessoEsc(rotDe(e.sort.c))} ${e.sort.dir==='desc'?'▾':'▴'} <b class="xf-x" data-ord="1" title="Tirar a ordenação">✕</b></span>`] : []);
+  const ch = bar.querySelector('.xf-chips'); ch.innerHTML = chips.join('') + (temEstado ? ' <a class="xf-limpar" href="javascript:void(0)">✕ limpar tudo</a>' : '');
+  ch.querySelectorAll('.xf-chip').forEach(el=>el.addEventListener('click', ev=>{ ev.stopPropagation(); if(ev.target.classList.contains('xf-x')){ if(el.dataset.ord) e.sort = null; else delete e.cols[Number(el.dataset.c)]; xfAplicar(tbl); return; } if(!el.dataset.ord) xfAbrir(tbl, Number(el.dataset.c), el); }));
+  const lp = ch.querySelector('.xf-limpar'); if(lp) lp.addEventListener('click', ()=>xfLimparTudo(tbl));
+  bar.querySelector('.xf-info').textContent = temEstado ? `Mostrando ${total-ocultas} de ${total} linha(s)` : `${total} linha(s)`;
+  const av = bar.querySelector('.xf-avancado'), temLc = !!tbl.querySelector('tr.lc-filtros'); av.style.display = temLc ? '' : 'none'; if(temLc && !av.textContent) av.textContent = tbl.classList.contains('lc-mostrar') ? '▴ ocultar filtros que mudam os totais' : '▾ filtros que mudam os totais';
+  xfMarcarTitulos(tbl, true);
+}
+/* títulos clicáveis (ordenar) e a seta da ordem atual */
+function xfMarcarTitulos(tbl, comBotoes){
+  const e = xfEstado(tbl);
+  xfColunas(tbl).forEach(({c, th})=>{
+    // um filtro INDEPENDENTE em cada coluna: o ▾ do título abre a lista de valores DAQUELA coluna (marcar vários itens, pesquisar, condições, ordenar)
+    let b = th.querySelector(':scope > .xf-btn');
+    if(comBotoes && !b){ b = document.createElement('button'); b.type = 'button'; b.className = 'xf-btn'; b.setAttribute('aria-label','Filtrar esta coluna'); b.title = 'Filtrar esta coluna (marque um ou mais itens)'; b.addEventListener('click', ev=>{ ev.stopPropagation(); ev.preventDefault(); xfAbrir(tbl, c, b); }); th.appendChild(b); }
+    if(b){ if(!comBotoes && !(e.cols[c] && (e.cols[c].sel || e.cols[c].cond))){ b.remove(); b = null; } else b.classList.toggle('ativo', !!(e.cols[c] && (e.cols[c].sel || e.cols[c].cond))); }
+    if(!th.__xfOrd){ th.__xfOrd = true; th.classList.add('xf-th'); th.title = th.title || 'Clique para ordenar esta coluna';
+      th.addEventListener('click', ev=>{ if(ev.target.closest('input,select,button,a,label,textarea')) return; const est = xfEstado(tbl); if(!est.sort || est.sort.c!==c) est.sort = {c, dir:'asc'}; else if(est.sort.dir==='asc') est.sort = {c, dir:'desc'}; else est.sort = null; xfAplicar(tbl); }); }
+    const ord = e.sort && e.sort.c===c ? e.sort.dir : ''; if((th.getAttribute('data-ord')||'') !== ord){ if(ord) th.setAttribute('data-ord', ord); else th.removeAttribute('data-ord'); }
+  });
+}
+function xfLimparTudo(tbl){ const e = xfEstado(tbl); e.cols = {}; e.sort = null; e.busca = ''; if(tbl.__xfBar){ const q = tbl.__xfBar.querySelector('.xf-q'); if(q) q.value = ''; } xfAplicar(tbl); }
+/* garante a barra e reaplica o estado (chamada depois de cada redesenho da tabela) */
+function xfRevalidar(tbl){
+  if(tbl.__xfRodando) return; tbl.__xfRodando = true;
+  try{ if(tbl.getAttribute('data-xf')==='off' || tbl.closest('.xf-pop')) return; xfAplicar(tbl); } finally { tbl.__xfRodando = false; }
+}
+function xfFechar(){ if(XF.pop){ XF.pop.remove(); XF.pop = null; } document.removeEventListener('mousedown', xfFora, true); document.removeEventListener('keydown', xfTecla, true); }
+function xfFora(ev){ if(XF.pop && !XF.pop.contains(ev.target) && !(ev.target.closest && ev.target.closest('.xf-bar, .xf-btn'))) xfFechar(); }
+function xfTecla(ev){ if(ev.key==='Escape') xfFechar(); }
+const XF_OPS = {texto:[['contains','contém'],['notcontains','não contém'],['eq','é igual a'],['ne','é diferente de'],['starts','começa com'],['ends','termina com']], numero:[['eq','é igual a'],['ne','é diferente de'],['gt','maior que'],['ge','maior ou igual a'],['lt','menor que'],['le','menor ou igual a'],['between','entre']], data:[['eq','é igual a'],['ne','é diferente de'],['before','antes de'],['after','depois de'],['between','entre']]};
+/* o painel único: seletor de coluna + ordenar + condição + pesquisa + valores */
+function xfAbrir(tbl, c, ancora){
+  xfFechar(); const e = xfEstado(tbl), f0 = e.cols[c] || {}, linhas = xfLinhas(tbl), cols = xfColunas(tbl); if(!cols.length) return;
+  if(!cols.some(x=>x.c===c)) c = cols[0].c;
+  const outros = Object.entries(e.cols).filter(([k,f])=>Number(k)!==c && f && (f.sel || f.cond)), tiposOut = {}; outros.forEach(([k])=>{ tiposOut[k] = xfTipoColuna(linhas.map(r=>xfValor(r.cells[k]))); });
+  const base = linhas.filter(tr=>outros.every(([k,f])=>{ const v = xfValor(tr.cells[k]); return (!f.sel || f.sel.has(v)) && xfCondOk(v, f, tiposOut[k]); }));
+  const cont = new Map(); base.forEach(tr=>{ const v = xfValor(tr.cells[c]); cont.set(v, (cont.get(v)||0)+1); });
+  const todos = linhas.map(tr=>xfValor(tr.cells[c])), tipo = xfTipoColuna(todos), cmp = xfCmp(tipo), vals = [...cont.keys()].sort(cmp);
+  const sel = new Set(f0.sel ? [...f0.sel].filter(v=>cont.has(v)) : vals), pop = XF.pop = document.createElement('div'); pop.className = 'xf-pop';
+  const ops = XF_OPS[tipo], c0 = f0.cond || {op:ops[0][0], a:'', b:''};
+  pop.innerHTML = `<div class="xf-tit"><label>Filtrar a coluna</label><strong>${acessoEsc(xfRot((cols.find(x=>x.c===c)||{th:{textContent:''}}).th))}</strong></div>
+    <div class="xf-ord"><button type="button" data-o="asc">↑ Classificar ${tipo==='texto'?'A → Z':(tipo==='data'?'da mais antiga à mais nova':'do menor ao maior')}</button><button type="button" data-o="desc">↓ Classificar ${tipo==='texto'?'Z → A':(tipo==='data'?'da mais nova à mais antiga':'do maior ao menor')}</button></div>
+    <details class="xf-cond" ${f0.cond?'open':''}><summary>Filtros de ${tipo==='texto'?'texto':(tipo==='numero'?'número':'data')}…</summary>
+      <select class="xf-op">${ops.map(([k,r])=>`<option value="${k}" ${k===c0.op?'selected':''}>${r}</option>`).join('')}</select>
+      <input class="xf-a" ${tipo==='data'?'type="date"':'type="text"'} value="${acessoEsc(c0.a||'')}" placeholder="valor"><input class="xf-b" ${tipo==='data'?'type="date"':'type="text"'} value="${acessoEsc(c0.b||'')}" placeholder="e" style="${c0.op==='between'?'':'display:none'}"></details>
+    <input class="xf-busca" type="search" placeholder="🔍 Pesquisar nos valores" autocomplete="off">
+    <div class="xf-lista"><label class="xf-todos"><input type="checkbox" class="xf-all"> <strong>(Selecionar tudo)</strong></label><div class="xf-itens"></div></div>
+    <div class="xf-rod"><button type="button" class="xf-limpar-col">Limpar filtro</button><span style="flex:1"></span><button type="button" class="xf-cancel">Cancelar</button><button type="button" class="xf-ok">OK</button></div>`;
+  document.body.appendChild(pop);
+  const r = ancora.getBoundingClientRect(), pw = 300; pop.style.left = Math.max(8, Math.min(r.left + window.scrollX, (window.innerWidth||1200) - pw - 12))+'px'; pop.style.top = (r.bottom + window.scrollY + 4)+'px';
+  const itens = pop.querySelector('.xf-itens'), busca = pop.querySelector('.xf-busca'), all = pop.querySelector('.xf-all'), opSel = pop.querySelector('.xf-op'), inB = pop.querySelector('.xf-b');
+  const desenhar = ()=>{ const q = normaTxt(busca.value), vis = vals.filter(v=>!q || normaTxt(v).includes(q));
+    itens.innerHTML = vis.length ? vis.map(v=>`<label class="xf-it"><input type="checkbox" data-v="${acessoEsc(v)}" ${sel.has(v)?'checked':''}> <span>${v===''?'(Vazias)':acessoEsc(v)}</span> <em>${cont.get(v)}</em></label>`).join('') : '<div class="xf-vazio">Nenhum valor.</div>';
+    itens.querySelectorAll('input[data-v]').forEach(i=>i.addEventListener('change', ()=>{ if(i.checked) sel.add(i.dataset.v); else sel.delete(i.dataset.v); atualizaTodos(); }));
+    atualizaTodos(); };
+  const atualizaTodos = ()=>{ const vis = [...itens.querySelectorAll('input[data-v]')]; const n = vis.filter(i=>i.checked).length; all.checked = vis.length>0 && n===vis.length; all.indeterminate = n>0 && n<vis.length; };
+  all.addEventListener('change', ()=>{ itens.querySelectorAll('input[data-v]').forEach(i=>{ i.checked = all.checked; if(all.checked) sel.add(i.dataset.v); else sel.delete(i.dataset.v); }); atualizaTodos(); });
+  busca.addEventListener('input', desenhar); opSel.addEventListener('change', ()=>{ inB.style.display = opSel.value==='between' ? '' : 'none'; });
+  pop.querySelectorAll('.xf-ord button').forEach(b=>b.addEventListener('click', ()=>{ e.sort = {c, dir:b.dataset.o}; xfFechar(); xfAplicar(tbl); }));
+  pop.querySelector('.xf-cancel').addEventListener('click', xfFechar);
+  pop.querySelector('.xf-limpar-col').addEventListener('click', ()=>{ delete e.cols[c]; if(e.sort && e.sort.c===c) e.sort = null; xfFechar(); xfAplicar(tbl); });
+  pop.querySelector('.xf-ok').addEventListener('click', ()=>{
+    const f = {}; const q = normaTxt(busca.value);
+    const marcados = q ? new Set([...sel].filter(v=>normaTxt(v).includes(q))) : sel;   // com a pesquisa preenchida, OK filtra pelo que está marcado entre os valores que combinam (como no Excel)
+    if(marcados.size !== vals.length) f.sel = new Set(marcados);
+    const a = pop.querySelector('.xf-a').value, b = inB.value; if(String(a).trim()!=='' || (opSel.value==='between' && String(b).trim()!=='')) f.cond = {op:opSel.value, a, b};
+    if(f.sel || f.cond) e.cols[c] = f; else delete e.cols[c];
+    xfFechar(); xfAplicar(tbl); });
+  desenhar(); document.addEventListener('mousedown', xfFora, true); document.addEventListener('keydown', xfTecla, true); busca.focus();
+}
+/* descobre as tabelas da página (inclusive as que surgem depois, como as janelas de relatório) e acompanha cada uma */
+function xfVarrer(){
+  document.querySelectorAll('table.data, table.dt, table.rp-grade').forEach(tbl=>{
+    if(tbl.getAttribute('data-xf')==='off' || tbl.closest('.xf-pop') || XF.tabelas.has(tbl)) return; XF.tabelas.add(tbl);
+    let pend = false; const agenda = ()=>{ if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ xfRevalidar(tbl); }catch(err){ console.warn('filtro:', err); } }); };
+    try{ new MutationObserver(agenda).observe(tbl, {childList:true, subtree:true}); }catch(err){}
+    agenda();
+  });
+}
+(function(){
+  let pend = false; const agenda = ()=>{ if(pend) return; pend = true; (window.requestAnimationFrame || (f=>setTimeout(f,16)))(()=>{ pend = false; try{ xfVarrer(); }catch(err){} }); };
+  try{ new MutationObserver(m=>{ if(m.some(x=>[...x.addedNodes].some(n=>n.nodeType===1 && (n.matches('table') || n.querySelector('table'))))) agenda(); }).observe(document.body, {childList:true, subtree:true}); }catch(err){}
+  agenda();
+})();
+
+/* =========================================================================
    MODO ONLINE — dados compartilhados em tempo real entre vários usuários
    -------------------------------------------------------------------------
    Ligado por configuração (arquivo config.js → window.MENZOIL_CONFIG). Sem configuração, a ferramenta
@@ -10825,9 +11623,9 @@ iniciarCongelamento();
      (quem mexeu em campos diferentes não perde nada; no mesmo campo, vale a última gravação).
    • Cada gravação é avisada em tempo real aos outros navegadores, que atualizam a tela aberta.
    ========================================================================= */
-const APP_BUILD = '2026-11-12.8';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
+const APP_BUILD = '2026-11-13.7';   // carimbo da versão (aparece nas telas de entrada/erro e no diagnostico.html: mostra se alguém está com uma cópia antiga)
 const ONLINE_CFG = (typeof window!=='undefined' && window.MENZOIL_CONFIG) || {};
-const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca'];
+const SYNC_COLECOES = ['items','recipes','resources','orders','plan','paradas','refugos','locaisGranel','motivosParada','prioridades','removidasComProducao','comprasAbertas','paramMateriais','gruposReposicao','solicitacoesOP','ordensERP','relatoriosInsumos','relatoriosReposicao','historicoImportacoes','aplicacoesSeguranca','historicoAlteracoes'];
 const SYNC_ESCALARES = ['updatedAt','planConfirmed','planConfirmedAt','clientesLoteMax','depositos','considerarEmProcesso','gruposPorSubgrupo'];   // viram registros da coleção "config"
 const SYNC_SEP = '\u0001';
 const SYNC_LOTE = 400;                                                    // registros por envio
@@ -10889,15 +11687,17 @@ function syncLocal(col, key){
 }
 function syncGravarLocal(col, key, dados){
   const d = syncClonar(dados);
-  if(col==='config'){ DB[key] = d.v; return; }
+  if(col==='config'){ DB[key] = d.v; try{ jrnRemoto(col, key); }catch(e){} return; }
   if(!Array.isArray(DB[col])) DB[col] = [];
   const alvo = DB[col].find(r=>String(syncChave(col,r))===key);
   if(alvo){ Object.keys(alvo).forEach(k=>{ if(!(k in d)) delete alvo[k]; }); Object.assign(alvo, d); }   // atualiza o MESMO objeto (referências da tela continuam válidas)
   else DB[col].push(d);
+  try{ jrnRemoto(col, key); }catch(e){}   // veio de outro usuário: não é lançado como alteração de quem está com a tela aberta
 }
 function syncRemoverLocal(col, key){
-  if(col==='config'){ delete DB[key]; return; }
+  if(col==='config'){ delete DB[key]; try{ jrnRemoto(col, key); }catch(e){} return; }
   DB[col] = (DB[col]||[]).filter(r=>String(syncChave(col,r))!==key);
+  try{ jrnRemoto(col, key); }catch(e){}
 }
 
 /* ---------- mesclagem campo a campo (base = o que eu tinha · mine = o que está aqui agora · theirs = o que chegou) ---------- */
@@ -11015,7 +11815,7 @@ function syncProcessarResultados(lote, resultados){
       const t = r.atual;
       if(t && !t.apagado){ syncGravarLocal(op.colecao, op.chave, t.dados); Sync.base.set(k, {col:op.colecao, key:op.chave, s:syncEstavel(t.dados), v:t.versao}); }
       else if(op.tipo==='upsert'){ syncRemoverLocal(op.colecao, op.chave); Sync.base.delete(k); }
-      Sync.resumo.descartes.push(r.erro==='linha_travada' ? `Linha com produção apontada: só administrador altera a programação (${op.chave})` : `${r.erro}: ${op.chave}`);
+      Sync.resumo.descartes.push(r.erro==='linha_travada' ? `Linha com produção apontada: só administrador (ou quem tem a permissão para isso) altera a programação (${op.chave})` : `${r.erro}: ${op.chave}`);
       mudou = true;
     }
   });
@@ -11115,6 +11915,7 @@ function syncMontarDB(rows){
   // valores padrão que já existem aqui e ainda não existem no servidor NÃO são enviados por si só (v:0 = "conhecido")
   SYNC_ESCALARES.forEach(k=>{ const id = syncIdRow('config',k); if(DB[k]!==undefined && !Sync.base.has(id)){ const o = {v:DB[k]}; Sync.base.set(id, {col:'config', key:k, s:syncEstavel(o), v:0}); } });
   garantirEstruturas();
+  try{ jrnRebase(); }catch(e){}   // instantâneo do histórico de atualizações = o que veio do servidor
 }
 function syncServidorVazio(rows){ return !rows.some(r=>!r.apagado && SYNC_COLECOES_GRANDES.includes(r.colecao)); }
 function syncDBTemDados(){ return SYNC_COLECOES_GRANDES.some(c=>(DB[c]||[]).length>0); }

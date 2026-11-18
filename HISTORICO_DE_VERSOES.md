@@ -3,6 +3,52 @@
 A versão aparece no rodapé da tela de entrada ("versão AAAA-MM-DD.N") e no relatório do `diagnostico.html`.
 Para atualizar a ferramenta publicada sem perder dados, veja "Atualizar a ferramenta depois" em `CONFIGURAR_SUPABASE.md`.
 
+## 2026-11-13.7
+- **Corrigido: barras de busca repetidas em tabelas recriadas pela tela.** Em telas que redesenham a tabela dentro da mesma moldura (como o "Resumo por recurso" da Lista Mestre), a barra de busca do filtro ficava para trás a cada atualização e se empilhava (várias barras iguais acima da tabela). Agora fica sempre uma só.
+- **Tabelas de resumo sem filtro:** "Resumo por recurso" (Lista Mestre) e "Por terceiro" (Terceirização) deixam de ter a barra de busca e os ▾, pois são resumos curtos. (Qualquer tabela pode ser excluída com data-xf="off".) Sem mudança no servidor.
+
+## 2026-11-13.6
+- **Itens por Dia: só os itens com planejamento no período.** Ao filtrar os dias, a matriz mostra apenas os itens com algo planejado nesses dias (e os atrasados cuja nova data prevista cai no período). Nova caixa "Só itens com planejamento no período" (marcada por padrão; desmarcar mostra todos os itens com pedido em aberto;
+  "Limpar filtros" volta ao padrão). Um aviso diz quantos itens com pedido em aberto ficaram ocultos e quantas unidades faltam programar neles; os cartões do topo e a exportação (.csv) seguem os itens mostrados. Sem mudança no servidor.
+
+## 2026-11-13.5
+- **Lista Mestre: filtros de datas de efetivo e de turno.** Novos filtros no topo: Última data efetiva (de/até), Data do turno (de/até) e Turno (1º, 2º, 3º). Somam-se aos demais filtros, valem para os totais e para as ações que usam o filtro da Lista, e "Limpar filtros" os esvazia.
+- **Itens por Dia: identificação de atraso e nova data.** O item em atraso ganha etiquetas na descrição ("⏰ Em atraso: N linha(s) · X unid.", "sem nova data: N", "📅 nova data prevista: dd/mm (X unid.)") e marcas nas células dos dias: ⏰ no dia do plano, ⏰! quando não há nova data e 📅 +X no dia da nova data.
+  As quantidades da matriz seguem as do plano; legenda na tela.
+- **Relatório de datas ajustadas: formato "Matriz por dia".** Nova opção de Formato que mostra o relatório no formato da tela do Itens por Dia, com a quantidade pendente das linhas atrasadas no dia da nova data (o efetuado fica no dia do plano; atraso sem nova data fica na data do plano), com filtro de dias (padrão hoje +13, máximo 90),
+  cliente, busca e "Só itens com atraso ajustado". CSV, Excel e PDF saem no mesmo formato. O formato Lista continua como estava. A data do plano não é alterada. Sem mudança no servidor.
+
+## 2026-11-13.4
+- **Nova data por atraso (Itens por Dia).** Alerta no topo do Itens por Dia com as linhas em atraso (data do plano anterior a hoje, com quantidade pendente e fora de Concluído), segundo os filtros de cliente, item e recurso da tela.
+  O botão **📅 Informar nova data** abre uma janela para informar a nova data de cada linha (hoje ou depois; "aplicar a todas as sem data"; ✕ para tirar). A **data do plano NÃO muda** (o Planejado x Efetuado segue igual): a nova data é gravada na linha com o motivo "Atraso", quem informou e quando,
+  e aparece no relatório de atualizações. Alerta de "nova data vencida". Botão **📄 Relatório de datas ajustadas**: lista as datas informadas (cliente, item, pedido, pendente, data do plano, nova data, atraso informado, motivo, situação), com filtros e saídas em CSV, Excel e PDF.
+  Permissão por campo "Informar nova data de produção (atraso)" em Itens por Dia (o relatório abre para quem vê a tela). Sem mudança no servidor. Documentação: IT-PCP-025 nova.
+
+## 2026-11-13.3
+- **Filtro independente em cada coluna, com vários itens.** Volta o ▾ no título de cada coluna (discreto; vermelho quando há filtro), que abre a lista de valores DAQUELA coluna: marcar um ou mais itens, pesquisar, ordenar e filtrar por condição de texto, número ou data.
+  Colunas diferentes se somam (marcar vários itens em várias colunas ao mesmo tempo). Mantidos da versão anterior: a barra enxuta com a busca em todas as colunas, as etiquetas dos filtros ativos, "limpar tudo", ordenar clicando no título e a ordem original ao tirar a ordenação.
+  Sai o botão "Filtros" com painel único e seletor de coluna. Os ▾ e a barra só aparecem em tabelas com 6 linhas ou mais (ou com filtro ativo). Na Lista Mestre, a linha de filtros que mudam os totais continua escondida (atalho "filtros que mudam os totais" na barra). Sem mudança no servidor.
+
+## 2026-11-13.2
+- **Filtro das tabelas simplificado: uma barra única por tabela.** Saem os botões ▾ de cada coluna. Acima de cada tabela com 6 linhas ou mais (e de qualquer tabela com filtro ativo) fica uma barra enxuta: caixa **Buscar em todas as colunas** (várias palavras, sem diferenciar
+  acento nem maiúscula) e botão **⚙ Filtros**, que abre UM painel com seletor de coluna (ordenar, condições de texto, número e data, pesquisa e valores marcáveis). Os filtros ativos viram etiquetas na barra (clique para editar, ✕ para tirar) e há "✕ limpar tudo".
+  Clicar no título da coluna ordena (▴ ▾; o terceiro clique volta à ordem original). Na Lista Mestre, a linha de filtros por coluna (que também muda os totais) fica escondida e aparece sozinha quando há filtro dela ativo, ou pelo atalho "filtros por coluna (totais)".
+  Corrigidos: voltar à ordem original ao tirar a ordenação e o texto digitado na busca que podia ser apagado por um redesenho. Sem mudança no servidor.
+
+## 2026-11-13.1
+- **Relatório de reposição usa os cenários de "em processo" por material da tela.** Ao abrir o relatório, a caixa "Usar os N cenário(s) por material da tela" vem marcada: o relatório mostra os mesmos números da tela, registra quais cenários usou (cabeçalho, seção Avisos e Parâmetros do Excel e do PDF) e o botão geral no momento.
+  Desmarcar a caixa gera só com o botão geral. Sem cenários na tela, a caixa não aparece. Relatórios antigos continuam abrindo. O cenário continua não sendo gravado nos dados e o Planejamento de Materiais segue só o botão geral. Sem mudança no servidor.
+
+## 2026-11-12.9
+- **Permissão "Alterar linhas com produção apontada".** Nova caixa na tela de permissões do usuário (por padrão só administradores): quem a recebe altera data, recurso, quantidade e exclusão das linhas com produção apontada na Lista Mestre e no Plano Mestre, sempre com justificativa
+  registrada com o nome de quem alterou. Também vale no servidor: **rodar o schema.sql de novo** (função pode_alterar_apontadas e coleção do histórico de atualizações).
+- **Plano de Reposição: "Considerar em processo" por material.** Cada item e grupo tem a sua caixa (grade, lista de ações e detalhe) para analisar o cenário dele, com o selo "cenário" e "↺ limpar cenários". Só na tela e na sessão; o relatório de reposição segue o botão geral.
+- **Terceirização.** Coluna "Terceiro" na Lista Mestre (linha a linha ou em lote nas linhas filtradas). A linha terceirizada mantém data, quantidade, OP e apontamento, mas sai dos indicadores de produção (Dashboards, Planejado x Efetuado), da Capacidade, da capacidade usada no
+  Plano Mestre e da alocação na geração do plano; o consumo de insumos continua entrando. Nova tela "Terceirização" (cartões, resumo por terceiro, linhas com status, filtros e CSV). As marcas voltam nas linhas novas do mesmo item e pedido ao refazer o plano.
+- **Filtro estilo Excel em todas as tabelas** (telas e janelas de relatório): ordenar, pesquisa na lista, valores marcáveis com contagem, condições de texto, número e data, filtros encadeados, barra com o total filtrado; continua ao redesenhar a tabela.
+- **Relatório de atualizações por tela** (botão 🕒 Atualizações em cada tela e link "ver o que mudou" em Itens por Dia): o que mudou, quem, quando, tela, campo e valores antes e depois; resumo único para ações em lote; 90 dias / 5.000 lançamentos; vale a partir da ativação.
+- Documentação: IT-PCP-023 (terceirização) e IT-PCP-024 (relatório de atualizações) novas; POP e ITs 001, 004, 007, 009, 013, 014, 015, 016 e 017 atualizados.
+
 ## 2026-11-12.8
 - **Grupos de reposição montados pelo Subgrupo do cadastro de itens.** Itens com o mesmo **Subgrupo** (2 ou mais) passam a ser planejados como um só material (estoque, consumo, entregas, estoque de segurança, máximo e prazo
   somados), sem precisar importar o arquivo "Grupos de reposição". "Sem subgrupo" e subgrupos com um item só continuam individuais; um grupo **importado** sempre vale mais (seus itens saem do grupo automático).
